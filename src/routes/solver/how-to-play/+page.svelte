@@ -76,11 +76,6 @@
 		gap: 0.75rem;
 	}
 
-	.error {
-		border-color: !important var(--color-error);
-		font-weight: 600;
-	}
-
 	.input-demo {
 		display: inline-flex;
 		justify-content: center;
