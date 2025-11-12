@@ -14,7 +14,7 @@
 
 	<footer>
 		<p>
-			visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to learn about SvelteKit
+			Follow me on LinkedIn <a href="https://linkedin.com/in/max-opperman">https://linkedin.com/in/max-opperman</a>!
 		</p>
 	</footer>
 </div>
