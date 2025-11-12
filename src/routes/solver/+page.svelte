@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import generateFilteredWords from '$lib/solver';
 	
 	export let data: PageData;
 	
@@ -12,54 +13,8 @@
 	
 	// Reactive statements to automatically generate words when chars or lowercaseMode change
 	$: inputChars = chars.filter(Boolean);
-	$: results = inputChars.length >= 1 ? generateFilteredWords(inputChars, lowercaseMode) : [];
-	
-	function generateFilteredWords(inputChars: string[], lowercaseModeParam: boolean): string[] {
-		// Filter words that contain only a subset of the available characters
-		// The first character (mandatory) must always be present in the word
-		const filteredWords = wordList.filter(word => {
-			// Convert word to lowercase for comparison (if lowercase mode is enabled)
-			const normalizedWord = lowercaseModeParam ? word.toLowerCase() : word;
-			
-			// Count characters, treating 'ij' as a single character
-			const charCount = normalizedWord.replace(/ij/g, 'x').length;
-			if (charCount < 4) return false; // Only words with at least 4 characters
-			
-			// Check if mandatory first character is present in the word
-			const mandatoryChar = inputChars[0].toLowerCase();
-			if (!normalizedWord.includes(mandatoryChar)) {
-				return false; // Mandatory character must be present
-			}
-			
-			// Get unique characters from the word (treating 'ij' as single unit)
-			const wordCharsSet = new Set<string>();
-			let i = 0;
-			while (i < normalizedWord.length) {
-				if (i < normalizedWord.length - 1 && normalizedWord.substring(i, i + 2) === 'ij') {
-					wordCharsSet.add('ij');
-					i += 2;
-				} else {
-					wordCharsSet.add(normalizedWord[i]);
-					i += 1;
-				}
-			}
-			
-			// Convert input characters to lowercase set
-			const availableCharsSet = new Set(inputChars.map(char => char.toLowerCase()));
-			
-			// Check if all unique characters in the word are available in input
-			for (const wordChar of wordCharsSet) {
-				if (!availableCharsSet.has(wordChar)) {
-					return false; // Word contains a character not in input
-				}
-			}
-			
-			return true;
-		});
-		
-		// Sort results by length (shorter words first)
-		return filteredWords.sort((a, b) => a.length - b.length);
-	}
+	$: results = inputChars.length >= 1 ? generateFilteredWords(wordList, inputChars, lowercaseMode) : [];
+
 	
 	function focusInput(index: number) {
 		if (inputRefs[index]) {
