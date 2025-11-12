@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import logo from '$lib/images/svelte-logo.svg';
+	import { dev } from '$app/environment';
 	import github from '$lib/images/github.svg';
 	import { darkMode, toggleDarkMode } from '$lib/stores/darkMode';
+	
+	// Get base path - empty in dev, /Spelwijsheid in production
+	const base = dev ? '' : '/Spelwijsheid';
 </script>
 
 <header>
@@ -17,14 +20,14 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li aria-current={page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Home</a>
+			<li aria-current={page.url.pathname === `${base}/` || (base === '' && page.url.pathname === '/') ? 'page' : undefined}>
+				<a href="{base}/">Home</a>
 			</li>
-			<li aria-current={page.url.pathname === '/about' ? 'page' : undefined}>
-				<a href="/about">About</a>
+			<li aria-current={page.url.pathname === `${base}/about` ? 'page' : undefined}>
+				<a href="{base}/about">About</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith('/solver') ? 'page' : undefined}>
-				<a href="/solver">Spelwijzer Solver</a>
+			<li aria-current={page.url.pathname.startsWith(`${base}/solver`) ? 'page' : undefined}>
+				<a href="{base}/solver">Spelwijzer Solver</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">

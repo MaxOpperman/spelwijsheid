@@ -42,8 +42,6 @@ jobs:
         uses: actions/configure-pages@v5
         
       - name: Build SvelteKit app
-        env:
-          BASE_PATH: '/Spelwijsheid'
         run: npm run build
         
       - name: Upload artifact

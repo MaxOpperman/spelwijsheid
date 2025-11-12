@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { dev } from '$app/environment';
 	import generateFilteredWords from '$lib/solver';
+	
+	// Get base path - empty in dev, /Spelwijsheid in production
+	const base = dev ? '' : '/Spelwijsheid';
 	
 	export let data: PageData;
 	
@@ -88,7 +92,7 @@
 <h1>Spelwijsheid - Spelwijzer Oplossingen</h1>
 
 <div class="help-link">
-	<a href="/solver/how-to-play">❓ Hoe werkt de Solver?</a>
+	<a href="{base}/solver/how-to-play">❓ Hoe werkt de Solver?</a>
 </div>
 
 <fieldset>
