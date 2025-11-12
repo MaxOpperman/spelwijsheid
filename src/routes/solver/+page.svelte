@@ -8,17 +8,18 @@
 
 	let chars = Array(MAX_CHARS).fill('');
 	let inputRefs: HTMLInputElement[] = [];
+	let lowercaseMode = false;
 	
-	// Reactive statement to automatically generate words when chars change
+	// Reactive statements to automatically generate words when chars or lowercaseMode change
 	$: inputChars = chars.filter(Boolean);
-	$: results = inputChars.length >= 1 ? generateFilteredWords(inputChars) : [];
+	$: results = inputChars.length >= 1 ? generateFilteredWords(inputChars, lowercaseMode) : [];
 	
-	function generateFilteredWords(inputChars: string[]): string[] {
+	function generateFilteredWords(inputChars: string[], lowercaseModeParam: boolean): string[] {
 		// Filter words that contain only a subset of the available characters
 		// The first character (mandatory) must always be present in the word
 		const filteredWords = wordList.filter(word => {
-			// Convert word to lowercase for comparison
-			const normalizedWord = word.toLowerCase();
+			// Convert word to lowercase for comparison (if lowercase mode is enabled)
+			const normalizedWord = lowercaseModeParam ? word.toLowerCase() : word;
 			
 			// Count characters, treating 'ij' as a single character
 			const charCount = normalizedWord.replace(/ij/g, 'x').length;
@@ -131,55 +132,105 @@
 
 <h1>Spelwijsheid - Spelwijzer Oplossingen</h1>
 
+<div class="help-link">
+	<a href="/solver/how-to-play">❓ Hoe werkt de Solver?</a>
+</div>
+
 <fieldset>
 	<legend>Voer maximaal {MAX_CHARS} karakters in:</legend>
-	<div>
+	<div class="input-grid">
 		{#each chars as char, index}
 			<input
+				type="text"
 				bind:this={inputRefs[index]}
 				bind:value={chars[index]}
 				maxlength={index === 0 ? 1 : 2}
-				placeholder={index === 0 ? 'Verplichte letter' : `Letter ${index + 1}`}
+				placeholder={index === 0 ? '!' : '?'}
 				class:selected={index === 0}
+				title={index === 0 ? 'Verplichte letter' : `Letter ${index + 1}`}
 				on:input={(event: Event) => handleInput(event as InputEvent, index)}
 				on:keydown={(event: KeyboardEvent) => handleKeydown(event, index)}
 			/>
 		{/each}
 	</div>
+	
+	<div class="options">
+		<label>
+			<input type="checkbox" bind:checked={lowercaseMode} />
+			Hoofdletterongevoelig zoeken
+		</label>
+	</div>
 </fieldset>
 
-{#if inputChars.length >= 1}
-	<h2>Gevonden woorden ({results.length}):</h2>
-	{#if results.length > 0}
-		<ul>
-			{#each results as word}
-				<li>{word}</li>
-			{/each}
-		</ul>
+<div class="results-section">
+	{#if inputChars.length >= 1}
+		<h2>Gevonden woorden ({results.length}):</h2>
+		{#if results.length > 0}
+			<ul>
+				{#each results as word}
+					<li>{word}</li>
+				{/each}
+			</ul>
+		{:else}
+			<p>Geen woorden gevonden met deze letters.</p>
+		{/if}
 	{:else}
-		<p>Geen woorden gevonden met deze letters.</p>
+		<p>Voer ten minste 1 karakter in om woorden te genereren.</p>
 	{/if}
-{:else}
-	<p>Voer ten minste 1 karakter in om woorden te genereren.</p>
-{/if}
+</div>
 
 <style>
 	h1 {
 		text-align: center;
 	}
 
-	div {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+	fieldset {
+		border: 2px solid var(--color-primary-light);
+		border-radius: 12px;
+		padding: 2rem;
+		margin: 2rem auto;
+		max-width: 600px;
+		background-color: var(--color-surface);
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
-	input {
-		padding: 0.5rem;
-		font-size: 1rem;
-		width: 100%;
-		max-width: 300px;
+	legend {
+		font-weight: 600;
+		color: var(--color-primary);
+		padding: 0 1rem;
+		font-size: 1.1rem;
+	}
+
+	.input-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.75rem;
+		margin: 1.5rem 0;
+		justify-items: center;
+	}
+
+	input[type="text"] {
+		display: inline-flex;
+		justify-content: center;
+		align-items: center;
+		width: 3.6rem;
+		height: 3.6rem;
+		font-size: 1.4rem;
+		font-weight: 600;
+		text-align: center;
+		background-color: var(--color-surface);
+		border: 2px solid var(--color-primary-light);
+		border-radius: 8px;
+		box-sizing: border-box;
+		transition: all 0.2s ease;
+		color: var(--color-text);
+	}
+
+	input[type="text"]:focus {
+		outline: none;
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 3px var(--color-primary-light);
+		background-color: var(--color-bg-2);
 	}
 
 
@@ -189,20 +240,94 @@
 		text-align: center;
 	}
 
+	.results-section {
+		max-width: 800px;
+		margin: 2rem auto;
+		padding: 0 1rem;
+	}
+
 	ul {
 		list-style-type: none;
 		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 0.75rem;
+		margin-top: 1rem;
 	}
 
 	li {
-		background-color: #f8f9fa;
-		margin: 0.5rem 0;
-		padding: 0.5rem;
-		border-radius: 0.25rem;
+		background-color: var(--color-surface);
+		border: 1px solid var(--color-primary-light);
+		margin: 0;
+		padding: 0.75rem;
+		border-radius: 8px;
+		text-align: center;
+		font-weight: 500;
+		transition: all 0.2s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		color: var(--color-text);
 	}
 
-	input.selected {
-		border-color: cadetblue;
+	li:hover {
+		border-color: var(--color-primary);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+		background-color: var(--color-primary-light);
+	}
+
+	input[type="text"].selected {
+		border-color: var(--color-accent);
 		border-width: 3px;
+		background-color: rgba(5, 150, 105, 0.05);
+		box-shadow: 0 0 0 1px var(--color-accent);
+	}
+
+	.options {
+		margin-top: 1rem;
+		text-align: center;
+	}
+
+	.options label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-size: 0.95rem;
+		cursor: pointer;
+		color: var(--color-text);
+		font-weight: 500;
+	}
+
+	.options input[type="checkbox"] {
+		width: auto;
+		max-width: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.help-link {
+		text-align: center;
+		margin: 1rem 0 2rem 0;
+	}
+
+	.help-link a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--color-primary);
+		text-decoration: none;
+		padding: 0.75rem 1.5rem;
+		border: 2px solid var(--color-primary);
+		border-radius: 25px;
+		font-size: 0.9rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+		background-color: var(--color-surface);
+	}
+
+	.help-link a:hover {
+		background-color: var(--color-primary);
+		color: white;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 	}
 </style>
