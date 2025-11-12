@@ -7,18 +7,16 @@
 	const wordList = data.wordList;
 
 	let chars = Array(MAX_CHARS).fill('');
-	let results: string[] = [];
-
-	function generateWords() {
-		const inputChars = chars.filter(Boolean);
-		if (inputChars.length < 1) {
-			alert('Voer ten minste 1 karakter in.');
-			return;
-		}
-
+	let inputRefs: HTMLInputElement[] = [];
+	
+	// Reactive statement to automatically generate words when chars change
+	$: inputChars = chars.filter(Boolean);
+	$: results = inputChars.length >= 1 ? generateFilteredWords(inputChars) : [];
+	
+	function generateFilteredWords(inputChars: string[]): string[] {
 		// Filter words that contain only a subset of the available characters
 		// The first character (mandatory) must always be present in the word
-		results = wordList.filter(word => {
+		const filteredWords = wordList.filter(word => {
 			// Convert word to lowercase for comparison
 			const normalizedWord = word.toLowerCase();
 			
@@ -56,33 +54,46 @@
 			}
 			
 			return true;
-		});		// Sort results by length (shorter words first)
-		results.sort((a, b) => a.length - b.length);
+		});
+		
+		// Sort results by length (shorter words first)
+		return filteredWords.sort((a, b) => a.length - b.length);
+	}
+	
+	function focusInput(index: number) {
+		if (inputRefs[index]) {
+			inputRefs[index].focus();
+			inputRefs[index].setSelectionRange(0, inputRefs[index].value.length);
+		}
+	}
+	
+	function focusNextInput(index: number) {
+		if (index < chars.length - 1) {
+			focusInput(index + 1);
+		}
+	}
+	
+	function focusPrevInput(index: number) {
+		if (index > 0) {
+			focusInput(index - 1);
+		}
 	}
 
 	function handleKeydown(event: KeyboardEvent, index: number) {
-		const input = event.target as HTMLInputElement;
-		
-		if (event.key === 'Backspace' && input.value === '' && index > 0) {
+		if (event.key === 'Backspace' && chars[index] === '' && index > 0) {
 			event.preventDefault();
-			chars[index] = '';
-			const prevInput = document.querySelectorAll('input')[index - 1] as HTMLInputElement;
-			prevInput.focus();
-			prevInput.setSelectionRange(0, prevInput.value.length);
+			focusPrevInput(index);
 		}
 	}
 
 	function handleInput(event: InputEvent, index: number) {
 		const input = event.target as HTMLInputElement;
 		const value = input.value.toLowerCase();
-		console.log(`Input at index ${index}: ${value}`, {event});
 
 		if (value === '' && event.inputType === 'deleteContentBackward') {
 			chars[index] = '';
 			if (index > 0) {
-				const prevInput = document.querySelectorAll('input')[index - 1] as HTMLInputElement;
-				prevInput.focus();
-				prevInput.setSelectionRange(0, prevInput.value.length);
+				focusPrevInput(index);
 			}
 			return;
 		}
@@ -94,32 +105,24 @@
 			} else {
 				input.maxLength = 1;
 				if (index < chars.length - 1) {
-					const nextInput = document.querySelectorAll('input')[index + 1] as HTMLInputElement;
-					nextInput.focus();
-					nextInput.setSelectionRange(0, nextInput.value.length);
+					focusNextInput(index);
 				}
 			}
 		} else if (value.length === 2) {
 			if (value === 'ij') {
 				chars[index] = value;
 				if (index < chars.length - 1) {
-					const nextInput = document.querySelectorAll('input')[index + 1] as HTMLInputElement;
-					nextInput.focus();
-					nextInput.setSelectionRange(0, nextInput.value.length);
+					focusNextInput(index);
 				}
 			} else {
 				chars[index] = value[0];
 				if (index < chars.length - 1) {
 					chars[index + 1] = value[1];
-					const nextInput = document.querySelectorAll('input')[index + 1] as HTMLInputElement;
-					nextInput.focus();
-					nextInput.setSelectionRange(0, nextInput.value.length);
+					focusNextInput(index);
 				}
 			}
 		}
 	}
-
-	console.log('Loaded wordList:', wordList);
 </script>
 
 <svelte:head>
@@ -133,7 +136,8 @@
 	<div>
 		{#each chars as char, index}
 			<input
-				bind:value={char}
+				bind:this={inputRefs[index]}
+				bind:value={chars[index]}
 				maxlength={index === 0 ? 1 : 2}
 				placeholder={index === 0 ? 'Verplichte letter' : `Letter ${index + 1}`}
 				class:selected={index === 0}
@@ -142,18 +146,21 @@
 			/>
 		{/each}
 	</div>
-	<button id="generate-button" on:click={generateWords}>Generate Words</button>
 </fieldset>
 
-{#if results.length > 0}
-	<h2>Genereer woorden:</h2>
-	<ul>
-		{#each results as word}
-			<li>{word}</li>
-		{/each}
-	</ul>
+{#if inputChars.length >= 1}
+	<h2>Gevonden woorden ({results.length}):</h2>
+	{#if results.length > 0}
+		<ul>
+			{#each results as word}
+				<li>{word}</li>
+			{/each}
+		</ul>
+	{:else}
+		<p>Geen woorden gevonden met deze letters.</p>
+	{/if}
 {:else}
-	<p>Nog geen woorden gegenereerd.</p>
+	<p>Voer ten minste 1 karakter in om woorden te genereren.</p>
 {/if}
 
 <style>
@@ -175,19 +182,7 @@
 		max-width: 300px;
 	}
 
-	button {
-		padding: 0.5rem 1rem;
-		font-size: 1rem;
-		background-color: #007bff;
-		color: white;
-		border: none;
-		border-radius: 0.25rem;
-		cursor: pointer;
-	}
 
-	button:hover {
-		background-color: #0056b3;
-	}
 
 	h2 {
 		margin-top: 2rem;
