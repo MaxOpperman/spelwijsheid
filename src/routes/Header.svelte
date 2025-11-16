@@ -26,11 +26,14 @@
 			<li aria-current={page.url.pathname === `${base}/about` ? 'page' : undefined}>
 				<a href="{base}/about">About</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith(`${base}/solver`) ? 'page' : undefined}>
-				<a href="{base}/solver">Spelwijze Solver</a>
+			<li aria-current={page.url.pathname.startsWith(`${base}/spelwijze`) ? 'page' : undefined}>
+				<a href="{base}/spelwijze">Spelwijze</a>
 			</li>
 			<li aria-current={page.url.pathname.startsWith(`${base}/wordle`) ? 'page' : undefined}>
 				<a href="{base}/wordle">Wordle</a>
+			</li>
+			<li aria-current={page.url.pathname.startsWith(`${base}/solver`) ? 'page' : undefined}>
+				<a href="{base}/solver">Spelwijze Solver</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
@@ -242,7 +245,7 @@
 
 	.cloud {
 		position: absolute;
-		background: white;
+		background: var(--color-surface);
 		border-radius: 10px;
 		opacity: 0.8;
 	}
@@ -251,7 +254,7 @@
 	.cloud::after {
 		content: '';
 		position: absolute;
-		background: white;
+		background: var(--color-surface);
 		border-radius: 50%;
 	}
 
@@ -337,7 +340,7 @@
 
 	.star {
 		position: absolute;
-		background: white;
+		background: var(--color-surface);
 		clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
 		animation: twinkle 2s ease-in-out infinite;
 	}

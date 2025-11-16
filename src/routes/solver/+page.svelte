@@ -92,7 +92,7 @@
 <h1>Spelwijsheid - Spelwijze Oplossingen</h1>
 
 <div class="help-link">
-	<a href="{base}/solver/how-to-play">❓ Hoe werkt de Solver?</a>
+	<a href="{base}/solver/how-to-play">Hoe werkt de Solver?</a>
 </div>
 
 <fieldset>
@@ -269,24 +269,25 @@
 	}
 
 	.help-link a {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		color: var(--color-primary);
+		color: var(--color-text);
 		text-decoration: none;
-		padding: 0.75rem 1.5rem;
-		border: 2px solid var(--color-primary);
-		border-radius: 25px;
-		font-size: 0.9rem;
-		font-weight: 500;
-		transition: all 0.2s ease;
-		background-color: var(--color-surface);
+		display: inline-block;
 	}
 
-	.help-link a:hover {
-		background-color: var(--color-primary);
-		color: white;
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+	.help-link a::before {
+		content: 'i';
+		display: inline-block;
+		font-size: 0.8em;
+		font-weight: 900;
+		width: 1em;
+		height: 1em;
+		padding: 0.2em;
+		line-height: 1;
+		border: 1.5px solid var(--color-text);
+		border-radius: 50%;
+		text-align: center;
+		margin: 0 0.5em 0 0;
+		position: relative;
+		top: -0.05em;
 	}
 </style>

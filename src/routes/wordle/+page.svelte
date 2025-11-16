@@ -271,27 +271,34 @@
 		border: none;
 		font-size: calc(0.08 * var(--width));
 		border-radius: 2px;
-		background: white;
+		background: var(--color-surface);
 		margin: 0;
-		color: rgba(0, 0, 0, 0.7);
+		color: var(--color-text);
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
 	.letter.missing {
 		background: rgba(255, 255, 255, 0.5);
-		color: rgba(0, 0, 0, 0.5);
+		color: var(--color-text);
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
 	.letter.exact {
-		background: var(--color-theme-2);
-		color: white;
+		background: var(--color-accent);
+		color: var(--color-text);
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
 	.letter.close {
-		border: 2px solid var(--color-theme-2);
+		border: 2px solid var(--color-accent);
+		color: var(--color-text);
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
 	.selected {
-		outline: 2px solid var(--color-theme-1);
+		outline: 2px solid var(--color-primary);
+		color: var(--color-text);
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
 	.controls {
@@ -319,8 +326,8 @@
 	.keyboard button,
 	.keyboard button:disabled {
 		--size: min(8vw, 4vh, 40px);
-		background-color: white;
-		color: black;
+		background-color: var(--color-surface);
+		color: var(--color-text);
 		width: var(--size);
 		border: none;
 		border-radius: 2px;
@@ -329,8 +336,8 @@
 	}
 
 	.keyboard button.exact {
-		background: var(--color-theme-2);
-		color: white;
+		background: var(--color-accent);
+		color: var(--color-surface);
 	}
 
 	.keyboard button.missing {
@@ -338,12 +345,12 @@
 	}
 
 	.keyboard button.close {
-		border: 2px solid var(--color-theme-2);
+		border: 2px solid var(--color-accent);
 	}
 
 	.keyboard button:focus {
-		background: var(--color-theme-1);
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-text);
 		outline: none;
 	}
 
@@ -380,8 +387,8 @@
 
 	.restart:focus,
 	.restart:hover {
-		background: var(--color-theme-1);
-		color: white;
+		background: var(--color-primary);
+		color: var(--color-surface);
 		outline: none;
 	}
 
