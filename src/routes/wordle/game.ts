@@ -3,16 +3,16 @@ export class Game {
 	guesses: string[];
 	answers: string[];
 	answer: string;
-	words: string[];
+	wordList: string[];
 	allowed: Set<string>;
 
 	/**
 	 * Create a game object from the player's cookie, or initialise a new game
 	 */
-	constructor(wordData: { words: string[]; allowed: Set<string> }, serialized: string | undefined = undefined) {
-		this.words = wordData.words;
-		this.allowed = wordData.allowed;
-		
+	constructor(serialized: string | undefined, wordList: string[]) {
+		this.wordList = wordList;
+		this.allowed = new Set(wordList);
+
 		if (serialized) {
 			const [index, guesses, answers] = serialized.split('-');
 
@@ -20,12 +20,12 @@ export class Game {
 			this.guesses = guesses ? guesses.split(' ') : [];
 			this.answers = answers ? answers.split(' ') : [];
 		} else {
-			this.index = Math.floor(Math.random() * this.words.length);
+			this.index = Math.floor(Math.random() * wordList.length);
 			this.guesses = ['', '', '', '', '', ''];
 			this.answers = [];
 		}
 
-		this.answer = this.words[this.index];
+		this.answer = wordList[this.index];
 	}
 
 	/**

@@ -1,11 +1,10 @@
-import type { PageServerLoad } from './$types.js';
-import { getWordleWords } from '$lib/words.server.js';
+import type { PageServerLoad } from './$types';
+import { getWordleWords } from '$lib/words.server.ts';
 
 export const load = (() => {
+	const wordList = getWordleWords();
+
 	return {
-		/**
-		 * The list of Dutch words for the Wordle
-		 */
-		wordList: getWordleWords()
+		wordList
 	};
 }) satisfies PageServerLoad;
