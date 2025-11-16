@@ -2,13 +2,28 @@
 	import { confetti } from '@neoconfetti/svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { Game } from './game.ts';
+	import { createWordData } from './words.client.ts';
+	import { dev } from '$app/environment';
 	import { browser } from '$app/environment';
+	import type { PageData } from './$types';
+
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
+	
+	// Get base path - empty in dev, /Spelwijsheid in production
+	const base = dev ? '' : '/Spelwijsheid';
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
+	// Create word data from server-provided word list
+	const wordData = createWordData(data.wordList);
+
 	// Game state
-	let game = $state(new Game());
+	let game = $state(new Game(wordData));
 	let badGuess = $state(false);
 
 	// Initialize game from localStorage on mount
@@ -17,10 +32,10 @@
 			const saved = localStorage.getItem('wordle-game');
 			if (saved) {
 				try {
-					game = new Game(saved);
+					game = new Game(wordData, saved);
 				} catch (e) {
 					// If saved data is invalid, start a new game
-					game = new Game();
+					game = new Game(wordData);
 				}
 			}
 		}
@@ -117,7 +132,7 @@
 	 * Restart the game
 	 */
 	function restart() {
-		game = new Game();
+		game = new Game(wordData);
 		badGuess = false;
 	}
 
@@ -158,7 +173,7 @@
 <h1 class="visually-hidden">Wordle</h1>
 
 <div class="game">
-	<a class="how-to-play" href="/wordle/how-to-play">How to play</a>
+	<a class="how-to-play" href="{base}/wordle/how-to-play">How to play</a>
 
 	<div class="grid" class:playing={!won} class:bad-guess={badGuess}>
 		{#each Array.from(Array(6).keys()) as row (row)}
