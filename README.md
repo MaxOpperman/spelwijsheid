@@ -1,38 +1,19 @@
-# sv
+# Spelwijsheid
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This app contains some games that I like to play and some that I was eager to program. Currently the games are:
 
-## Creating a project
+- Wordle
+- Spelwijze
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Solvers
+Because I am not always the best at finding the correct answer I have created some solvers as well for these games
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Svelte
+This app is programmed in Svelte to broaden my experience with frameworks. A small sidenote is that I took some sidesteps with Claude but who doesn't nowadays :D
 
-# create a new project in my-app
-npx sv create my-app
-```
+## Future work
+I want to create some more content:
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- Impossible Wordle; tries to pick the word that is the furthest away from what you have currently guessed to make it as hard as possible. So the word is changed based on your attempts.
+- Wordle solver
+- Localization; also changes the dictionary accordingly!
