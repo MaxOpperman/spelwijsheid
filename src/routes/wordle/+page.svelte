@@ -1,27 +1,46 @@
 <script lang="ts">
 	import { confetti } from '@neoconfetti/svelte';
 	import { MediaQuery } from 'svelte/reactivity';
-	import { enhance } from '$app/forms';
-	import type { PageData, ActionData } from './$types';
-
-	interface Props {
-		data: PageData;
-		form: ActionData;
-	}
-
-	let { data, form }: Props = $props();
+	import { Game } from './game.ts';
+	import { browser } from '$app/environment';
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
+	// Game state
+	let game = $state(new Game());
+	let badGuess = $state(false);
+
+	// Initialize game from localStorage on mount
+	$effect(() => {
+		if (browser) {
+			const saved = localStorage.getItem('wordle-game');
+			if (saved) {
+				try {
+					game = new Game(saved);
+				} catch (e) {
+					// If saved data is invalid, start a new game
+					game = new Game();
+				}
+			}
+		}
+	});
+
+	// Save game state to localStorage whenever it changes
+	$effect(() => {
+		if (browser && game) {
+			localStorage.setItem('wordle-game', game.toString());
+		}
+	});
+
 	/** Whether or not the user has won */
-	let won = $derived(data.answers.at(-1) === 'xxxxx');
+	let won = $derived(game.answers.at(-1) === 'xxxxx');
 
 	/** The index of the current guess */
-	let i = $derived(won ? -1 : data.answers.length);
+	let i = $derived(won ? -1 : game.answers.length);
 
 	/** The current guess */
-	let currentGuess = $derived(data.guesses[i] || '');
+	let currentGuess = $derived(game.guesses[i] || '');
 
 	/** Whether the current guess can be submitted */
 	let submittable = $derived(currentGuess.length === 5);
@@ -37,8 +56,8 @@
 		 * used for adding text for assistive technology (e.g. screen readers)
 		 */
 		let description: Record<string, string> = {};
-		data.answers.forEach((answer, i) => {
-			const guess = data.guesses[i];
+		game.answers.forEach((answer, i) => {
+			const guess = game.guesses[i];
 			for (let i = 0; i < 5; i += 1) {
 				const letter = guess[i];
 				if (answer[i] === 'x') {
@@ -54,18 +73,52 @@
 	});
 
 	/**
-	 * Modify the game state without making a trip to the server,
-	 * if client-side JavaScript is enabled
+	 * Update the current guess
 	 */
-	function update(event: MouseEvent) {
-		const form = (event.target as HTMLButtonElement).closest('form');
-		if (!form) return;
-
-		const key = (event.target as HTMLButtonElement).getAttribute('data-key');
-		const hidden = form.querySelector(`input[name="${key}"]`) as HTMLInputElement;
-		if (hidden) {
-			hidden.click();
+	function update(key: string) {
+		const i = game.answers.length;
+		
+		if (key === 'backspace') {
+			game.guesses[i] = game.guesses[i].slice(0, -1);
+			badGuess = false;
+		} else if (game.guesses[i].length < 5) {
+			game.guesses[i] += key;
 		}
+		
+		// Trigger reactivity
+		game = game;
+	}
+
+	/**
+	 * Submit the current guess
+	 */
+	function enter() {
+		const i = game.answers.length;
+		const guess = game.guesses[i].split('');
+		
+		if (guess.length !== 5) return;
+		
+		const valid = game.enter(guess);
+		
+		if (!valid) {
+			badGuess = true;
+			setTimeout(() => {
+				badGuess = false;
+			}, 500);
+		} else {
+			badGuess = false;
+		}
+		
+		// Trigger reactivity
+		game = game;
+	}
+
+	/**
+	 * Restart the game
+	 */
+	function restart() {
+		game = new Game();
+		badGuess = false;
 	}
 
 	/**
@@ -75,11 +128,23 @@
 	function keydown(event: KeyboardEvent) {
 		if (event.metaKey) return;
 
-		if (event.key === 'Enter' && !submittable) return;
+		if (event.key === 'Enter') {
+			if (won || game.answers.length >= 6) {
+				restart();
+			} else if (submittable) {
+				enter();
+			}
+			return;
+		}
 
-		document
-			.querySelector(`[data-key="${event.key}" i]`)
-			?.dispatchEvent(new MouseEvent('click', { cancelable: true, bubbles: true }));
+		if (event.key === 'Backspace') {
+			update('backspace');
+			return;
+		}
+
+		if (/^[a-z]$/i.test(event.key)) {
+			update(event.key.toLowerCase());
+		}
 	}
 </script>
 
@@ -92,26 +157,17 @@
 
 <h1 class="visually-hidden">Wordle</h1>
 
-<form
-	method="post"
-	action="?/enter"
-	use:enhance={() => {
-		// prevent default callback from resetting the form
-		return ({ update }) => {
-			update({ reset: false });
-		};
-	}}
->
+<div class="game">
 	<a class="how-to-play" href="/wordle/how-to-play">How to play</a>
 
-	<div class="grid" class:playing={!won} class:bad-guess={form?.badGuess}>
+	<div class="grid" class:playing={!won} class:bad-guess={badGuess}>
 		{#each Array.from(Array(6).keys()) as row (row)}
 			{@const current = row === i}
 			<h2 class="visually-hidden">Row {row + 1}</h2>
 			<div class="row" class:current>
 				{#each Array.from(Array(5).keys()) as column (column)}
-					{@const guess = current ? currentGuess : data.guesses[row]}
-					{@const answer = data.answers[row]?.[column]}
+					{@const guess = current ? currentGuess : game.guesses[row]}
+					{@const answer = game.answers[row]?.[column]}
 					{@const value = guess?.[column] ?? ''}
 					{@const selected = current && column === guess.length}
 					{@const exact = answer === 'x'}
@@ -130,7 +186,6 @@
 								empty
 							{/if}
 						</span>
-						<input name="guess" disabled={!current} type="hidden" {value} />
 					</div>
 				{/each}
 			</div>
@@ -138,24 +193,24 @@
 	</div>
 
 	<div class="controls">
-		{#if won || data.answers.length >= 6}
-			{#if !won && data.answer}
-				<p>the answer was "{data.answer}"</p>
+		{#if won || game.answers.length >= 6}
+			{#if !won && game.answer}
+				<p>the answer was "{game.answer}"</p>
 			{/if}
-			<button data-key="enter" class="restart selected" formaction="?/restart">
+			<button class="restart selected" onclick={restart}>
 				{won ? 'you won :)' : `game over :(`} play again?
 			</button>
 		{:else}
 			<div class="keyboard">
-				<button data-key="enter" class:selected={submittable} disabled={!submittable}>enter</button>
-
-				<button
-					onclick={update}
-					data-key="backspace"
-					formaction="?/update"
-					name="key"
-					value="backspace"
+				<button 
+					class:selected={submittable} 
+					disabled={!submittable}
+					onclick={enter}
 				>
+					enter
+				</button>
+
+				<button onclick={() => update('backspace')}>
 					back
 				</button>
 
@@ -163,13 +218,8 @@
 					<div class="row">
 						{#each row as letter, index (index)}
 							<button
-								onclick={update}
-								data-key={letter}
 								class={classnames[letter]}
-								disabled={submittable}
-								formaction="?/update"
-								name="key"
-								value={letter}
+								onclick={() => update(letter)}
 								aria-label="{letter} {description[letter] || ''}"
 							>
 								{letter}
@@ -180,7 +230,7 @@
 			</div>
 		{/if}
 	</div>
-</form>
+</div>
 
 {#if won}
 	<div
@@ -196,7 +246,7 @@
 {/if}
 
 <style>
-	form {
+	.game {
 		width: 100%;
 		height: 100%;
 		display: flex;
