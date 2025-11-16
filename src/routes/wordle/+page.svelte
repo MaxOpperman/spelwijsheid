@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { confetti } from '@neoconfetti/svelte';
-	import type { ActionData, PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { enhance } from '$app/forms';
+	import type { PageData, ActionData } from './$types';
 
 	interface Props {
 		data: PageData;
 		form: ActionData;
 	}
-	let { data, form = $bindable() }: Props = $props();
+
+	let { data, form }: Props = $props();
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
@@ -57,16 +58,13 @@
 	 * if client-side JavaScript is enabled
 	 */
 	function update(event: MouseEvent) {
-		event.preventDefault();
-		const key = (event.target as HTMLButtonElement).getAttribute(
-			'data-key'
-		);
+		const form = (event.target as HTMLButtonElement).closest('form');
+		if (!form) return;
 
-		if (key === 'backspace') {
-			currentGuess = currentGuess.slice(0, -1);
-			if (form?.badGuess) form.badGuess = false;
-		} else if (currentGuess.length < 5) {
-			currentGuess += key;
+		const key = (event.target as HTMLButtonElement).getAttribute('data-key');
+		const hidden = form.querySelector(`input[name="${key}"]`) as HTMLInputElement;
+		if (hidden) {
+			hidden.click();
 		}
 	}
 
