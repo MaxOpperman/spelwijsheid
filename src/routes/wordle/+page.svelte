@@ -1,61 +1,30 @@
 <script lang="ts">
 	import { confetti } from '@neoconfetti/svelte';
-	import { MediaQuery } from 'svelte/reactivity';
-	import { Game } from './game.ts';
-	import { createWordData } from './words.client.ts';
-	import { dev } from '$app/environment';
-	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
+	import { MediaQuery } from 'svelte/reactivity';
+	import { Game } from './game';
 
 	interface Props {
 		data: PageData;
 	}
-
 	let { data }: Props = $props();
-	
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
-	// Create word data from server-provided word list
-	const wordData = createWordData(data.wordList);
-
-	// Game state
-	let game = $state(new Game(wordData));
+	let game = $state<Game | null>(null);
 	let badGuess = $state(false);
 
-	// Initialize game from localStorage on mount
-	$effect(() => {
-		if (browser) {
-			const saved = localStorage.getItem('wordle-game');
-			if (saved) {
-				try {
-					game = new Game(wordData, saved);
-				} catch (e) {
-					// If saved data is invalid, start a new game
-					game = new Game(wordData);
-				}
-			}
-		}
-	});
-
-	// Save game state to localStorage whenever it changes
-	$effect(() => {
-		if (browser && game) {
-			localStorage.setItem('wordle-game', game.toString());
-		}
-	});
-
 	/** Whether or not the user has won */
-	let won = $derived(game.answers.at(-1) === 'xxxxx');
+	let won = $derived(game?.answers.at(-1) === 'xxxxx');
 
 	/** The index of the current guess */
-	let i = $derived(won ? -1 : game.answers.length);
+	let i = $derived(won ? -1 : (game?.answers.length ?? 0));
 
 	/** The current guess */
-	let currentGuess = $derived(game.guesses[i] || '');
+	let currentGuess = $derived(game?.guesses[i] || '');
 
 	/** Whether the current guess can be submitted */
 	let submittable = $derived(currentGuess.length === 5);
@@ -71,8 +40,10 @@
 		 * used for adding text for assistive technology (e.g. screen readers)
 		 */
 		let description: Record<string, string> = {};
+		if (!game) return { classnames, description };
+		
 		game.answers.forEach((answer, i) => {
-			const guess = game.guesses[i];
+			const guess = game ? game.guesses[i] : '';
 			for (let i = 0; i < 5; i += 1) {
 				const letter = guess[i];
 				if (answer[i] === 'x') {
@@ -87,53 +58,83 @@
 		return { classnames, description };
 	});
 
+	onMount(() => {
+		// Load game from localStorage or create new one
+		const saved = localStorage.getItem('wordle');
+		game = new Game(saved ?? undefined, data.wordList);
+	});
+
+	function saveGame() {
+		if (game) {
+			localStorage.setItem('wordle', game.toString());
+		}
+	}
+
 	/**
-	 * Update the current guess
+	 * Update the game state when a key is pressed
 	 */
 	function update(key: string) {
-		const i = game.answers.length;
-		
+		if (!game) return;
+
+		const currentIndex = game.answers.length;
+
 		if (key === 'backspace') {
-			game.guesses[i] = game.guesses[i].slice(0, -1);
-			badGuess = false;
-		} else if (game.guesses[i].length < 5) {
-			game.guesses[i] += key;
+			game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1);
+			if (badGuess) badGuess = false;
+		} else if (game.guesses[currentIndex].length < 5) {
+			game.guesses[currentIndex] += key;
 		}
-		
-		// Trigger reactivity
-		game = game;
+
+		// Create new Game instance to trigger reactivity
+		const serialized = game.toString();
+		game = new Game(serialized, data.wordList);
+		saveGame();
 	}
 
 	/**
 	 * Submit the current guess
 	 */
 	function enter() {
-		const i = game.answers.length;
-		const guess = game.guesses[i].split('');
-		
-		if (guess.length !== 5) return;
-		
+		if (!game || !submittable) return;
+
+		const guess = game.guesses[game.answers.length].split('');
 		const valid = game.enter(guess);
-		
+
 		if (!valid) {
 			badGuess = true;
-			setTimeout(() => {
-				badGuess = false;
-			}, 500);
 		} else {
 			badGuess = false;
 		}
-		
-		// Trigger reactivity
-		game = game;
+
+		// Create new Game instance to trigger reactivity
+		const serialized = game.toString();
+		game = new Game(serialized, data.wordList);
+		saveGame();
 	}
 
 	/**
 	 * Restart the game
 	 */
 	function restart() {
-		game = new Game(wordData);
+		if (!game) return;
+		localStorage.removeItem('wordle');
+		game = new Game(undefined, data.wordList);
 		badGuess = false;
+		saveGame();
+	}
+
+	/**
+	 * Handle button clicks
+	 */
+	function handleClick(event: MouseEvent) {
+		const key = (event.target as HTMLButtonElement).getAttribute('data-key');
+		if (!key) return;
+
+		if (key === 'enter') {
+			enter();
+		} else {
+			update(key);
+		}
 	}
 
 	/**
@@ -144,11 +145,7 @@
 		if (event.metaKey) return;
 
 		if (event.key === 'Enter') {
-			if (won || game.answers.length >= 6) {
-				restart();
-			} else if (submittable) {
-				enter();
-			}
+			if (submittable) enter();
 			return;
 		}
 
@@ -157,7 +154,7 @@
 			return;
 		}
 
-		if (/^[a-z]$/i.test(event.key)) {
+		if (event.key.length === 1 && event.key.match(/[a-z]/i)) {
 			update(event.key.toLowerCase());
 		}
 	}
@@ -172,79 +169,80 @@
 
 <h1 class="visually-hidden">Wordle</h1>
 
-<div class="game">
+<div class="wordle-container">
 	<a class="how-to-play" href="{base}/wordle/how-to-play">How to play</a>
 
-	<div class="grid" class:playing={!won} class:bad-guess={badGuess}>
-		{#each Array.from(Array(6).keys()) as row (row)}
-			{@const current = row === i}
-			<h2 class="visually-hidden">Row {row + 1}</h2>
-			<div class="row" class:current>
-				{#each Array.from(Array(5).keys()) as column (column)}
-					{@const guess = current ? currentGuess : game.guesses[row]}
-					{@const answer = game.answers[row]?.[column]}
-					{@const value = guess?.[column] ?? ''}
-					{@const selected = current && column === guess.length}
-					{@const exact = answer === 'x'}
-					{@const close = answer === 'c'}
-					{@const missing = answer === '_'}
-					<div class="letter" class:exact class:close class:missing class:selected>
-						{value}
-						<span class="visually-hidden">
-							{#if exact}
-								(correct)
-							{:else if close}
-								(present)
-							{:else if missing}
-								(absent)
-							{:else}
-								empty
-							{/if}
-						</span>
-					</div>
-				{/each}
-			</div>
-		{/each}
-	</div>
+	{#if game}
+		<div class="grid" class:playing={!won} class:bad-guess={badGuess}>
+			{#each Array.from(Array(6).keys()) as row (row)}
+				{@const current = row === i}
+				<h2 class="visually-hidden">Row {row + 1}</h2>
+				<div class="row" class:current>
+					{#each Array.from(Array(5).keys()) as column (column)}
+						{@const guess = current ? currentGuess : game.guesses[row]}
+						{@const answer = game.answers[row]?.[column]}
+						{@const value = guess?.[column] ?? ''}
+						{@const selected = current && column === guess.length}
+						{@const exact = answer === 'x'}
+						{@const close = answer === 'c'}
+						{@const missing = answer === '_'}
+						<div class="letter" class:exact class:close class:missing class:selected>
+							{value}
+							<span class="visually-hidden">
+								{#if exact}
+									(correct)
+								{:else if close}
+									(present)
+								{:else if missing}
+									(absent)
+								{:else}
+									empty
+								{/if}
+							</span>
+						</div>
+					{/each}
+				</div>
+			{/each}
+		</div>
 
-	<div class="controls">
-		{#if won || game.answers.length >= 6}
-			{#if !won && game.answer}
-				<p>the answer was "{game.answer}"</p>
+		<div class="controls">
+			{#if won || game.answers.length >= 6}
+				{#if !won && game.answer}
+					<p>the answer was "{game.answer}"</p>
+				{/if}
+				<button onclick={restart} class="restart selected">
+					{won ? 'you won :)' : `game over :(`} play again?
+				</button>
+			{:else}
+				<div class="keyboard">
+					<button onclick={handleClick} data-key="enter" class:selected={submittable} disabled={!submittable}>enter</button>
+
+					<button
+						onclick={handleClick}
+						data-key="backspace"
+					>
+						back
+					</button>
+
+					{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row (row)}
+						<div class="row">
+							{#each row as letter, index (index)}
+								<button
+									onclick={handleClick}
+									data-key={letter}
+									class={classnames[letter]}
+									disabled={submittable}
+									aria-label="{letter} {description[letter] || ''}"
+								>
+									{letter}
+								</button>
+							{/each}
+						</div>
+					{/each}
+				</div>
 			{/if}
-			<button class="restart selected" onclick={restart}>
-				{won ? 'you won :)' : `game over :(`} play again?
-			</button>
-		{:else}
-			<div class="keyboard">
-				<button 
-					class:selected={submittable} 
-					disabled={!submittable}
-					onclick={enter}
-				>
-					enter
-				</button>
-
-				<button onclick={() => update('backspace')}>
-					back
-				</button>
-
-				{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row (row)}
-					<div class="row">
-						{#each row as letter, index (index)}
-							<button
-								class={classnames[letter]}
-								onclick={() => update(letter)}
-								aria-label="{letter} {description[letter] || ''}"
-							>
-								{letter}
-							</button>
-						{/each}
-					</div>
-				{/each}
-			</div>
-		{/if}
-	</div>
+		</div>
+	{/if}
 </div>
 
 {#if won}
@@ -261,7 +259,7 @@
 {/if}
 
 <style>
-	.game {
+	.wordle-container {
 		width: 100%;
 		height: 100%;
 		display: flex;
