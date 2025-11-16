@@ -51,7 +51,7 @@
 		font-size: 0.8em;
 		width: 2.4em;
 		height: 2.4em;
-		background-color: white;
+		background-color: var(--color-surface);
 		box-sizing: border-box;
 		border-radius: 2px;
 		border-width: 2px;
@@ -65,12 +65,12 @@
 
 	.close {
 		border-style: solid;
-		border-color: var(--color-theme-2);
+		border-color: var(--color-accent);
 	}
 
 	.exact {
-		background: var(--color-theme-2);
-		color: white;
+		background: var(--color-accent);
+		color: var(--color-surface);
 	}
 
 	.example {
