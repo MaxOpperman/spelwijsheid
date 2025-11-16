@@ -1,4 +1,4 @@
-import { words, allowed } from './words.server.ts';
+import { words, allowed } from './words.client.ts';
 
 export class Game {
 	index: number;

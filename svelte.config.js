@@ -14,13 +14,10 @@ const config = {
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
-			fallback: 'index.html',
+			fallback: '404.html',
 			precompress: false,
-			strict: false
+			strict: true
 		}),
-		prerender: {
-			handleHttpError: 'warn'
-		},
 		paths: {
 			base: dev ? '' : process.env.BASE_PATH || '/Spelwijsheid'
 		}
