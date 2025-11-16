@@ -1,15 +1,18 @@
-import { words, allowed } from './words.client.ts';
-
 export class Game {
 	index: number;
 	guesses: string[];
 	answers: string[];
 	answer: string;
+	words: string[];
+	allowed: Set<string>;
 
 	/**
 	 * Create a game object from the player's cookie, or initialise a new game
 	 */
-	constructor(serialized: string | undefined = undefined) {
+	constructor(wordData: { words: string[]; allowed: Set<string> }, serialized: string | undefined = undefined) {
+		this.words = wordData.words;
+		this.allowed = wordData.allowed;
+		
 		if (serialized) {
 			const [index, guesses, answers] = serialized.split('-');
 
@@ -17,12 +20,12 @@ export class Game {
 			this.guesses = guesses ? guesses.split(' ') : [];
 			this.answers = answers ? answers.split(' ') : [];
 		} else {
-			this.index = Math.floor(Math.random() * words.length);
+			this.index = Math.floor(Math.random() * this.words.length);
 			this.guesses = ['', '', '', '', '', ''];
 			this.answers = [];
 		}
 
-		this.answer = words[this.index];
+		this.answer = this.words[this.index];
 	}
 
 	/**
@@ -31,7 +34,7 @@ export class Game {
 	 */
 	enter(letters: string[]) {
 		const word = letters.join('');
-		const valid = allowed.has(word);
+		const valid = this.allowed.has(word);
 
 		if (!valid) return false;
 

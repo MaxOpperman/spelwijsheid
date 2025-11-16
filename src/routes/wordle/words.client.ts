@@ -1,10 +1,12 @@
-import { getWordleWords } from '$lib/words.server.js';
+// Client-side Dutch words for Wordle
+// Words are passed from the server via page data
 
-// Get the filtered Dutch words for Wordle
-const dutchWords = getWordleWords();
-
-/** The list of possible 5-letter Dutch words for Wordle */
-export const words = dutchWords;
-
-/** Set of all allowed 5-letter Dutch words */
-export const allowed = new Set(dutchWords);
+/**
+ * Create words and allowed set from the provided word list
+ */
+export function createWordData(wordList: string[]) {
+	return {
+		words: wordList,
+		allowed: new Set(wordList)
+	};
+}
