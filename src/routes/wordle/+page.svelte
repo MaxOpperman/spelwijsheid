@@ -79,10 +79,21 @@
 		const currentIndex = game.answers.length;
 
 		if (key === 'backspace') {
-			game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1);
+			if (game.guesses[currentIndex].slice(-1) === 'ĳ') {
+				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'i';
+			} else {
+				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1);
+			}
 			if (badGuess) badGuess = false;
 		} else if (game.guesses[currentIndex].length < 5) {
-			game.guesses[currentIndex] += key;
+			if (game.guesses[currentIndex].slice(-1) === 'i' && key === 'j') {
+				// Special case for Dutch ĳ digraph
+				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
+			} else {
+				game.guesses[currentIndex] += key;
+			}
+		} else if (game.guesses[currentIndex].length === 5 && game.guesses[currentIndex].slice(-1) === 'i' && key === 'j') {
+			game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
 		}
 
 		// Create new Game instance to trigger reactivity
@@ -224,7 +235,7 @@
 						back
 					</button>
 
-					{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row (row)}
+					{#each ['qwertyuiop', 'asdfghjklĳ', 'zxcvbnm'] as row (row)}
 						<div class="row">
 							{#each row as letter, index (index)}
 								<button

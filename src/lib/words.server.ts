@@ -59,7 +59,7 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 			if (maxLength !== undefined && word.length > maxLength) return false;
 			
 			// Apply alphabetic filter
-			if (alphabeticOnly && !/^[a-zA-Z]+$/.test(word)) return false;
+            if (alphabeticOnly && !/^[a-zA-ZĳĲ]+$/.test(word)) return false;
 			
 			return true;
 		})
