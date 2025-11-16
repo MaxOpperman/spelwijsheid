@@ -89,7 +89,7 @@
 	<title>Spelwijsheid</title>
 </svelte:head>
 
-<h1>Spelwijsheid - Spelwijzer Oplossingen</h1>
+<h1>Spelwijsheid - Spelwijze Oplossingen</h1>
 
 <div class="help-link">
 	<a href="{base}/solver/how-to-play">❓ Hoe werkt de Solver?</a>

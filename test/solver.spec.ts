@@ -1,26 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import generateFilteredWords from '../src/lib/solver';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { getSolverWords } from '../src/lib/words.server';
 
-// Load a subset of the Dutch word list for testing (including shorter words for test purposes)
-const filePath = path.resolve('node_modules/dictionary-nl/index.dic');
-const fileContent = readFileSync(filePath, 'utf-8');
-const allWords = fileContent
-	.split('\n')
-	.map(line => line.split('/')[0].trim())
-	.filter(word => {
-		if (word.length === 0) return false;
-		const charCount = word.replace(/ij/g, 'x').length;
-		return charCount >= 4 && charCount <= 8; // Include 4+ char words for testing
-	});
+// Load the Dutch word list for testing
+const allWords = getSolverWords();
 
 describe('generateFilteredWords', () => {
 	it('example from how-to-play (b a n d) returns expected words', () => {
 		const inputs = ['b', 'a', 'n', 'd'];
 		const results = generateFilteredWords(allWords, inputs, false);
-		
-		console.log('Results for [b,a,n,d]:', results);
 		
 		// Check if common expected words are present
 		expect(results).toContain('band');
@@ -40,13 +28,12 @@ describe('generateFilteredWords', () => {
 				expect(['b', 'a', 'n', 'd']).toContain(char);
 			});
 		});
+		expect(results.length).toEqual(new Set(results).size);
 	});
 
 	it('when ij is provided it matches words containing ij correctly', () => {
 		const inputs = ['z', 'ij', 'e', 'r'];
 		const results = generateFilteredWords(allWords, inputs, false);
-		
-		console.log('Results for [ij,z,e,r]:', results.slice(0, 10));
 		
 		// All results should contain 'z' since it's mandatory (first char)
 		results.forEach(word => {
@@ -54,8 +41,39 @@ describe('generateFilteredWords', () => {
 		});
 		
 		// Should only contain words that use ij, z, e, r
-		expect(results.length).toBeGreaterThan(0);
+        expect(results).toContain('rĳĳzer');
+        expect(results).toContain('zeer');
+        expect(results).toContain('zere');
+		expect(results).toContain('ĳzer');
+		expect(results.length).toBe(4);
+	});
 
-        expect(results).toContain('ijzer');
+	it('when ij is provided at the start', () => {
+		const inputs = ['ij', 'd', 'e', 'l', 'm', 'a', 'n'];
+		const results = generateFilteredWords(allWords, inputs, false);
+
+		// All results should contain 'ij' since it's mandatory (first char)
+		results.forEach(word => {
+			expect(word.toLowerCase()).toContain('ĳ');
+		});
+
+		// Should only contain words that use ij, d, e, l, m, a, n
+		expect(results).toContain('ĳdel');
+		expect(results).toContain('dĳen');
+		expect(results).toContain('ĳlen');
+		expect(results).toContain('mĳne');
+		expect(results).toContain('lĳden');
+		expect(results).toContain('lĳmen');
+		expect(results).toContain('lĳnen');
+		expect(results).toContain('meelĳ');
+		expect(results).toContain('mĳden');
+		expect(results).toContain('mĳnen');
+		expect(results).toContain('aanlĳn');
+		expect(results).toContain('damlĳn');
+		expect(results).toContain('deellĳn');
+		expect(results).toContain('lĳnmeel');
+		expect(results).toContain('medelĳden');
+		expect(results).toContain('medelĳdend');
+		expect(results.length).toBe(16);
 	});
 });
