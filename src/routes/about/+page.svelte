@@ -8,7 +8,7 @@
 
 	<p>
 		Deze app is gemaakt door Max Opperman als een demonstratie van SvelteKit. Het doel is om een
-		simpel te gebruiken hulpmiddel te bieden voor het oplossen van de Spelwijzer puzzels. De code is
+		simpel te gebruiken hulpmiddel te bieden voor het oplossen van de Spelwijze puzzels. De code is
 		volledig open-source en beschikbaar op:
 	</p>
 

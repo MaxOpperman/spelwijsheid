@@ -5,6 +5,10 @@
  * @returns An array of filtered words.
  */
 export default function generateFilteredWords(wordList: string[], inputChars: string[], lowercaseModeParam: boolean): string[] {
+    if (inputChars.includes('ij')) {
+        // replace 'ij' with a placeholder to treat it as a single character
+        inputChars = inputChars.map(char => (char === 'ij' ? 'ĳ' : char));
+    }
     // Filter words that contain only a subset of the available characters
     // The first character (mandatory) must always be present in the word
     const filteredWords = wordList.filter(word => {
@@ -22,7 +26,7 @@ export default function generateFilteredWords(wordList: string[], inputChars: st
         let i = 0;
         while (i < normalizedWord.length) {
             if (i < normalizedWord.length - 1 && normalizedWord.substring(i, i + 2) === 'ij') {
-                wordCharsSet.add('ij');
+                wordCharsSet.add('ĳ');
                 i += 2;
             } else {
                 wordCharsSet.add(normalizedWord[i]);
@@ -43,6 +47,9 @@ export default function generateFilteredWords(wordList: string[], inputChars: st
         return true;
     });
     
+    // Remove duplicates by converting to Set and back to array
+    const uniqueWords = Array.from(new Set(filteredWords));
+    
     // Sort results by length (shorter words first)
-    return filteredWords.sort((a, b) => a.length - b.length);
+    return uniqueWords.sort((a, b) => a.length - b.length);
 }

@@ -17,7 +17,7 @@
 			</picture>
 		</span>
 
-		Welke walvis kan altijd de Spelwijzer oplossen?
+		Welke walvis kan altijd de Spelwijze oplossen?
 		<br />
 		<br />
 		De Oréka! 

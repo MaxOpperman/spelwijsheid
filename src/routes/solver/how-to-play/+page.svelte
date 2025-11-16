@@ -1,14 +1,14 @@
 <svelte:head>
-	<title>Hoe werkt de Spelwijzer Solver</title>
-	<meta name="description" content="Uitleg over hoe de Spelwijzer Solver werkt" />
+	<title>Hoe werkt de Spelwijze Solver</title>
+	<meta name="description" content="Uitleg over hoe de Spelwijze Solver werkt" />
 </svelte:head>
 
 <div class="content-container">
-	<h1>Hoe werkt de Spelwijzer Solver</h1>
+	<h1>Hoe werkt de Spelwijze Solver</h1>
 
 	<div class="info-card">
 		<p>
-			De Spelwijzer Solver helpt je woorden te vinden op basis van beschikbare letters. Voer tot 8 letters in om alle mogelijke Nederlandse woorden te vinden. Bijvoorbeeld:
+			De Spelwijze Solver helpt je woorden te vinden op basis van beschikbare letters. Voer tot 8 letters in om alle mogelijke Nederlandse woorden te vinden. Bijvoorbeeld:
 		</p>
 
 		<div class="example">

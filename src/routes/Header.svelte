@@ -27,7 +27,10 @@
 				<a href="{base}/about">About</a>
 			</li>
 			<li aria-current={page.url.pathname.startsWith(`${base}/solver`) ? 'page' : undefined}>
-				<a href="{base}/solver">Spelwijzer Solver</a>
+				<a href="{base}/solver">Spelwijze Solver</a>
+			</li>
+			<li aria-current={page.url.pathname.startsWith(`${base}/wordle`) ? 'page' : undefined}>
+				<a href="{base}/wordle">Wordle</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
@@ -65,6 +68,10 @@
 	header {
 		display: flex;
 		justify-content: space-between;
+		width: 100%;
+		max-width: 100vw; /* Prevent horizontal overflow */
+		box-sizing: border-box; /* Include padding/border in width calculation */
+		overflow-x: hidden; /* Hide any horizontal overflow */
 	}
 
 	.corner {
@@ -73,6 +80,7 @@
 		gap: 0.5rem;
 		width: auto;
 		height: 3em;
+		margin: 0 0.5rem; /* Add horizontal margin */
 	}
 
 	.corner a {
@@ -89,6 +97,8 @@
 		padding: 4px;
 		cursor: pointer;
 		transition: transform 0.2s ease;
+		margin-left: 0.5rem; /* Add left margin to separate from other elements */
+		flex-shrink: 0; /* Prevent shrinking */
 	}
 
 	.dark-mode-toggle:hover {
@@ -104,6 +114,7 @@
 		transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 		background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
 		box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+		flex-shrink: 0; /* Prevent shrinking */
 	}
 
 	:global(.dark) .toggle-background {
@@ -443,5 +454,21 @@
 
 	a:hover {
 		color: var(--color-theme-1);
+	}
+
+	/* Responsive design for smaller screens */
+	@media (max-width: 768px) {
+		.corner {
+			margin: 0 0.25rem; /* Reduce margin on small screens */
+		}
+		
+		.dark-mode-toggle {
+			margin-left: 0.25rem; /* Reduce margin on small screens */
+		}
+		
+		nav a {
+			padding: 0 0.3rem; /* Reduce padding on small screens */
+			font-size: 0.7rem; /* Slightly smaller text */
+		}
 	}
 </style>
