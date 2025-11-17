@@ -92,7 +92,7 @@
 <h1>Spelwijsheid - Spelwijze Oplossingen</h1>
 
 <div class="help-link">
-	<a href="{base}/solver/how-to-play">Hoe werkt de Solver?</a>
+	<a href="{base}/spelwijze-solver/how-to-play">Hoe werkt de Spelwijze Solver?</a>
 </div>
 
 <fieldset>
