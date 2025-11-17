@@ -189,15 +189,15 @@
 <h1 class="visually-hidden">Wordle</h1>
 
 <div class="wordle-container">
-	<a class="how-to-play" href="{base}/wordle/how-to-play">How to play</a>
+	<a class="how-to-play" href="{base}/wordle/how-to-play">Hoe te spelen</a>
 
 		<!-- Indicator showing whether the answer uses the ĳ digraph -->
 		{#if game}
 			<div class="digraph-indicator" aria-live="polite">
 				{#if answerUsesDigraph}
-					<span class="badge digraph">Uses ĳ (digraph)</span>
+					<span class="badge digraph">Gebruikt ĳ (digraph)</span>
 				{:else}
-					<span class="badge separate">Uses i + j (separate)</span>
+					<span class="badge separate">Gebruikt i + j (apart)</span>
 				{/if}
 			</div>
 		{/if}
@@ -238,10 +238,10 @@
 		<div class="controls">
 			{#if won || game.answers.length >= 6}
 				{#if !won && game.answer}
-					<p>the answer was "{game.answer}"</p>
+					<p>het antwoord was "{game.answer}"</p>
 				{/if}
 				<button onclick={restart} class="restart selected">
-					{won ? 'you won :)' : `game over :(`} play again?
+					{won ? 'je hebt gewonnen :)' : `spel afgelopen :(`} opnieuw spelen?
 				</button>
 			{:else}
 				<div class="keyboard">
@@ -251,7 +251,7 @@
 						onclick={handleClick}
 						data-key="backspace"
 					>
-						back
+						terug
 					</button>
 
 					{#each ['qwertyuiop', 'asdfghjklĳ', 'zxcvbnm'] as row (row)}
