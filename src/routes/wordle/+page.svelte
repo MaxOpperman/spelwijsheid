@@ -26,6 +26,8 @@
 	/** The current guess */
 	let currentGuess = $derived(game?.guesses[i] || '');
 
+	/** Whether the current answer uses the Unicode digraph ĳ */
+	let answerUsesDigraph = $derived((game?.answer ?? '').includes('ĳ'));
 	/** Whether the current guess can be submitted */
 	let submittable = $derived(currentGuess.length === 5);
 
@@ -79,21 +81,27 @@
 		const currentIndex = game.answers.length;
 
 		if (key === 'backspace') {
-			if (game.guesses[currentIndex].slice(-1) === 'ĳ') {
+			// If the answer uses the digraph, treat ĳ as a single backspace target
+			if (answerUsesDigraph && game.guesses[currentIndex].slice(-1) === 'ĳ') {
 				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'i';
 			} else {
 				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1);
 			}
 			if (badGuess) badGuess = false;
 		} else if (game.guesses[currentIndex].length < 5) {
-			if (game.guesses[currentIndex].slice(-1) === 'i' && key === 'j') {
-				// Special case for Dutch ĳ digraph
+			// Special case for Dutch ĳ digraph: only convert if the answer actually uses the digraph
+			if (answerUsesDigraph && game.guesses[currentIndex].slice(-1) === 'i' && key === 'j') {
 				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
 			} else {
 				game.guesses[currentIndex] += key;
 			}
 		} else if (game.guesses[currentIndex].length === 5 && game.guesses[currentIndex].slice(-1) === 'i' && key === 'j') {
-			game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
+			if (answerUsesDigraph) {
+				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
+			} else {
+				// If digraph is not used, treat 'i'+'j' as two characters; append 'j'
+				game.guesses[currentIndex] += 'j';
+			}
 		}
 
 		// Create new Game instance to trigger reactivity
@@ -182,6 +190,17 @@
 
 <div class="wordle-container">
 	<a class="how-to-play" href="{base}/wordle/how-to-play">How to play</a>
+
+		<!-- Indicator showing whether the answer uses the ĳ digraph -->
+		{#if game}
+			<div class="digraph-indicator" aria-live="polite">
+				{#if answerUsesDigraph}
+					<span class="badge digraph">Uses ĳ (digraph)</span>
+				{:else}
+					<span class="badge separate">Uses i + j (separate)</span>
+				{/if}
+			</div>
+		{/if}
 
 	{#if game}
 		<div class="grid" class:playing={!won} class:bad-guess={badGuess}>
@@ -462,6 +481,30 @@
 		background: var(--color-primary);
 		color: var(--color-surface);
 		outline: none;
+	}
+
+	.digraph-indicator {
+		margin-top: -0.5rem;
+		margin-bottom: 0.25rem;
+		display: flex;
+		justify-content: center;
+	}
+
+	.badge {
+		padding: 0.25rem 0.6rem;
+		border-radius: 999px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-bg-0);
+	}
+
+	.badge.digraph {
+		background: var(--color-accent);
+	}
+
+	.badge.separate {
+		background: rgba(0,0,0,0.12);
+		color: var(--color-text);
 	}
 
 	@keyframes wiggle {

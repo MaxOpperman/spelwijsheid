@@ -15,6 +15,8 @@ export interface WordFilterConfig {
 	lowercase?: boolean;
 	/** Whether to filter only alphabetic characters */
 	alphabeticOnly?: boolean;
+	/** Whether to split 'ij' digraph into two characters */
+	splitIjDigraph?: boolean;
 }
 
 let cachedWords: string[] | null = null;
@@ -43,27 +45,41 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		exactLength,
 		maxLength,
 		lowercase = false,
-		alphabeticOnly = false
+		alphabeticOnly = false,
+		splitIjDigraph = false,
 	} = config;
 
 	const rawWords = loadRawWords();
 	
 	return rawWords
 		.filter(word => {
-            // Remove words where 'ij' are together
-            if (word.includes('ij')) return false;
+			// Calculate the effective length considering ij digraph splitting
+			let effectiveLength = word.length;
+			if (splitIjDigraph) {
+				// Count how many 'ij' occurrences will add an extra character
+				const ijCount = (word.match(/ij/g) || []).length;
+				const ijUpperCount = (word.match(/ĳ/g) || []).length;
+				const IJUpperCount = (word.match(/Ĳ/g) || []).length;
+				effectiveLength += ijCount + ijUpperCount + IJUpperCount;
+			}
 			
-			// Apply length filters
-			if (minLength !== undefined && word.length < minLength) return false;
-			if (exactLength !== undefined && word.length !== exactLength) return false;
-			if (maxLength !== undefined && word.length > maxLength) return false;
+			// Apply length filters based on effective length
+			if (minLength !== undefined && effectiveLength < minLength) return false;
+			if (exactLength !== undefined && effectiveLength !== exactLength) return false;
+			if (maxLength !== undefined && effectiveLength > maxLength) return false;
 			
 			// Apply alphabetic filter
-            if (alphabeticOnly && !/^[a-zA-ZĳĲ]+$/.test(word)) return false;
-			
+			if (alphabeticOnly && !/^[a-zA-ZĳĲ]+$/.test(word)) return false;
+
 			return true;
 		})
-		.map(word => lowercase ? word.toLowerCase() : word);
+		.map(word => {
+			// Map 'ij' digraph into two characters if splitIjDigraph is true
+			if (splitIjDigraph) {
+				word = word.replace(/ij/g, 'i' + 'j').replace(/ĳ/g, 'i' + 'j').replace(/Ĳ/g, 'I' + 'J');
+			}
+			return lowercase ? word.toLowerCase() : word;
+		});
 }
 
 /**
@@ -76,10 +92,13 @@ export function getSolverWords(): string[] {
 /**
  * Get words for Wordle (exactly 5 characters, lowercase, alphabetic only)
  */
-export function getWordleWords(): string[] {
+export function getWordleWords(config: WordFilterConfig = {}): string[] {
 	return getFilteredWords({ 
-		exactLength: 5, 
-		lowercase: true, 
-		alphabeticOnly: true 
+		minLength: config.minLength,
+		exactLength: config.exactLength ?? 5,
+		maxLength: config.maxLength,
+		lowercase: config.lowercase ?? true,
+		alphabeticOnly: config.alphabeticOnly ?? true,
+		splitIjDigraph: config.splitIjDigraph ?? false,
 	});
 }

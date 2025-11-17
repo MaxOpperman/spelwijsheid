@@ -15,5 +15,5 @@ This app is programmed in Svelte to broaden my experience with frameworks. A sma
 I want to create some more content:
 
 - Impossible Wordle; tries to pick the word that is the furthest away from what you have currently guessed to make it as hard as possible. So the word is changed based on your attempts.
-- Wordle solver
+- LinkedIn games: N-queens with a twist; word games
 - Localization; also changes the dictionary accordingly!

@@ -29,11 +29,14 @@
 			<li aria-current={page.url.pathname.startsWith(`${base}/spelwijze`) ? 'page' : undefined}>
 				<a href="{base}/spelwijze">Spelwijze</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith(`${base}/wordle`) ? 'page' : undefined}>
+			<li aria-current={page.url.pathname.startsWith(`${base}/wordle`) && !page.url.pathname.startsWith(`${base}/wordle-solver`) ? 'page' : undefined}>
 				<a href="{base}/wordle">Wordle</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith(`${base}/solver`) ? 'page' : undefined}>
-				<a href="{base}/solver">Spelwijze Solver</a>
+			<li aria-current={page.url.pathname.startsWith(`${base}/wordle-solver`) ? 'page' : undefined}>
+				<a href="{base}/wordle-solver">Wordle Solver</a>
+			</li>
+			<li aria-current={page.url.pathname.startsWith(`${base}/spelwijze-solver`) ? 'page' : undefined}>
+				<a href="{base}/spelwijze-solver">Spelwijze Solver</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
