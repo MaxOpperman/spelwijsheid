@@ -74,6 +74,19 @@ describe('generateFilteredWords', () => {
 		expect(results).toContain('lĳnmeel');
 		expect(results).toContain('medelĳden');
 		expect(results).toContain('medelĳdend');
-		expect(results.length).toBe(16);
+		// OpenTaal has more words than the original dictionary
+		expect(results.length).toBeGreaterThanOrEqual(16);
+	});
+
+	it('should handle case i and j split correctly', () => {
+		const inputs = ['a', 'b', 'd', 'i', 'j'];
+
+		const results = generateFilteredWords(allWords, inputs, false);
+
+		// Should contain words that use a, b, d, i, j
+		// When separate 'i' and 'j' are provided, they can form 'ij' digraph in words
+		expect(results).toContain('abdĳ'); // Word contains 'ij' as digraph character
+		expect(results).toContain('baba');
+		expect(results).toContain('daad');
 	});
 });
