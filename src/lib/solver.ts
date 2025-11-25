@@ -9,6 +9,16 @@ export default function generateFilteredWords(wordList: string[], inputChars: st
         // replace 'ij' with a placeholder to treat it as a single character
         inputChars = inputChars.map(char => (char === 'ij' ? 'ĳ' : char));
     }
+    
+    // Convert input characters to lowercase set
+    const availableCharsSet = new Set(inputChars.map(char => char.toLowerCase()));
+    
+    // Check if both 'i' and 'j' are available separately (can also match 'ĳ' digraph)
+    const canFormDigraph = availableCharsSet.has('i') && availableCharsSet.has('j');
+    if (canFormDigraph) {
+        availableCharsSet.add('ĳ');
+    }
+    
     // Filter words that contain only a subset of the available characters
     // The first character (mandatory) must always be present in the word
     const filteredWords = wordList.filter(word => {
@@ -33,9 +43,6 @@ export default function generateFilteredWords(wordList: string[], inputChars: st
                 i += 1;
             }
         }
-        
-        // Convert input characters to lowercase set
-        const availableCharsSet = new Set(inputChars.map(char => char.toLowerCase()));
         
         // Check if all unique characters in the word are available in input
         for (const wordChar of wordCharsSet) {

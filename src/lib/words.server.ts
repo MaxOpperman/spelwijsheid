@@ -26,11 +26,12 @@ let cachedWords: string[] | null = null;
  */
 function loadRawWords(): string[] {
 	if (cachedWords === null) {
-		const filePath = path.resolve('node_modules/dictionary-nl/index.dic');
+		// Path to the OpenTaal wordlist in the static directory
+		const filePath = path.resolve('static/wordlist.txt');
 		const fileContent = readFileSync(filePath, 'utf-8');
 		cachedWords = fileContent
 			.split('\n')
-			.map(line => line.split('/')[0].trim()) // Extract words before any metadata
+			.map(line => line.trim())
 			.filter(word => word.length > 0); // Remove empty lines
 	}
 	return cachedWords;
@@ -53,32 +54,34 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 	
 	return rawWords
 		.filter(word => {
-			// Calculate the effective length considering ij digraph splitting
-			let effectiveLength = word.length;
-			if (splitIjDigraph) {
-				// Count how many 'ij' occurrences will add an extra character
-				const ijCount = (word.match(/ij/g) || []).length;
-				const ijUpperCount = (word.match(/ĳ/g) || []).length;
-				const IJUpperCount = (word.match(/Ĳ/g) || []).length;
-				effectiveLength += ijCount + ijUpperCount + IJUpperCount;
-			}
+			// For digraph mode (splitIjDigraph = false), convert 'ij' to 'ĳ' for length calculation
+			// For split mode (splitIjDigraph = true), keep 'ij' as two characters
+			const processedWord = splitIjDigraph 
+				? word 
+				: word.replace(/ij/g, 'ĳ').replace(/IJ/g, 'Ĳ').replace(/Ij/g, 'Ĳ');
+			
+			const effectiveLength = processedWord.length;
 			
 			// Apply length filters based on effective length
 			if (minLength !== undefined && effectiveLength < minLength) return false;
 			if (exactLength !== undefined && effectiveLength !== exactLength) return false;
 			if (maxLength !== undefined && effectiveLength > maxLength) return false;
 			
-			// Apply alphabetic filter
-			if (alphabeticOnly && !/^[a-zA-ZĳĲ]+$/.test(word)) return false;
+			// Apply alphabetic filter (check original word)
+			if (alphabeticOnly && !/^[a-zA-Z]+$/.test(word)) return false;
 
 			return true;
 		})
 		.map(word => {
-			// Map 'ij' digraph into two characters if splitIjDigraph is true
+			// Convert based on mode
 			if (splitIjDigraph) {
-				word = word.replace(/ij/g, 'i' + 'j').replace(/ĳ/g, 'i' + 'j').replace(/Ĳ/g, 'I' + 'J');
+				// Split mode: keep ij as two characters (original format from OpenTaal)
+				return lowercase ? word.toLowerCase() : word;
+			} else {
+				// Digraph mode: convert ij to ĳ single character
+				word = word.replace(/ij/g, 'ĳ').replace(/IJ/g, 'Ĳ').replace(/Ij/g, 'Ĳ');
+				return lowercase ? word.toLowerCase() : word;
 			}
-			return lowercase ? word.toLowerCase() : word;
 		});
 }
 
