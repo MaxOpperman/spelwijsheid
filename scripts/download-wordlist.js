@@ -2,10 +2,11 @@ import { createWriteStream } from 'fs';
 import { mkdir } from 'fs/promises';
 import { pipeline } from 'stream/promises';
 import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const WORDLIST_URL = 'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt';
 const LICENSE_URL = 'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/LICENSE.txt';
-const OUTPUT_PATH = new URL('../static/wordlist.txt', import.meta.url).pathname.substring(1); // Remove leading slash on Windows
+const OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist.txt', import.meta.url));
 
 async function downloadWordlist() {
 	console.log('Downloading OpenTaal wordlist...');
@@ -21,7 +22,7 @@ async function downloadWordlist() {
 		if (!licenseResponse.ok) {
 			throw new Error(`Failed to download license: ${licenseResponse.statusText}`);
 		}
-		const licensePath = new URL('../static/LICENSE.md', import.meta.url).pathname.substring(1);
+		const licensePath = fileURLToPath(new URL('../static/LICENSE.md', import.meta.url));
 		const licenseStream = createWriteStream(licensePath);
 		await pipeline(licenseResponse.body, licenseStream);
 
