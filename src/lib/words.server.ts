@@ -111,7 +111,8 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
  */
 export function getSolverWords(config: WordFilterConfig = {}): string[] {
 	return getFilteredWords({
-		minLength: 4,
+		...config,
+		minLength: config.minLength ?? 4,
 		normalizeAccents: config.normalizeAccents ?? true
 	});
 }
@@ -121,9 +122,8 @@ export function getSolverWords(config: WordFilterConfig = {}): string[] {
  */
 export function getWordleWords(config: WordFilterConfig = {}): string[] {
 	return getFilteredWords({
-		minLength: config.minLength,
+		...config,
 		exactLength: config.exactLength ?? 5,
-		maxLength: config.maxLength,
 		lowercase: config.lowercase ?? true,
 		alphabeticOnly: config.alphabeticOnly ?? true,
 		splitIjDigraph: config.splitIjDigraph ?? false,
