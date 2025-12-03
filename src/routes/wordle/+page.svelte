@@ -43,7 +43,7 @@
 		 */
 		let description: Record<string, string> = {};
 		if (!game) return { classnames, description };
-		
+
 		game.answers.forEach((answer, i) => {
 			const guess = game ? game.guesses[i] : '';
 			for (let i = 0; i < 5; i += 1) {
@@ -95,7 +95,11 @@
 			} else {
 				game.guesses[currentIndex] += key;
 			}
-		} else if (game.guesses[currentIndex].length === 5 && game.guesses[currentIndex].slice(-1) === 'i' && key === 'j') {
+		} else if (
+			game.guesses[currentIndex].length === 5 &&
+			game.guesses[currentIndex].slice(-1) === 'i' &&
+			key === 'j'
+		) {
 			if (answerUsesDigraph) {
 				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
 			} else {
@@ -191,16 +195,16 @@
 <div class="wordle-container">
 	<a class="how-to-play" href="{base}/wordle/how-to-play">Hoe te spelen</a>
 
-		<!-- Indicator showing whether the answer uses the ĳ digraph -->
-		{#if game}
-			<div class="digraph-indicator" aria-live="polite">
-				{#if answerUsesDigraph}
-					<span class="badge digraph">Gebruikt ĳ (digraph)</span>
-				{:else}
-					<span class="badge separate">Gebruikt i + j (apart)</span>
-				{/if}
-			</div>
-		{/if}
+	<!-- Indicator showing whether the answer uses the ĳ digraph -->
+	{#if game}
+		<div class="digraph-indicator" aria-live="polite">
+			{#if answerUsesDigraph}
+				<span class="badge digraph">Gebruikt ĳ (digraph)</span>
+			{:else}
+				<span class="badge separate">Gebruikt i + j (apart)</span>
+			{/if}
+		</div>
+	{/if}
 
 	{#if game}
 		<div class="grid" class:playing={!won} class:bad-guess={badGuess}>
@@ -245,14 +249,14 @@
 				</button>
 			{:else}
 				<div class="keyboard">
-					<button onclick={handleClick} data-key="enter" class:selected={submittable} disabled={!submittable}>enter</button>
-
 					<button
 						onclick={handleClick}
-						data-key="backspace"
+						data-key="enter"
+						class:selected={submittable}
+						disabled={!submittable}>enter</button
 					>
-						terug
-					</button>
+
+					<button onclick={handleClick} data-key="backspace"> terug </button>
 
 					{#each ['qwertyuiop', 'asdfghjklĳ', 'zxcvbnm'] as row (row)}
 						<div class="row">
@@ -503,7 +507,7 @@
 	}
 
 	.badge.separate {
-		background: rgba(0,0,0,0.12);
+		background: rgba(0, 0, 0, 0.12);
 		color: var(--color-text);
 	}
 

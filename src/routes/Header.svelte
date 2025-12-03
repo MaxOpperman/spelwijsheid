@@ -3,29 +3,29 @@
 	import { dev } from '$app/environment';
 	import github from '$lib/images/github.svg';
 	import DarkModeToggle from '$lib/components/DarkModeToggle.svelte';
-	
+
 	// Get base path - empty in dev, /Spelwijsheid in production
 	const base = dev ? '' : '/Spelwijsheid';
-	
+
 	let solversOpen = $state(false);
 	let mobileMenuOpen = $state(false);
-	
+
 	function toggleSolvers() {
 		solversOpen = !solversOpen;
 	}
-	
+
 	function closeSubmenu() {
 		solversOpen = false;
 	}
-	
+
 	function toggleMenu() {
 		mobileMenuOpen = !mobileMenuOpen;
 	}
-	
+
 	function closeMenu() {
 		mobileMenuOpen = false;
 	}
-	
+
 	function closeMenuAndSubmenu() {
 		mobileMenuOpen = false;
 		solversOpen = false;
@@ -39,7 +39,12 @@
 		</a>
 	</div>
 
-	<button class="mobile-menu-toggle" onclick={toggleMenu} aria-label="Toggle menu" aria-expanded={mobileMenuOpen}>
+	<button
+		class="mobile-menu-toggle"
+		onclick={toggleMenu}
+		aria-label="Toggle menu"
+		aria-expanded={mobileMenuOpen}
+	>
 		<span class="hamburger"></span>
 	</button>
 
@@ -48,16 +53,30 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li aria-current={page.url.pathname === `${base}/` || (base === '' && page.url.pathname === '/') ? 'page' : undefined}>
+			<li
+				aria-current={page.url.pathname === `${base}/` || (base === '' && page.url.pathname === '/')
+					? 'page'
+					: undefined}
+			>
 				<a href="{base}/" onclick={closeMenuAndSubmenu}>Home</a>
 			</li>
 			<li aria-current={page.url.pathname === `${base}/about` ? 'page' : undefined}>
 				<a href="{base}/about" onclick={closeMenuAndSubmenu}>About</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith(`${base}/spelwijze`) && !page.url.pathname.startsWith(`${base}/spelwijze-solver`) ? 'page' : undefined}>
+			<li
+				aria-current={page.url.pathname.startsWith(`${base}/spelwijze`) &&
+				!page.url.pathname.startsWith(`${base}/spelwijze-solver`)
+					? 'page'
+					: undefined}
+			>
 				<a href="{base}/spelwijze" onclick={closeMenuAndSubmenu}>Spelwijze</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith(`${base}/wordle`) && !page.url.pathname.startsWith(`${base}/wordle-solver`) ? 'page' : undefined}>
+			<li
+				aria-current={page.url.pathname.startsWith(`${base}/wordle`) &&
+				!page.url.pathname.startsWith(`${base}/wordle-solver`)
+					? 'page'
+					: undefined}
+			>
 				<a href="{base}/wordle" onclick={closeMenuAndSubmenu}>Wordle</a>
 			</li>
 			<li class="has-submenu" class:submenu-open={solversOpen}>
@@ -65,10 +84,18 @@
 					Solvers <span class="arrow">▼</span>
 				</button>
 				<ul class="submenu">
-					<li aria-current={page.url.pathname.startsWith(`${base}/wordle-solver`) ? 'page' : undefined}>
+					<li
+						aria-current={page.url.pathname.startsWith(`${base}/wordle-solver`)
+							? 'page'
+							: undefined}
+					>
 						<a href="{base}/wordle-solver" onclick={closeMenu}>Wordle Solver</a>
 					</li>
-					<li aria-current={page.url.pathname.startsWith(`${base}/spelwijze-solver`) ? 'page' : undefined}>
+					<li
+						aria-current={page.url.pathname.startsWith(`${base}/spelwijze-solver`)
+							? 'page'
+							: undefined}
+					>
 						<a href="{base}/spelwijze-solver" onclick={closeMenu}>Spelwijze Solver</a>
 					</li>
 				</ul>
@@ -316,15 +343,15 @@
 			top: 7px;
 		}
 
-		.mobile-menu-toggle[aria-expanded="true"] .hamburger {
+		.mobile-menu-toggle[aria-expanded='true'] .hamburger {
 			background: transparent;
 		}
 
-		.mobile-menu-toggle[aria-expanded="true"] .hamburger::before {
+		.mobile-menu-toggle[aria-expanded='true'] .hamburger::before {
 			transform: rotate(45deg) translate(5px, 5px);
 		}
 
-		.mobile-menu-toggle[aria-expanded="true"] .hamburger::after {
+		.mobile-menu-toggle[aria-expanded='true'] .hamburger::after {
 			transform: rotate(-45deg) translate(5px, -5px);
 		}
 
@@ -341,7 +368,7 @@
 			flex-direction: column;
 			justify-content: flex-start;
 			padding-top: 4rem;
-			box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+			box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 		}
 
 		nav.mobile-open {

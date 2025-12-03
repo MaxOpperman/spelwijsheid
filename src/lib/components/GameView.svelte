@@ -25,7 +25,7 @@
 				<span class="optional">{char}</span>
 			{/each}
 		</div>
-		
+
 		<div class="game-stats">
 			<div class="stat">
 				<span class="label">Tijd:</span>
@@ -40,16 +40,12 @@
 				<span class="value">{completionPercentage}%</span>
 			</div>
 		</div>
-		
+
 		<div class="game-controls">
 			{#if gamePaused}
-				<button class="resume-button" on:click={onResumeGame}>
-					▶️ Doorgaan
-				</button>
+				<button class="resume-button" on:click={onResumeGame}> ▶️ Doorgaan </button>
 			{:else}
-				<button class="pause-button" on:click={onPauseGame}>
-					⏸️ Pauzeren
-				</button>
+				<button class="pause-button" on:click={onPauseGame}> ⏸️ Pauzeren </button>
 			{/if}
 		</div>
 	</div>
@@ -59,7 +55,7 @@
 			<input
 				type="text"
 				bind:value={wordInput}
-				placeholder={gamePaused ? "Spel is gepauzeerd..." : "Typ een woord..."}
+				placeholder={gamePaused ? 'Spel is gepauzeerd...' : 'Typ een woord...'}
 				on:keydown={onKeydown}
 				disabled={gameComplete || gamePaused}
 			/>
@@ -89,9 +85,7 @@
 	</div>
 
 	<div class="game-actions">
-		<button class="reset-button" on:click={onResetGame}>
-			Nieuw spel
-		</button>
+		<button class="reset-button" on:click={onResetGame}> Nieuw spel </button>
 	</div>
 </div>
 
@@ -303,7 +297,8 @@
 		gap: 0.5rem;
 	}
 
-	.pause-button, .resume-button {
+	.pause-button,
+	.resume-button {
 		background: var(--color-accent);
 		color: var(--color-surface);
 		border: none;
@@ -318,7 +313,8 @@
 		transition: all 0.2s;
 	}
 
-	.pause-button:hover, .resume-button:hover {
+	.pause-button:hover,
+	.resume-button:hover {
 		background-color: var(--color-accent);
 		filter: brightness(1.1);
 		transform: translateY(-1px);
@@ -393,9 +389,15 @@
 	}
 
 	@keyframes highlight {
-		0% { transform: scale(1); }
-		50% { transform: scale(1.05); }
-		100% { transform: scale(1); }
+		0% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.05);
+		}
+		100% {
+			transform: scale(1);
+		}
 	}
 
 	/* Responsive design */
@@ -404,16 +406,16 @@
 			flex-direction: column;
 			gap: 1rem;
 		}
-		
+
 		.game-stats {
 			flex-wrap: wrap;
 			justify-content: center;
 		}
-		
+
 		.word-input {
 			flex-direction: column;
 		}
-		
+
 		.word-input input {
 			max-width: 100%;
 		}

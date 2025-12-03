@@ -14,7 +14,9 @@
 
 	<footer>
 		<p>
-			Follow me on LinkedIn <a href="https://linkedin.com/in/max-opperman">https://linkedin.com/in/max-opperman</a>!
+			Follow me on LinkedIn <a href="https://linkedin.com/in/max-opperman"
+				>https://linkedin.com/in/max-opperman</a
+			>!
 		</p>
 	</footer>
 </div>

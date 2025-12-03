@@ -2,37 +2,37 @@
 	import type { PageData } from './$types';
 	import { dev } from '$app/environment';
 	import generateFilteredWords from '$lib/solver';
-	
+
 	// Get base path - empty in dev, /Spelwijsheid in production
 	const base = dev ? '' : '/Spelwijsheid';
-	
+
 	export let data: PageData;
-	
+
 	const MAX_CHARS = 8;
 	const wordList = data.wordList;
 
 	let chars = Array(MAX_CHARS).fill('');
 	let inputRefs: HTMLInputElement[] = [];
 	let lowercaseMode = false;
-	
+
 	// Reactive statements to automatically generate words when chars or lowercaseMode change
 	$: inputChars = chars.filter(Boolean);
-	$: results = inputChars.length >= 1 ? generateFilteredWords(wordList, inputChars, lowercaseMode) : [];
+	$: results =
+		inputChars.length >= 1 ? generateFilteredWords(wordList, inputChars, lowercaseMode) : [];
 
-	
 	function focusInput(index: number) {
 		if (inputRefs[index]) {
 			inputRefs[index].focus();
 			inputRefs[index].setSelectionRange(0, inputRefs[index].value.length);
 		}
 	}
-	
+
 	function focusNextInput(index: number) {
 		if (index < chars.length - 1) {
 			focusInput(index + 1);
 		}
 	}
-	
+
 	function focusPrevInput(index: number) {
 		if (index > 0) {
 			focusInput(index - 1);
@@ -112,7 +112,7 @@
 			/>
 		{/each}
 	</div>
-	
+
 	<div class="options">
 		<label>
 			<input type="checkbox" bind:checked={lowercaseMode} />
@@ -168,7 +168,7 @@
 		justify-items: center;
 	}
 
-	input[type="text"] {
+	input[type='text'] {
 		display: inline-flex;
 		justify-content: center;
 		align-items: center;
@@ -185,14 +185,12 @@
 		color: var(--color-text);
 	}
 
-	input[type="text"]:focus {
+	input[type='text']:focus {
 		outline: none;
 		border-color: var(--color-primary);
 		box-shadow: 0 0 0 3px var(--color-primary-light);
 		background-color: var(--color-bg-2);
 	}
-
-
 
 	h2 {
 		margin-top: 2rem;
@@ -234,7 +232,7 @@
 		background-color: var(--color-primary-light);
 	}
 
-	input[type="text"].selected {
+	input[type='text'].selected {
 		border-color: var(--color-accent);
 		border-width: 3px;
 		background-color: rgba(5, 150, 105, 0.05);
@@ -256,7 +254,7 @@
 		font-weight: 500;
 	}
 
-	.options input[type="checkbox"] {
+	.options input[type='checkbox'] {
 		width: auto;
 		max-width: none;
 		margin: 0;
