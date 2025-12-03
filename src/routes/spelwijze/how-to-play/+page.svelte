@@ -1,10 +1,3 @@
-<script lang="ts">
-	import { dev } from '$app/environment';
-	
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
-</script>
-
 <svelte:head>
 	<title>Hoe te spelen - Spelwijze</title>
 </svelte:head>
@@ -14,15 +7,24 @@
 
 	<section>
 		<h2>🎯 Doel van het spel</h2>
-		<p>Vind alle mogelijke Nederlandse woorden die je kunt maken met de willekeurig gegenereerde letters. Elke dag krijg je nieuwe letters om mee te spelen!</p>
+		<p>
+			Vind alle mogelijke Nederlandse woorden die je kunt maken met de willekeurig gegenereerde
+			letters. Elke dag krijg je nieuwe letters om mee te spelen!
+		</p>
 	</section>
 
 	<section>
 		<h2>🎮 Spelregels</h2>
 		<ol>
-			<li><strong>Automatische letters:</strong> Het spel genereert willekeurig 6-10 letters voor je</li>
-			<li><strong>Verplichte letter:</strong> De eerste letter (groen) MOET in elk woord voorkomen</li>
-			<li><strong>Optionele letters:</strong> De andere letters mag je gebruiken, maar het hoeft niet</li>
+			<li>
+				<strong>Automatische letters:</strong> Het spel genereert willekeurig 6-10 letters voor je
+			</li>
+			<li>
+				<strong>Verplichte letter:</strong> De eerste letter (groen) MOET in elk woord voorkomen
+			</li>
+			<li>
+				<strong>Optionele letters:</strong> De andere letters mag je gebruiken, maar het hoeft niet
+			</li>
 			<li><strong>Speciale regel:</strong> 'ij' telt als één letter in het Nederlands</li>
 			<li><strong>Opslag:</strong> Je voortgang wordt automatisch opgeslagen</li>
 		</ol>
@@ -75,7 +77,7 @@
 	</section>
 
 	<div class="back-link">
-		<a href="{base}/spelwijze">← Terug naar het spel</a>
+		<a href="/spelwijze">← Terug naar het spel</a>
 	</div>
 </div>
 
@@ -111,7 +113,8 @@
 		border: 1px solid var(--color-primary-light);
 	}
 
-	ol, ul {
+	ol,
+	ul {
 		margin: 1rem 0;
 		padding-left: 1.5rem;
 	}

@@ -7,12 +7,12 @@
 	let { data }: Props = $props();
 
 	// State for the solver
-	let exactPositions = $state<(string | null)[]>([null, null, null, null, null]);
-	let wrongPositions = $state<string[][]>([[], [], [], [], []]);
-	let absentLetters = $state<string>('');
-	let possibleWords = $state<string[]>([]);
-	let allowIjDigraph = $state<boolean>(true);
-	let maxDisplayedWords = $state<number>(100);
+	let exactPositions = $state([null, null, null, null, null] as (string | null)[]);
+	let wrongPositions = $state([[], [], [], [], []] as string[][]);
+	let absentLetters = $state('');
+	let possibleWords = $state([] as string[]);
+	let allowIjDigraph = $state(true);
+	let maxDisplayedWords = $state(100);
 
 	// Input refs for focus management
 	let exactInputRefs: HTMLInputElement[] = [];
@@ -20,13 +20,10 @@
 
 	// Auto-solve effect
 	$effect(() => {
-		// Track dependencies
-		exactPositions;
-		wrongPositions;
-		absentLetters;
-		allowIjDigraph;
+		// Track dependencies by reading them into a variable
+		const deps = [exactPositions, wrongPositions, absentLetters, allowIjDigraph];
 		// Call solve whenever any input changes
-		solve();
+		if (deps) solve();
 	});
 
 	function addWrongPosition(position: number, letter: string) {
@@ -36,7 +33,7 @@
 	}
 
 	function removeWrongPosition(position: number, letter: string) {
-		wrongPositions[position] = wrongPositions[position].filter(l => l !== letter);
+		wrongPositions[position] = wrongPositions[position].filter((l) => l !== letter);
 	}
 
 	function focusInput(inputs: HTMLInputElement[], index: number) {
@@ -144,42 +141,45 @@
 
 	function solve() {
 		const absent = new Set(absentLetters.toLowerCase().match(/[a-z]/g) || []);
-		const mustInclude = new Set(
-			wrongPositions.flat().map(convertToDigraph)
-		);
+		const mustInclude = new Set(wrongPositions.flat().map(convertToDigraph));
 		const wordsToSearch = allowIjDigraph ? data.wordList : data.wordListWithSplitIj;
 
-		possibleWords = wordsToSearch.filter((word: string) => {
-			// Check exact positions
-			for (let i = 0; i < 5; i++) {
-				if (exactPositions[i] && !matchesPosition(word, i, exactPositions[i]!)) {
+		const mappedWords = wordsToSearch
+			.filter((word: string) => {
+				// Check exact positions
+				for (let i = 0; i < 5; i++) {
+					if (exactPositions[i] && !matchesPosition(word, i, exactPositions[i]!)) {
+						return false;
+					}
+				}
+
+				// Check that all required letters are present
+				const cleanWord = allowIjDigraph ? word : word.replace(/-/g, '');
+				if ([...mustInclude].some((letter) => !cleanWord.includes(letter))) {
 					return false;
 				}
-			}
 
-			// Check that all required letters are present
-			const cleanWord = allowIjDigraph ? word : word.replace(/-/g, '');
-			if ([...mustInclude].some(letter => !cleanWord.includes(letter))) {
-				return false;
-			}
-
-			// Check wrong positions (letter must NOT be at this position)
-			for (let i = 0; i < 5; i++) {
-				if (wrongPositions[i].some(letter => matchesPosition(word, i, letter))) {
-					return false;
+				// Check wrong positions (letter must NOT be at this position)
+				for (let i = 0; i < 5; i++) {
+					if (wrongPositions[i].some((letter) => matchesPosition(word, i, letter))) {
+						return false;
+					}
 				}
-			}
 
-			// Check absent letters
-			for (const letter of absent) {
-				const isRequired = mustInclude.has(letter) || exactPositions.includes(letter);
-				if (!isRequired && cleanWord.includes(letter)) {
-					return false;
+				// Check absent letters
+				for (const letter of absent) {
+					const isRequired = mustInclude.has(letter) || exactPositions.includes(letter);
+					if (!isRequired && cleanWord.includes(letter)) {
+						return false;
+					}
 				}
-			}
 
-			return true;
-		}).map(word => word.replace(/-/g, ''));
+				return true;
+			})
+			.map((word) => word.replace(/-/g, ''));
+
+		// Deduplicate normalized words to avoid duplicate keys in keyed each blocks
+		possibleWords = Array.from(new Set(mappedWords));
 	}
 
 	function reset() {
@@ -188,7 +188,7 @@
 		absentLetters = '';
 		possibleWords = [];
 		maxDisplayedWords = 100;
-		[...exactInputRefs, ...wrongInputRefs].forEach(input => {
+		[...exactInputRefs, ...wrongInputRefs].forEach((input) => {
 			if (input) input.value = '';
 		});
 	}
@@ -205,15 +205,13 @@
 
 <div class="solver-container">
 	<h1>Wordle Solver</h1>
-	<p class="description">
-		Voer in wat je weet over het woord om mogelijke oplossingen te vinden
-	</p>
+	<p class="description">Voer in wat je weet over het woord om mogelijke oplossingen te vinden</p>
 
 	<div class="solver-grid">
 		<section class="input-section">
 			<h2>Exact Posities (Groen)</h2>
 			<div class="exact-positions">
-				{#each exactPositions as letter, i}
+				{#each exactPositions as letter, i (i)}
 					<input
 						type="text"
 						bind:this={exactInputRefs[i]}
@@ -232,7 +230,7 @@
 			<h2>Goede Letter, Verkeede Posities (Geel)</h2>
 			<p class="hint">Voer letters in die in het woord voorkomen maar niet op deze posities</p>
 			<div class="wrong-positions">
-				{#each wrongPositions as letters, i}
+				{#each wrongPositions as letters, i (i)}
 					<div class="position-group">
 						<div class="position-label">Positie {i + 1}</div>
 						<input
@@ -245,11 +243,8 @@
 							class="letter-input wrong"
 						/>
 						<div class="letters-list">
-							{#each letters as letter}
-								<button
-									onclick={() => removeWrongPosition(i, letter)}
-									class="letter-tag"
-								>
+							{#each letters as letter (letter)}
+								<button onclick={() => removeWrongPosition(i, letter)} class="letter-tag">
 									{letter} ×
 								</button>
 							{/each}
@@ -286,20 +281,24 @@
 		<section class="results">
 			<h2>Mogelijke Woorden ({possibleWords.length})</h2>
 			<div class="words-grid">
-				{#each possibleWords.slice(0, maxDisplayedWords) as word}
+				{#each possibleWords.slice(0, maxDisplayedWords) as word (word)}
 					<div class="word-card">{word}</div>
 				{/each}
 			</div>
 			{#if possibleWords.length > maxDisplayedWords}
 				<div class="show-more-container">
-					<p class="note">Toont de eerste {maxDisplayedWords} van {possibleWords.length} resultaten</p>
+					<p class="note">
+						Toont de eerste {maxDisplayedWords} van {possibleWords.length} resultaten
+					</p>
 					<button onclick={showMoreWords} class="show-more-button">Toon Meer Oplossingen</button>
 				</div>
 			{/if}
 		</section>
-	{:else if possibleWords.length === 0 && (exactPositions.some(p => p !== null) || wrongPositions.some(p => p.length > 0) || absentLetters)}
+	{:else if possibleWords.length === 0 && (exactPositions.some((p) => p !== null) || wrongPositions.some((p) => p.length > 0) || absentLetters)}
 		<section class="results">
-			<p class="no-results">Geen overeenkomende woorden gevonden. Probeer je criteria aan te passen.</p>
+			<p class="no-results">
+				Geen overeenkomende woorden gevonden. Probeer je criteria aan te passen.
+			</p>
 		</section>
 	{/if}
 </div>
@@ -550,7 +549,7 @@
 		cursor: pointer;
 	}
 
-	.checkbox-label input[type="checkbox"] {
+	.checkbox-label input[type='checkbox'] {
 		width: 1.2rem;
 		height: 1.2rem;
 		cursor: pointer;

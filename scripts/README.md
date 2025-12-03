@@ -5,6 +5,7 @@
 This script downloads the Dutch wordlist from [OpenTaal/opentaal-wordlist](https://github.com/OpenTaal/opentaal-wordlist) on GitHub.
 
 The wordlist is automatically downloaded:
+
 - During `npm install` (via the `postinstall` script)
 - When running `npm run download-wordlist` manually
 

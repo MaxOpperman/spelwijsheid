@@ -20,7 +20,7 @@
 		Welke walvis kan alle puzzels oplossen?
 		<br />
 		<br />
-		De Oréka! 
+		De Oréka!
 	</h1>
 </section>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import GameState from '$lib/components/GameState.svelte';
-	
+
 	export let data: PageData;
 </script>
 
