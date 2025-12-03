@@ -9,14 +9,15 @@
 	export let data: PageData;
 
 	const MAX_CHARS = 8;
-	const wordList = data.wordList;
 
 	let chars = Array(MAX_CHARS).fill('');
 	let inputRefs: HTMLInputElement[] = [];
 	let lowercaseMode = false;
+	let ignoreAccents = true;
 
-	// Reactive statements to automatically generate words when chars or lowercaseMode change
+	// Reactive statements to automatically generate words when chars, lowercaseMode, or ignoreAccents change
 	$: inputChars = chars.filter(Boolean);
+	$: wordList = ignoreAccents ? data.wordList : data.wordListWithAccents;
 	$: results = (() => {
 		if (inputChars.length < 1) return [];
 		const raw = generateFilteredWords(wordList, inputChars, lowercaseMode);
@@ -121,6 +122,10 @@
 		<label>
 			<input type="checkbox" bind:checked={lowercaseMode} />
 			Hoofdletterongevoelig zoeken
+		</label>
+		<label>
+			<input type="checkbox" bind:checked={ignoreAccents} />
+			Negeer accenten (bijv. ü → u)
 		</label>
 	</div>
 </fieldset>
@@ -244,25 +249,34 @@
 	}
 
 	.options {
-		margin-top: 1rem;
-		text-align: center;
+		margin-top: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		align-items: flex-start;
+		padding: 0 0.5rem;
 	}
 
 	.options label {
-		display: inline-flex;
+		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		font-size: 0.95rem;
+		font-size: 1rem;
 		cursor: pointer;
 		color: var(--color-text);
 		font-weight: 500;
+		transition: color 0.2s ease;
+	}
+
+	.options label:hover {
+		color: var(--color-primary);
 	}
 
 	.options input[type='checkbox'] {
-		width: auto;
-		max-width: none;
-		margin: 0;
-		padding: 0;
+		width: 1.25rem;
+		height: 1.25rem;
+		cursor: pointer;
+		accent-color: var(--color-primary);
 	}
 
 	.help-link {

@@ -144,6 +144,21 @@ describe('getSolverWords with accent normalization', () => {
 		// "reünie" should still have the accent
 		expect(words).toContain('reünie');
 	});
+
+	it('should return different word counts based on accent normalization', () => {
+		const input = ['c', 'r', 'e', 'n'];
+		const normalizedWords = generateFilteredWords(getSolverWords(), input, false);
+		const accentedWords = generateFilteredWords(
+			getSolverWords({ normalizeAccents: false }),
+			input,
+			false
+		);
+		expect(normalizedWords).toContain('creeer');
+		expect(normalizedWords).toContain('creeren');
+		expect(normalizedWords).toContain('recreeren');
+		expect(normalizedWords.length).toEqual(3);
+		expect(accentedWords.length).toEqual(0);
+	});
 });
 
 describe('getWordleWords with accent normalization', () => {
