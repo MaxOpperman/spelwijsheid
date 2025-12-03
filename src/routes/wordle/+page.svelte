@@ -1,9 +1,13 @@
 <script lang="ts">
 	import { confetti } from '@neoconfetti/svelte';
+	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { Game } from './game';
+
+	// Get base path - empty in dev, /Spelwijsheid in production
+	const base = dev ? '' : '/Spelwijsheid';
 
 	interface Props {
 		data: PageData;
@@ -192,7 +196,7 @@
 <h1 class="visually-hidden">Wordle</h1>
 
 <div class="wordle-container">
-	<a class="how-to-play" href="/wordle/how-to-play">Hoe te spelen</a>
+	<a class="how-to-play" href="{base}/wordle/how-to-play">Hoe te spelen</a>
 
 	<!-- Indicator showing whether the answer uses the ĳ digraph -->
 	{#if game}

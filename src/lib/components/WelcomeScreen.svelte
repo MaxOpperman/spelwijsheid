@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { dev } from '$app/environment';
+
+	// Get base path - empty in dev, /Spelwijsheid in production
+	const base = dev ? '' : '/Spelwijsheid';
+
 	export let inputChars: string[];
 	export let totalPossibleWords: number;
 	export let hasSavedGame: boolean;
@@ -11,7 +16,7 @@
 <h1>Spelwijze</h1>
 
 <div class="help-link">
-	<a href="/spelwijze/how-to-play">Hoe werkt het spel?</a>
+	<a href="{base}/spelwijze/how-to-play">Hoe werkt het spel?</a>
 </div>
 
 <div class="welcome-screen">
