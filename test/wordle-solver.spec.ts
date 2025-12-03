@@ -35,6 +35,15 @@ describe('Wordle Solver - ij digraph handling', () => {
 	});
 
 	describe('With digraph enabled (default)', () => {
+		it('should return 4-character words with ij digraph', () => {
+			const words = getWordleWords({ exactLength: 4, splitIjDigraph: false });
+
+			// These should be included (4 chars with ij as digraph)
+			expect(words).toContain('abdĳ');
+			expect(words).toContain('blĳf');
+			expect(words.length).toBeGreaterThan(0);
+		});
+
 		it('should return 5-character words treating ij as single character', () => {
 			const words = getWordleWords({ exactLength: 5, splitIjDigraph: false });
 
@@ -46,16 +55,40 @@ describe('Wordle Solver - ij digraph handling', () => {
 			expect(words).not.toContain('blĳf');
 		});
 
-		it('should return 4-character words with ij digraph', () => {
-			const words = getWordleWords({ exactLength: 4, splitIjDigraph: false });
+		it('should return 6-character words with ij digraph', () => {
+			const words = getWordleWords({ exactLength: 6, splitIjDigraph: false });
 
-			// These should be included (4 chars with ij as digraph)
-			expect(words).toContain('abdĳ');
-			expect(words).toContain('blĳf');
+			expect(words.length).toBeGreaterThan(0);
+			// All words should have exactly 6 characters when counting ĳ as 1
+			words.slice(0, 10).forEach((word: string) => {
+				expect(word.length).toBe(6);
+			});
+		});
+
+		it('should return 7-character words with ij digraph', () => {
+			const words = getWordleWords({ exactLength: 7, splitIjDigraph: false });
+
+			expect(words.length).toBeGreaterThan(0);
+			// All words should have exactly 7 characters when counting ĳ as 1
+			words.slice(0, 10).forEach((word: string) => {
+				expect(word.length).toBe(7);
+			});
 		});
 	});
 
 	describe('With digraph disabled (splitIjDigraph: true)', () => {
+		it('should return 4-character words when ij is split', () => {
+			const words = getWordleWords({ exactLength: 4, splitIjDigraph: true });
+
+			expect(words.length).toBeGreaterThan(0);
+			// All words should have exactly 4 characters
+			words.slice(0, 10).forEach((word: string) => {
+				expect(word.length).toBe(4);
+			});
+			// Should not contain digraph versions of ij words
+			expect(words.some((w: string) => w.includes('ĳ'))).toBe(false);
+		});
+
 		it('should return 5-character words treating ij as two separate characters', () => {
 			const words = getWordleWords({ exactLength: 5, splitIjDigraph: true });
 
@@ -75,15 +108,31 @@ describe('Wordle Solver - ij digraph handling', () => {
 			expect(words).toContain('gelijk');
 			expect(words).not.toContain('gelĳk');
 		});
+
+		it('should return 7-character words when ij is split', () => {
+			const words = getWordleWords({ exactLength: 7, splitIjDigraph: true });
+
+			expect(words.length).toBeGreaterThan(0);
+			// All words should have exactly 7 characters
+			words.slice(0, 10).forEach((word: string) => {
+				expect(word.length).toBe(7);
+			});
+		});
 	});
 
 	describe('Word list verification', () => {
-		it('should have different word counts for split vs non-split at length 5', () => {
-			const wordsWithDigraph = getWordleWords({ exactLength: 5, splitIjDigraph: false });
-			const wordsWithSplit = getWordleWords({ exactLength: 5, splitIjDigraph: true });
+		it('should have different word counts for split vs non-split at all lengths', () => {
+			[4, 5, 6, 7].forEach((length) => {
+				const wordsWithDigraph = getWordleWords({ exactLength: length, splitIjDigraph: false });
+				const wordsWithSplit = getWordleWords({ exactLength: length, splitIjDigraph: true });
 
-			// The counts should be different because different words qualify
-			expect(wordsWithDigraph.length).not.toBe(wordsWithSplit.length);
+				// Both should return words
+				expect(wordsWithDigraph.length).toBeGreaterThan(0);
+				expect(wordsWithSplit.length).toBeGreaterThan(0);
+
+				// The counts should be different because different words qualify
+				expect(wordsWithDigraph.length).not.toBe(wordsWithSplit.length);
+			});
 		});
 
 		it('should maintain word integrity when splitting', () => {
@@ -93,6 +142,18 @@ describe('Wordle Solver - ij digraph handling', () => {
 			const abdij = words.find((w: string) => w === 'abdij');
 			expect(abdij).toBeDefined();
 			expect(abdij).toContain('ij');
+		});
+
+		it('should return valid word lists for all supported lengths', () => {
+			[4, 5, 6, 7].forEach((length) => {
+				const words = getWordleWords({ exactLength: length, splitIjDigraph: false });
+				expect(words).toBeInstanceOf(Array);
+				expect(words.length).toBeGreaterThan(0);
+				// Verify all words have correct length
+				words.slice(0, 5).forEach((word: string) => {
+					expect(word.length).toBe(length);
+				});
+			});
 		});
 	});
 });
