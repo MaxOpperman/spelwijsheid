@@ -15,11 +15,11 @@
 	<a href="https://github.com/MaxOpperman/Spelwijsheid">GitHub</a>
 
 	<p>
-		Voor verdere vragen of suggesties, neem gerust contact op via GitHub of stuur een e-mail. Voor meer
-		informatie over mijzelf en mijn werk, bezoek mijn persoonlijke website op: <a href="https://maxopperman.nl">maxopperman.nl</a>
+		Voor verdere vragen of suggesties, neem gerust contact op via GitHub of stuur een e-mail. Voor
+		meer informatie over mijzelf en mijn werk, bezoek mijn persoonlijke website op: <a
+			href="https://maxopperman.nl">maxopperman.nl</a
+		>
 	</p>
 
-	<p>
-		Bedankt voor het gebruiken van de Spelwijsheid app!
-	</p>
+	<p>Bedankt voor het gebruiken van de Spelwijsheid app!</p>
 </div>

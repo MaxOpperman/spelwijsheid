@@ -47,14 +47,14 @@
 		position: relative;
 		overflow: hidden;
 		transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-		background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
-		box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+		background: linear-gradient(135deg, #87ceeb 0%, #98d8e8 100%);
+		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 		flex-shrink: 0;
 	}
 
 	:global(.dark) .toggle-background {
 		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-		box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
 	.sun {
@@ -64,16 +64,17 @@
 		width: 24px;
 		height: 24px;
 		border-radius: 50%;
-		background: #FFD700;
+		background: #ffd700;
 		transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 		box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 	}
 
 	:global(.dark) .sun {
 		transform: translateX(30px);
-		background: #F5F5DC;
-		box-shadow: 0 0 20px rgba(245, 245, 220, 0.8), 
-		           inset -2px -2px 4px rgba(0,0,0,0.2);
+		background: #f5f5dc;
+		box-shadow:
+			0 0 20px rgba(245, 245, 220, 0.8),
+			inset -2px -2px 4px rgba(0, 0, 0, 0.2);
 	}
 
 	.sun-rays {
@@ -95,17 +96,18 @@
 		left: 50%;
 		width: 2px;
 		height: 8px;
-		background: #FFD700;
+		background: #ffd700;
 		border-radius: 1px;
 		transform-origin: center;
 	}
 
 	.sun-rays::before {
 		transform: translate(-50%, -50%) rotate(0deg);
-		box-shadow: 0 0 0 #FFD700, 
-		           0 0 0 #FFD700 rotate(45deg), 
-		           0 0 0 #FFD700 rotate(90deg), 
-		           0 0 0 #FFD700 rotate(135deg);
+		box-shadow:
+			0 0 0 #ffd700,
+			0 0 0 #ffd700 rotate(45deg),
+			0 0 0 #ffd700 rotate(90deg),
+			0 0 0 #ffd700 rotate(135deg);
 	}
 
 	:global(.dark) .sun-rays {
@@ -120,7 +122,7 @@
 		width: 24px;
 		height: 24px;
 		border-radius: 50%;
-		background: #F5F5DC;
+		background: #f5f5dc;
 		transform: translateX(30px);
 		transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 		opacity: 0;
@@ -135,7 +137,7 @@
 	.crater {
 		position: absolute;
 		border-radius: 50%;
-		background: rgba(0,0,0,0.1);
+		background: rgba(0, 0, 0, 0.1);
 		transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 	}
 
@@ -273,7 +275,18 @@
 	.star {
 		position: absolute;
 		background: var(--color-surface);
-		clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+		clip-path: polygon(
+			50% 0%,
+			61% 35%,
+			98% 35%,
+			68% 57%,
+			79% 91%,
+			50% 70%,
+			21% 91%,
+			32% 57%,
+			2% 35%,
+			39% 35%
+		);
 		animation: twinkle 2s ease-in-out infinite;
 	}
 
@@ -302,7 +315,8 @@
 	}
 
 	@keyframes float {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translateY(0px);
 		}
 		50% {
@@ -311,7 +325,8 @@
 	}
 
 	@keyframes twinkle {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0.3;
 			transform: scale(1);
 		}

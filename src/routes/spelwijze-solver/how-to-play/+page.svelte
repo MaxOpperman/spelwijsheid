@@ -8,7 +8,8 @@
 
 	<div class="info-card">
 		<p>
-			De Spelwijze Solver helpt je woorden te vinden op basis van beschikbare letters. Voer tot 8 letters in om alle mogelijke Nederlandse woorden te vinden. Bijvoorbeeld:
+			De Spelwijze Solver helpt je woorden te vinden op basis van beschikbare letters. Voer tot 8
+			letters in om alle mogelijke Nederlandse woorden te vinden. Bijvoorbeeld:
 		</p>
 
 		<div class="example">
@@ -19,7 +20,8 @@
 		</div>
 
 		<p>
-			Met deze letters <strong>b-a-n-d</strong> vindt de solver alle Nederlandse woorden die alleen deze letters gebruiken, zoals:
+			Met deze letters <strong>b-a-n-d</strong> vindt de solver alle Nederlandse woorden die alleen deze
+			letters gebruiken, zoals:
 		</p>
 
 		<div class="word-examples">
@@ -27,12 +29,18 @@
 			<div class="word-item"><strong>bad</strong> - gebruikt een subset van de letters</div>
 			<div class="word-item"><strong>dan</strong> - gebruikt een ander subset</div>
 			<div class="word-item"><strong>banaan</strong> - herhaalt letters uit de set</div>
-			<div class="item word-item incorrect"><strong>naad</strong> - gebruikt niet de verplichte letter <div class="input-demo required inline">b</div></div>
-			<div class="item word-item incorrect"><strong>bond</strong> - gebruikt letters die niet in de set staan</div>
+			<div class="item word-item incorrect">
+				<strong>naad</strong> - gebruikt niet de verplichte letter
+				<div class="input-demo required inline">b</div>
+			</div>
+			<div class="item word-item incorrect">
+				<strong>bond</strong> - gebruikt letters die niet in de set staan
+			</div>
 		</div>
 
 		<div class="highlight-box">
-			Het <div class="input-demo required inline">b</div> eerste vak is verplicht - deze letter moet altijd in de gevonden woorden voorkomen.
+			Het <div class="input-demo required inline">b</div>
+			eerste vak is verplicht - deze letter moet altijd in de gevonden woorden voorkomen.
 		</div>
 
 		<div class="rules-section">
@@ -209,7 +217,7 @@
 	}
 
 	.rules-list li::before {
-		content: "✓";
+		content: '✓';
 		position: absolute;
 		left: 0.75rem;
 		color: var(--color-accent);

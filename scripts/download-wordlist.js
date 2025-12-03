@@ -4,8 +4,10 @@ import { pipeline } from 'stream/promises';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const WORDLIST_URL = 'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt';
-const LICENSE_URL = 'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/LICENSE.txt';
+const WORDLIST_URL =
+	'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt';
+const LICENSE_URL =
+	'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/LICENSE.txt';
 const OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist.txt', import.meta.url));
 
 async function downloadWordlist() {
@@ -28,7 +30,7 @@ async function downloadWordlist() {
 
 		// Download the file
 		const response = await fetch(WORDLIST_URL);
-		
+
 		if (!response.ok) {
 			throw new Error(`Failed to download: ${response.statusText}`);
 		}

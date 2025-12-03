@@ -62,7 +62,7 @@
 
 	function saveGameToCookie() {
 		if (!browser) return;
-		
+
 		const gameState = {
 			gameId,
 			chars,
@@ -76,21 +76,21 @@
 			pauseStartTime,
 			elapsedTime: timeStarted ? Math.floor((currentTime - timeStarted - pausedTime) / 1000) : 0
 		};
-		
+
 		document.cookie = `spelwijze_game=${JSON.stringify(gameState)}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
 	}
 
 	function loadGameFromCookie() {
 		if (!browser) return;
-		
+
 		const cookies = document.cookie.split(';');
-		const gameCookie = cookies.find(c => c.trim().startsWith('spelwijze_game='));
-		
+		const gameCookie = cookies.find((c) => c.trim().startsWith('spelwijze_game='));
+
 		if (gameCookie) {
 			try {
 				const gameStateJson = gameCookie.split('=')[1];
 				const gameState = JSON.parse(decodeURIComponent(gameStateJson));
-				
+
 				gameId = gameState.gameId || '';
 				chars = gameState.chars || Array(MAX_CHARS).fill('');
 				foundWords = gameState.foundWords || [];
@@ -100,7 +100,7 @@
 				score = gameState.score || 0;
 				pausedTime = gameState.pausedTime || 0;
 				pauseStartTime = gameState.pauseStartTime || null;
-				
+
 				// Restore time state
 				if (gameState.timeStarted && gameStarted && !gameComplete) {
 					if (gamePaused) {
@@ -109,7 +109,7 @@
 						currentTime = Date.now();
 					} else {
 						// If game was active when saved, adjust time for elapsed time
-						timeStarted = Date.now() - (gameState.elapsedTime * 1000);
+						timeStarted = Date.now() - gameState.elapsedTime * 1000;
 					}
 				}
 			} catch (e) {
@@ -136,7 +136,7 @@
 			saveGameToCookie();
 		}
 	}
-	
+
 	function pauseGame() {
 		if (!gameStarted || gameComplete || gamePaused) return;
 		gamePaused = true;
@@ -148,7 +148,7 @@
 		}
 		saveGameToCookie();
 	}
-	
+
 	function resumeGame() {
 		if (gameComplete || !gamePaused) return;
 		gamePaused = false;
@@ -170,14 +170,14 @@
 
 		// Check if word uses only available characters
 		const allPossible = generateFilteredWords(wordList, inputChars, false);
-		
+
 		if (allPossible.includes(word)) {
 			if (!foundWords.includes(word)) {
 				foundWords = [...foundWords, word].sort((a, b) => a.length - b.length);
 				saveGameToCookie();
 			}
 		}
-		
+
 		wordInput = '';
 	}
 
@@ -199,7 +199,7 @@
 	// Reactive statements - initialize inputChars first
 	$: {
 		inputChars = chars.filter(Boolean);
-		
+
 		// Calculate total possible words only after inputChars is set
 		if (inputChars && inputChars.length >= 1) {
 			const allPossible = generateFilteredWords(wordList, inputChars, false);
@@ -208,18 +208,19 @@
 			totalPossibleWords = 0;
 		}
 	}
-	
+
 	$: if (gameStarted && !gameComplete && !gamePaused) {
 		startTimer();
 	}
-	
+
 	// Calculate elapsed time (excluding paused time)
 	$: elapsedTime = timeStarted ? Math.floor((currentTime - timeStarted - pausedTime) / 1000) : 0;
 	$: formattedTime = `${Math.floor(elapsedTime / 60)}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
-	
+
 	// Calculate completion percentage
-	$: completionPercentage = totalPossibleWords > 0 ? Math.round((foundWords.length / totalPossibleWords) * 100) : 0;
-	
+	$: completionPercentage =
+		totalPossibleWords > 0 ? Math.round((foundWords.length / totalPossibleWords) * 100) : 0;
+
 	// Check if game is complete
 	$: if (foundWords.length > 0 && foundWords.length === totalPossibleWords && !gameComplete) {
 		gameComplete = true;
@@ -242,7 +243,7 @@
 		<p>Het spel wordt voorbereid...</p>
 	</div>
 {:else if !gameStarted}
-	<WelcomeScreen 
+	<WelcomeScreen
 		{inputChars}
 		{totalPossibleWords}
 		{hasSavedGame}

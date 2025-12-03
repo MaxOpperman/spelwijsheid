@@ -1,9 +1,4 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
-	
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
-
 	export let inputChars: string[];
 	export let totalPossibleWords: number;
 	export let hasSavedGame: boolean;
@@ -16,7 +11,7 @@
 <h1>Spelwijze</h1>
 
 <div class="help-link">
-	<a href="{base}/spelwijze/how-to-play">Hoe werkt het spel?</a>
+	<a href="/spelwijze/how-to-play">Hoe werkt het spel?</a>
 </div>
 
 <div class="welcome-screen">
@@ -29,10 +24,12 @@
 	<div class="game-preview">
 		<div class="challenge-section">
 			<h3>🎲 Vandaag's Uitdaging</h3>
-			<p class="challenge-description">Gebruik deze letters om zo veel mogelijk woorden te vinden:</p>
-			
+			<p class="challenge-description">
+				Gebruik deze letters om zo veel mogelijk woorden te vinden:
+			</p>
+
 			<div class="letters-display">
-				{#each inputChars || [] as char, index}
+				{#each inputChars || [] as char, index (index)}
 					<span class="letter-tile" class:mandatory={index === 0}>
 						{char}
 					</span>
@@ -50,7 +47,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		{#if inputChars && inputChars.length >= 1}
 			<div class="game-stats-preview">
 				<div class="stat-card">
@@ -70,22 +67,18 @@
 			<div class="game-actions-welcome">
 				{#if hasSavedGame}
 					{#if gamePaused}
-						<button class="continue-button-hero" on:click={onResumeGame}>
+						<button class="continue-button-hero" onclick={onResumeGame}>
 							▶️ Doorgaan met spel
 						</button>
 					{:else}
-						<button class="continue-button-hero" on:click={onStartGame}>
-						    🚀 Start het nieuwe spel!
+						<button class="continue-button-hero" onclick={onStartGame}>
+							🚀 Start het nieuwe spel!
 						</button>
 					{/if}
 				{:else}
-					<button class="start-button-hero" on:click={onStartGame}>
-						🚀 Start het spel!
-					</button>
+					<button class="start-button-hero" onclick={onStartGame}> 🚀 Start het spel! </button>
 				{/if}
-				<button class="new-game-button" on:click={onNewGame}>
-					🎲 Nieuwe letters
-				</button>
+				<button class="new-game-button" onclick={onNewGame}> 🎲 Nieuwe letters </button>
 			</div>
 
 			<div class="game-tips">
@@ -294,7 +287,8 @@
 		flex-wrap: wrap;
 	}
 
-	.start-button-hero, .continue-button-hero {
+	.start-button-hero,
+	.continue-button-hero {
 		background: var(--color-primary);
 		color: var(--color-surface);
 		border: none;
@@ -311,7 +305,8 @@
 		background: var(--color-accent);
 	}
 
-	.start-button-hero:hover, .continue-button-hero:hover {
+	.start-button-hero:hover,
+	.continue-button-hero:hover {
 		transform: translateY(-1px);
 		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 	}
@@ -392,8 +387,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	/* Responsive design */
@@ -418,7 +417,7 @@
 		.letters-display {
 			gap: 0.75rem;
 		}
-		
+
 		.letter-tile {
 			width: 3rem;
 			height: 3rem;
@@ -447,7 +446,8 @@
 			align-items: center;
 		}
 
-		.start-button-hero, .continue-button-hero {
+		.start-button-hero,
+		.continue-button-hero {
 			width: 100%;
 			max-width: 300px;
 			padding: 1rem 2rem;

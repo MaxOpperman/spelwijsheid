@@ -13,19 +13,17 @@
 	export let onResetGame: () => void;
 	export let onSubmitWord: () => void;
 	export let onKeydown: (event: KeyboardEvent) => void;
-
-	$: inputChars = chars.filter(Boolean);
 </script>
 
 <div class="game">
 	<div class="game-header">
 		<div class="letters-display">
 			<span class="mandatory">{chars[0]}</span>
-			{#each chars.slice(1).filter(Boolean) as char}
+			{#each chars.slice(1).filter(Boolean) as char, index (index)}
 				<span class="optional">{char}</span>
 			{/each}
 		</div>
-		
+
 		<div class="game-stats">
 			<div class="stat">
 				<span class="label">Tijd:</span>
@@ -40,16 +38,12 @@
 				<span class="value">{completionPercentage}%</span>
 			</div>
 		</div>
-		
+
 		<div class="game-controls">
 			{#if gamePaused}
-				<button class="resume-button" on:click={onResumeGame}>
-					▶️ Doorgaan
-				</button>
+				<button class="resume-button" onclick={onResumeGame}> ▶️ Doorgaan </button>
 			{:else}
-				<button class="pause-button" on:click={onPauseGame}>
-					⏸️ Pauzeren
-				</button>
+				<button class="pause-button" onclick={onPauseGame}> ⏸️ Pauzeren </button>
 			{/if}
 		</div>
 	</div>
@@ -59,11 +53,11 @@
 			<input
 				type="text"
 				bind:value={wordInput}
-				placeholder={gamePaused ? "Spel is gepauzeerd..." : "Typ een woord..."}
-				on:keydown={onKeydown}
+				placeholder={gamePaused ? 'Spel is gepauzeerd...' : 'Typ een woord...'}
+				onkeydown={onKeydown}
 				disabled={gameComplete || gamePaused}
 			/>
-			<button on:click={onSubmitWord} disabled={gameComplete || gamePaused || !wordInput}>
+			<button onclick={onSubmitWord} disabled={gameComplete || gamePaused || !wordInput}>
 				Toevoegen
 			</button>
 		</div>
@@ -77,7 +71,7 @@
 		<h3>Gevonden woorden ({foundWords.length}):</h3>
 		{#if foundWords.length > 0}
 			<div class="words-grid">
-				{#each foundWords as word}
+				{#each foundWords as word (word)}
 					<span class="found-word" class:new={word === foundWords[foundWords.length - 1]}>
 						{word}
 					</span>
@@ -89,9 +83,7 @@
 	</div>
 
 	<div class="game-actions">
-		<button class="reset-button" on:click={onResetGame}>
-			Nieuw spel
-		</button>
+		<button class="reset-button" onclick={onResetGame}> Nieuw spel </button>
 	</div>
 </div>
 
@@ -104,7 +96,7 @@
 				<div>Tijd: {formattedTime}</div>
 				<div>Score: {score} punten</div>
 			</div>
-			<button on:click={onResetGame}>Speel opnieuw</button>
+			<button onclick={onResetGame}>Speel opnieuw</button>
 		</div>
 	</div>
 {/if}
@@ -303,7 +295,8 @@
 		gap: 0.5rem;
 	}
 
-	.pause-button, .resume-button {
+	.pause-button,
+	.resume-button {
 		background: var(--color-accent);
 		color: var(--color-surface);
 		border: none;
@@ -318,7 +311,8 @@
 		transition: all 0.2s;
 	}
 
-	.pause-button:hover, .resume-button:hover {
+	.pause-button:hover,
+	.resume-button:hover {
 		background-color: var(--color-accent);
 		filter: brightness(1.1);
 		transform: translateY(-1px);
@@ -393,9 +387,15 @@
 	}
 
 	@keyframes highlight {
-		0% { transform: scale(1); }
-		50% { transform: scale(1.05); }
-		100% { transform: scale(1); }
+		0% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.05);
+		}
+		100% {
+			transform: scale(1);
+		}
 	}
 
 	/* Responsive design */
@@ -404,16 +404,16 @@
 			flex-direction: column;
 			gap: 1rem;
 		}
-		
+
 		.game-stats {
 			flex-wrap: wrap;
 			justify-content: center;
 		}
-		
+
 		.word-input {
 			flex-direction: column;
 		}
-		
+
 		.word-input input {
 			max-width: 100%;
 		}

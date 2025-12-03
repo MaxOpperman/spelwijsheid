@@ -29,10 +29,14 @@ function loadRawWords(): string[] {
 		// Path to the OpenTaal wordlist in the static directory
 		const filePath = path.resolve('static/wordlist.txt');
 		const fileContent = readFileSync(filePath, 'utf-8');
-		cachedWords = fileContent
-			.split('\n')
-			.map(line => line.trim())
-			.filter(word => word.length > 0); // Remove empty lines
+		cachedWords = Array.from(
+			new Set(
+				fileContent
+					.split('\n')
+					.map((line) => line.trim())
+					.filter((word) => word.length > 0)
+			)
+		);
 	}
 	return cachedWords;
 }
@@ -47,32 +51,32 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		maxLength,
 		lowercase = false,
 		alphabeticOnly = false,
-		splitIjDigraph = false,
+		splitIjDigraph = false
 	} = config;
 
 	const rawWords = loadRawWords();
-	
+
 	return rawWords
-		.filter(word => {
+		.filter((word) => {
 			// For digraph mode (splitIjDigraph = false), convert 'ij' to 'ĳ' for length calculation
 			// For split mode (splitIjDigraph = true), keep 'ij' as two characters
-			const processedWord = splitIjDigraph 
-				? word 
+			const processedWord = splitIjDigraph
+				? word
 				: word.replace(/ij/g, 'ĳ').replace(/IJ/g, 'Ĳ').replace(/Ij/g, 'Ĳ');
-			
+
 			const effectiveLength = processedWord.length;
-			
+
 			// Apply length filters based on effective length
 			if (minLength !== undefined && effectiveLength < minLength) return false;
 			if (exactLength !== undefined && effectiveLength !== exactLength) return false;
 			if (maxLength !== undefined && effectiveLength > maxLength) return false;
-			
+
 			// Apply alphabetic filter (check original word)
 			if (alphabeticOnly && !/^[a-zA-Z]+$/.test(word)) return false;
 
 			return true;
 		})
-		.map(word => {
+		.map((word) => {
 			// Convert based on mode
 			if (splitIjDigraph) {
 				// Split mode: keep ij as two characters (original format from OpenTaal)
@@ -96,12 +100,12 @@ export function getSolverWords(): string[] {
  * Get words for Wordle (exactly 5 characters, lowercase, alphabetic only)
  */
 export function getWordleWords(config: WordFilterConfig = {}): string[] {
-	return getFilteredWords({ 
+	return getFilteredWords({
 		minLength: config.minLength,
 		exactLength: config.exactLength ?? 5,
 		maxLength: config.maxLength,
 		lowercase: config.lowercase ?? true,
 		alphabeticOnly: config.alphabeticOnly ?? true,
-		splitIjDigraph: config.splitIjDigraph ?? false,
+		splitIjDigraph: config.splitIjDigraph ?? false
 	});
 }
