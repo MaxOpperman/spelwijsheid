@@ -17,11 +17,28 @@
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
+	/** Get the appropriate word list for the given word length */
+	function getWordList(length: number): string[] {
+		switch (length) {
+			case 4:
+				return data.wordList4;
+			case 5:
+				return data.wordList5;
+			case 6:
+				return data.wordList6;
+			case 7:
+				return data.wordList7;
+			default:
+				return data.wordList5;
+		}
+	}
+
+	let wordLength = $state(5);
 	let game = $state<Game | null>(null);
 	let badGuess = $state(false);
 
 	/** Whether or not the user has won */
-	let won = $derived(game?.answers.at(-1) === 'xxxxx');
+	let won = $derived(game?.answers.at(-1) === 'x'.repeat(wordLength));
 
 	/** The index of the current guess */
 	let i = $derived(won ? -1 : (game?.answers.length ?? 0));
@@ -32,7 +49,7 @@
 	/** Whether the current answer uses the Unicode digraph ĳ */
 	let answerUsesDigraph = $derived((game?.answer ?? '').includes('ĳ'));
 	/** Whether the current guess can be submitted */
-	let submittable = $derived(currentGuess.length === 5);
+	let submittable = $derived(currentGuess.length === wordLength);
 
 	const { classnames, description } = $derived.by(() => {
 		/**
@@ -49,7 +66,7 @@
 
 		game.answers.forEach((answer, i) => {
 			const guess = game ? game.guesses[i] : '';
-			for (let i = 0; i < 5; i += 1) {
+			for (let i = 0; i < wordLength; i += 1) {
 				const letter = guess[i];
 				if (answer[i] === 'x') {
 					classnames[letter] = 'exact';
@@ -65,13 +82,24 @@
 
 	onMount(() => {
 		// Load game from localStorage or create new one
-		const saved = localStorage.getItem('wordle');
-		game = new Game(saved ?? undefined, data.wordList);
+		const storageKey = `wordle-${wordLength}`;
+		const saved = localStorage.getItem(storageKey);
+		const currentWordList = getWordList(wordLength);
+		game = new Game(saved ?? undefined, currentWordList, wordLength);
 	});
+
+	function changeWordLength(newLength: number) {
+		wordLength = newLength;
+		const storageKey = `wordle-${wordLength}`;
+		const saved = localStorage.getItem(storageKey);
+		const currentWordList = getWordList(wordLength);
+		game = new Game(saved ?? undefined, currentWordList, wordLength);
+	}
 
 	function saveGame() {
 		if (game) {
-			localStorage.setItem('wordle', game.toString());
+			const storageKey = `wordle-${wordLength}`;
+			localStorage.setItem(storageKey, game.toString());
 		}
 	}
 
@@ -113,11 +141,10 @@
 
 		// Create new Game instance to trigger reactivity
 		const serialized = game.toString();
-		game = new Game(serialized, data.wordList);
+		const currentWordList = getWordList(wordLength);
+		game = new Game(serialized, currentWordList, wordLength);
 		saveGame();
-	}
-
-	/**
+	} /**
 	 * Submit the current guess
 	 */
 	function enter() {
@@ -134,17 +161,18 @@
 
 		// Create new Game instance to trigger reactivity
 		const serialized = game.toString();
-		game = new Game(serialized, data.wordList);
+		const currentWordList = getWordList(wordLength);
+		game = new Game(serialized, currentWordList, wordLength);
 		saveGame();
-	}
-
-	/**
+	} /**
 	 * Restart the game
 	 */
 	function restart() {
 		if (!game) return;
-		localStorage.removeItem('wordle');
-		game = new Game(undefined, data.wordList);
+		const storageKey = `wordle-${wordLength}`;
+		localStorage.removeItem(storageKey);
+		const currentWordList = getWordList(wordLength);
+		game = new Game(undefined, currentWordList, wordLength);
 		badGuess = false;
 		saveGame();
 	}
@@ -198,6 +226,14 @@
 <div class="wordle-container">
 	<a class="how-to-play" href="{base}/wordle/how-to-play">Hoe te spelen</a>
 
+	<!-- Word length selector -->
+	<div class="word-length-selector">
+		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}> 4 letters </button>
+		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}> 5 letters </button>
+		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}> 6 letters </button>
+		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}> 7 letters </button>
+	</div>
+
 	<!-- Indicator showing whether the answer uses the ĳ digraph -->
 	{#if game}
 		<div class="digraph-indicator" aria-live="polite">
@@ -210,12 +246,17 @@
 	{/if}
 
 	{#if game}
-		<div class="grid" class:playing={!won} class:bad-guess={badGuess}>
+		<div
+			class="grid"
+			class:playing={!won}
+			class:bad-guess={badGuess}
+			style="--word-length: {wordLength}"
+		>
 			{#each Array.from(Array(6).keys()) as row (row)}
 				{@const current = row === i}
 				<h2 class="visually-hidden">Row {row + 1}</h2>
 				<div class="row" class:current>
-					{#each Array.from(Array(5).keys()) as column (column)}
+					{#each Array.from(Array(wordLength).keys()) as column (column)}
 						{@const guess = current ? currentGuess : game.guesses[row]}
 						{@const answer = game.answers[row]?.[column]}
 						{@const value = guess?.[column] ?? ''}
@@ -311,6 +352,32 @@
 		color: var(--color-text);
 	}
 
+	.word-length-selector {
+		display: flex;
+		gap: 0.5rem;
+		margin: 0.5rem 0;
+	}
+
+	.word-length-selector button {
+		padding: 0.5rem 1rem;
+		border: 2px solid var(--color-primary);
+		background: var(--color-surface);
+		color: var(--color-text);
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		transition: all 0.2s;
+	}
+
+	.word-length-selector button:hover {
+		background: var(--color-primary-light);
+	}
+
+	.word-length-selector button.active {
+		background: var(--color-primary);
+		color: white;
+	}
+
 	.how-to-play::before {
 		content: 'i';
 		display: inline-block;
@@ -342,7 +409,7 @@
 
 	.grid .row {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(var(--word-length, 5), 1fr);
 		grid-gap: 0.2rem;
 		margin: 0 0 0.2rem 0;
 	}

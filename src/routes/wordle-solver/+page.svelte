@@ -6,7 +6,19 @@
 	}
 	let { data }: Props = $props();
 
+	/** Get the appropriate word list for the given word length and digraph setting */
+	function getWordList(length: number, splitIj: boolean): string[] {
+		const lists = {
+			4: splitIj ? data.wordList4WithSplitIj : data.wordList4,
+			5: splitIj ? data.wordList5WithSplitIj : data.wordList5,
+			6: splitIj ? data.wordList6WithSplitIj : data.wordList6,
+			7: splitIj ? data.wordList7WithSplitIj : data.wordList7
+		};
+		return lists[length as keyof typeof lists] || lists[5];
+	}
+
 	// State for the solver
+	let wordLength = $state(5);
 	let exactPositions = $state([null, null, null, null, null] as (string | null)[]);
 	let wrongPositions = $state([[], [], [], [], []] as string[][]);
 	let absentLetters = $state('');
@@ -15,13 +27,24 @@
 	let maxDisplayedWords = $state(100);
 
 	// Input refs for focus management
-	let exactInputRefs: HTMLInputElement[] = [];
-	let wrongInputRefs: HTMLInputElement[] = [];
+	let exactInputRefs = $state<HTMLInputElement[]>([]);
+	let wrongInputRefs = $state<HTMLInputElement[]>([]);
+
+	function changeWordLength(newLength: number) {
+		wordLength = newLength;
+		exactPositions = Array(newLength).fill(null);
+		wrongPositions = Array(newLength)
+			.fill([])
+			.map(() => []);
+		absentLetters = '';
+		possibleWords = [];
+		maxDisplayedWords = 100;
+	}
 
 	// Auto-solve effect
 	$effect(() => {
 		// Track dependencies by reading them into a variable
-		const deps = [exactPositions, wrongPositions, absentLetters, allowIjDigraph];
+		const deps = [exactPositions, wrongPositions, absentLetters, allowIjDigraph, wordLength];
 		// Call solve whenever any input changes
 		if (deps) solve();
 	});
@@ -142,12 +165,14 @@
 	function solve() {
 		const absent = new Set(absentLetters.toLowerCase().match(/[a-z]/g) || []);
 		const mustInclude = new Set(wrongPositions.flat().map(convertToDigraph));
-		const wordsToSearch = allowIjDigraph ? data.wordList : data.wordListWithSplitIj;
+
+		// Select the appropriate wordlist based on word length and digraph setting
+		const wordsToSearch = getWordList(wordLength, !allowIjDigraph);
 
 		const mappedWords = wordsToSearch
 			.filter((word: string) => {
 				// Check exact positions
-				for (let i = 0; i < 5; i++) {
+				for (let i = 0; i < wordLength; i++) {
 					if (exactPositions[i] && !matchesPosition(word, i, exactPositions[i]!)) {
 						return false;
 					}
@@ -160,7 +185,7 @@
 				}
 
 				// Check wrong positions (letter must NOT be at this position)
-				for (let i = 0; i < 5; i++) {
+				for (let i = 0; i < wordLength; i++) {
 					if (wrongPositions[i].some((letter) => matchesPosition(word, i, letter))) {
 						return false;
 					}
@@ -183,8 +208,10 @@
 	}
 
 	function reset() {
-		exactPositions = [null, null, null, null, null];
-		wrongPositions = [[], [], [], [], []];
+		exactPositions = Array(wordLength).fill(null);
+		wrongPositions = Array(wordLength)
+			.fill([])
+			.map(() => []);
 		absentLetters = '';
 		possibleWords = [];
 		maxDisplayedWords = 100;
@@ -206,6 +233,14 @@
 <div class="solver-container">
 	<h1>Wordle Solver</h1>
 	<p class="description">Voer in wat je weet over het woord om mogelijke oplossingen te vinden</p>
+
+	<!-- Word length selector -->
+	<div class="word-length-selector">
+		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}> 4 letters </button>
+		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}> 5 letters </button>
+		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}> 6 letters </button>
+		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}> 7 letters </button>
+	</div>
 
 	<div class="solver-grid">
 		<section class="input-section">
@@ -320,7 +355,34 @@
 		text-align: center;
 		color: var(--color-text);
 		opacity: 0.8;
-		margin-bottom: 2rem;
+		margin-bottom: 1rem;
+	}
+
+	.word-length-selector {
+		display: flex;
+		gap: 0.5rem;
+		margin: 0 auto 2rem;
+		justify-content: center;
+	}
+
+	.word-length-selector button {
+		padding: 0.5rem 1rem;
+		border: 2px solid var(--color-primary);
+		background: var(--color-surface);
+		color: var(--color-text);
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		transition: all 0.2s;
+	}
+
+	.word-length-selector button:hover {
+		background: var(--color-primary-light);
+	}
+
+	.word-length-selector button.active {
+		background: var(--color-primary);
+		color: white;
 	}
 
 	.solver-grid {
