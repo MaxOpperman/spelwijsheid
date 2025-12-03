@@ -1,10 +1,3 @@
-<script lang="ts">
-	import { dev } from '$app/environment';
-
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
-</script>
-
 <svelte:head>
 	<title>Hoe te spelen - Spelwijze</title>
 </svelte:head>
@@ -84,7 +77,7 @@
 	</section>
 
 	<div class="back-link">
-		<a href="{base}/spelwijze">← Terug naar het spel</a>
+		<a href="/spelwijze">← Terug naar het spel</a>
 	</div>
 </div>
 

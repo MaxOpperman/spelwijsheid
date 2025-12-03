@@ -1,21 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { dev } from '$app/environment';
 	import github from '$lib/images/github.svg';
 	import DarkModeToggle from '$lib/components/DarkModeToggle.svelte';
 
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
-
-	let solversOpen = $state(false);
-	let mobileMenuOpen = $state(false);
+	let solversOpen = false;
+	let mobileMenuOpen = false;
 
 	function toggleSolvers() {
 		solversOpen = !solversOpen;
-	}
-
-	function closeSubmenu() {
-		solversOpen = false;
 	}
 
 	function toggleMenu() {
@@ -53,50 +45,38 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
+			<li aria-current={page.url.pathname === '/' ? 'page' : undefined}>
+				<a href="/" onclick={closeMenuAndSubmenu}>Home</a>
+			</li>
+			<li aria-current={page.url.pathname === '/about' ? 'page' : undefined}>
+				<a href="/about" onclick={closeMenuAndSubmenu}>About</a>
+			</li>
 			<li
-				aria-current={page.url.pathname === `${base}/` || (base === '' && page.url.pathname === '/')
+				aria-current={page.url.pathname.startsWith('/spelwijze') &&
+				!page.url.pathname.startsWith('/spelwijze-solver')
 					? 'page'
 					: undefined}
 			>
-				<a href="{base}/" onclick={closeMenuAndSubmenu}>Home</a>
-			</li>
-			<li aria-current={page.url.pathname === `${base}/about` ? 'page' : undefined}>
-				<a href="{base}/about" onclick={closeMenuAndSubmenu}>About</a>
+				<a href="/spelwijze" onclick={closeMenuAndSubmenu}>Spelwijze</a>
 			</li>
 			<li
-				aria-current={page.url.pathname.startsWith(`${base}/spelwijze`) &&
-				!page.url.pathname.startsWith(`${base}/spelwijze-solver`)
+				aria-current={page.url.pathname.startsWith('/wordle') &&
+				!page.url.pathname.startsWith('/wordle-solver')
 					? 'page'
 					: undefined}
 			>
-				<a href="{base}/spelwijze" onclick={closeMenuAndSubmenu}>Spelwijze</a>
-			</li>
-			<li
-				aria-current={page.url.pathname.startsWith(`${base}/wordle`) &&
-				!page.url.pathname.startsWith(`${base}/wordle-solver`)
-					? 'page'
-					: undefined}
-			>
-				<a href="{base}/wordle" onclick={closeMenuAndSubmenu}>Wordle</a>
+				<a href="/wordle" onclick={closeMenuAndSubmenu}>Wordle</a>
 			</li>
 			<li class="has-submenu" class:submenu-open={solversOpen}>
 				<button class="submenu-toggle" onclick={toggleSolvers} aria-expanded={solversOpen}>
 					Solvers <span class="arrow">▼</span>
 				</button>
 				<ul class="submenu">
-					<li
-						aria-current={page.url.pathname.startsWith(`${base}/wordle-solver`)
-							? 'page'
-							: undefined}
-					>
-						<a href="{base}/wordle-solver" onclick={closeMenu}>Wordle Solver</a>
+					<li aria-current={page.url.pathname.startsWith('/wordle-solver') ? 'page' : undefined}>
+						<a href="/wordle-solver" onclick={closeMenu}>Wordle Solver</a>
 					</li>
-					<li
-						aria-current={page.url.pathname.startsWith(`${base}/spelwijze-solver`)
-							? 'page'
-							: undefined}
-					>
-						<a href="{base}/spelwijze-solver" onclick={closeMenu}>Spelwijze Solver</a>
+					<li aria-current={page.url.pathname.startsWith('/spelwijze-solver') ? 'page' : undefined}>
+						<a href="/spelwijze-solver" onclick={closeMenu}>Spelwijze Solver</a>
 					</li>
 				</ul>
 			</li>

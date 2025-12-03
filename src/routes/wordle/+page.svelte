@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { confetti } from '@neoconfetti/svelte';
-	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
@@ -193,7 +192,7 @@
 <h1 class="visually-hidden">Wordle</h1>
 
 <div class="wordle-container">
-	<a class="how-to-play" href="{base}/wordle/how-to-play">Hoe te spelen</a>
+	<a class="how-to-play" href="/wordle/how-to-play">Hoe te spelen</a>
 
 	<!-- Indicator showing whether the answer uses the ĳ digraph -->
 	{#if game}

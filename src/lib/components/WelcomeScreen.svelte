@@ -1,9 +1,4 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
-
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
-
 	export let inputChars: string[];
 	export let totalPossibleWords: number;
 	export let hasSavedGame: boolean;
@@ -16,7 +11,7 @@
 <h1>Spelwijze</h1>
 
 <div class="help-link">
-	<a href="{base}/spelwijze/how-to-play">Hoe werkt het spel?</a>
+	<a href="/spelwijze/how-to-play">Hoe werkt het spel?</a>
 </div>
 
 <div class="welcome-screen">
@@ -34,7 +29,7 @@
 			</p>
 
 			<div class="letters-display">
-				{#each inputChars || [] as char, index}
+				{#each inputChars || [] as char, index (index)}
 					<span class="letter-tile" class:mandatory={index === 0}>
 						{char}
 					</span>
@@ -72,18 +67,18 @@
 			<div class="game-actions-welcome">
 				{#if hasSavedGame}
 					{#if gamePaused}
-						<button class="continue-button-hero" on:click={onResumeGame}>
+						<button class="continue-button-hero" onclick={onResumeGame}>
 							▶️ Doorgaan met spel
 						</button>
 					{:else}
-						<button class="continue-button-hero" on:click={onStartGame}>
+						<button class="continue-button-hero" onclick={onStartGame}>
 							🚀 Start het nieuwe spel!
 						</button>
 					{/if}
 				{:else}
-					<button class="start-button-hero" on:click={onStartGame}> 🚀 Start het spel! </button>
+					<button class="start-button-hero" onclick={onStartGame}> 🚀 Start het spel! </button>
 				{/if}
-				<button class="new-game-button" on:click={onNewGame}> 🎲 Nieuwe letters </button>
+				<button class="new-game-button" onclick={onNewGame}> 🎲 Nieuwe letters </button>
 			</div>
 
 			<div class="game-tips">

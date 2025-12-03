@@ -40,7 +40,7 @@
 
 		<div class="highlight-box">
 			Het <div class="input-demo required inline">b</div>
-			 eerste vak is verplicht - deze letter moet altijd in de gevonden woorden voorkomen.
+			eerste vak is verplicht - deze letter moet altijd in de gevonden woorden voorkomen.
 		</div>
 
 		<div class="rules-section">

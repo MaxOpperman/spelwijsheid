@@ -11,9 +11,10 @@
 		"preinstall": "node scripts/download-wordlist.js",
 		"download-wordlist": "node scripts/download-wordlist.js",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:style": "prettier --check . && eslint .",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint .",
+		"lint": "eslint . --fix",
 		"test": "vitest"
 	},
 	"devDependencies": {

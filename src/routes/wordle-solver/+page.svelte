@@ -7,12 +7,12 @@
 	let { data }: Props = $props();
 
 	// State for the solver
-	let exactPositions = $state<(string | null)[]>([null, null, null, null, null]);
-	let wrongPositions = $state<string[][]>([[], [], [], [], []]);
-	let absentLetters = $state<string>('');
-	let possibleWords = $state<string[]>([]);
-	let allowIjDigraph = $state<boolean>(true);
-	let maxDisplayedWords = $state<number>(100);
+	let exactPositions = $state([null, null, null, null, null] as (string | null)[]);
+	let wrongPositions = $state([[], [], [], [], []] as string[][]);
+	let absentLetters = $state('');
+	let possibleWords = $state([] as string[]);
+	let allowIjDigraph = $state(true);
+	let maxDisplayedWords = $state(100);
 
 	// Input refs for focus management
 	let exactInputRefs: HTMLInputElement[] = [];
@@ -20,13 +20,10 @@
 
 	// Auto-solve effect
 	$effect(() => {
-		// Track dependencies
-		exactPositions;
-		wrongPositions;
-		absentLetters;
-		allowIjDigraph;
+		// Track dependencies by reading them into a variable
+		const deps = [exactPositions, wrongPositions, absentLetters, allowIjDigraph];
 		// Call solve whenever any input changes
-		solve();
+		if (deps) solve();
 	});
 
 	function addWrongPosition(position: number, letter: string) {
@@ -147,7 +144,7 @@
 		const mustInclude = new Set(wrongPositions.flat().map(convertToDigraph));
 		const wordsToSearch = allowIjDigraph ? data.wordList : data.wordListWithSplitIj;
 
-		possibleWords = wordsToSearch
+		const mappedWords = wordsToSearch
 			.filter((word: string) => {
 				// Check exact positions
 				for (let i = 0; i < 5; i++) {
@@ -180,6 +177,9 @@
 				return true;
 			})
 			.map((word) => word.replace(/-/g, ''));
+
+		// Deduplicate normalized words to avoid duplicate keys in keyed each blocks
+		possibleWords = Array.from(new Set(mappedWords));
 	}
 
 	function reset() {
@@ -211,7 +211,7 @@
 		<section class="input-section">
 			<h2>Exact Posities (Groen)</h2>
 			<div class="exact-positions">
-				{#each exactPositions as letter, i}
+				{#each exactPositions as letter, i (i)}
 					<input
 						type="text"
 						bind:this={exactInputRefs[i]}
@@ -230,7 +230,7 @@
 			<h2>Goede Letter, Verkeede Posities (Geel)</h2>
 			<p class="hint">Voer letters in die in het woord voorkomen maar niet op deze posities</p>
 			<div class="wrong-positions">
-				{#each wrongPositions as letters, i}
+				{#each wrongPositions as letters, i (i)}
 					<div class="position-group">
 						<div class="position-label">Positie {i + 1}</div>
 						<input
@@ -243,7 +243,7 @@
 							class="letter-input wrong"
 						/>
 						<div class="letters-list">
-							{#each letters as letter}
+							{#each letters as letter (letter)}
 								<button onclick={() => removeWrongPosition(i, letter)} class="letter-tag">
 									{letter} ×
 								</button>
@@ -281,7 +281,7 @@
 		<section class="results">
 			<h2>Mogelijke Woorden ({possibleWords.length})</h2>
 			<div class="words-grid">
-				{#each possibleWords.slice(0, maxDisplayedWords) as word}
+				{#each possibleWords.slice(0, maxDisplayedWords) as word (word)}
 					<div class="word-card">{word}</div>
 				{/each}
 			</div>

@@ -29,10 +29,14 @@ function loadRawWords(): string[] {
 		// Path to the OpenTaal wordlist in the static directory
 		const filePath = path.resolve('static/wordlist.txt');
 		const fileContent = readFileSync(filePath, 'utf-8');
-		cachedWords = fileContent
-			.split('\n')
-			.map((line) => line.trim())
-			.filter((word) => word.length > 0); // Remove empty lines
+		cachedWords = Array.from(
+			new Set(
+				fileContent
+					.split('\n')
+					.map((line) => line.trim())
+					.filter((word) => word.length > 0)
+			)
+		);
 	}
 	return cachedWords;
 }

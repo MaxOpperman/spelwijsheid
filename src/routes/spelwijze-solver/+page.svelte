@@ -1,10 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { dev } from '$app/environment';
 	import generateFilteredWords from '$lib/solver';
-
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
 
 	export let data: PageData;
 
@@ -17,8 +13,12 @@
 
 	// Reactive statements to automatically generate words when chars or lowercaseMode change
 	$: inputChars = chars.filter(Boolean);
-	$: results =
-		inputChars.length >= 1 ? generateFilteredWords(wordList, inputChars, lowercaseMode) : [];
+	$: results = (() => {
+		if (inputChars.length < 1) return [];
+		const raw = generateFilteredWords(wordList, inputChars, lowercaseMode);
+		// Deduplicate results to avoid duplicate keys in keyed each blocks
+		return Array.from(new Set(raw));
+	})();
 
 	function focusInput(index: number) {
 		if (inputRefs[index]) {
@@ -92,17 +92,17 @@
 <h1>Spelwijsheid - Spelwijze Oplossingen</h1>
 
 <div class="help-link">
-	<a href="{base}/spelwijze-solver/how-to-play">Hoe werkt de Spelwijze Solver?</a>
+	<a href="/spelwijze-solver/how-to-play">Hoe werkt de Spelwijze Solver?</a>
 </div>
 
 <fieldset>
 	<legend>Voer maximaal {MAX_CHARS} karakters in:</legend>
 	<div class="input-grid">
-		{#each chars as char, index}
+		{#each chars as char, index (index)}
 			<input
 				type="text"
 				bind:this={inputRefs[index]}
-				bind:value={chars[index]}
+				bind:value={char}
 				maxlength={index === 0 ? 1 : 2}
 				placeholder={index === 0 ? '!' : '?'}
 				class:selected={index === 0}
@@ -126,7 +126,7 @@
 		<h2>Gevonden woorden ({results.length}):</h2>
 		{#if results.length > 0}
 			<ul>
-				{#each results as word}
+				{#each results as word (word)}
 					<li>{word}</li>
 				{/each}
 			</ul>
