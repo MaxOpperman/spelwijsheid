@@ -3,6 +3,7 @@
 	import { confetti } from '@neoconfetti/svelte';
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
+	import StatsPanel from './StatsPanel.svelte';
 
 	interface FormData {
 		badGuess?: boolean;
@@ -204,6 +205,9 @@
 			{#if !won && data.answer}
 				<p>het antwoord was "{data.answer}"</p>
 			{/if}
+
+			<StatsPanel stats={data.stats} />
+
 			<button data-key="enter" class="restart selected" formaction="?/restart">
 				{won ? 'je hebt gewonnen :)' : `game over :(`} opnieuw spelen?
 			</button>
@@ -266,9 +270,11 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		justify-content: flex-start;
 		gap: 1rem;
 		flex: 1;
+		padding: 2rem 0;
+		overflow-y: auto;
 	}
 
 	.how-to-play {
@@ -410,7 +416,8 @@
 	.controls {
 		text-align: center;
 		justify-content: center;
-		height: min(18vh, 10rem);
+		width: 100%;
+		max-width: min(100vw, calc(var(--word-length, 5) * 8vh), calc(var(--word-length, 5) * 76px));
 	}
 
 	.keyboard {
@@ -419,7 +426,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--gap);
-		height: 100%;
+		height: min(18vh, 10rem);
 	}
 
 	.keyboard .row {

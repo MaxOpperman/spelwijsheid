@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { Game } from './game.ts';
 import type { PageServerLoad, Actions } from './$types';
 import { getWordleWords } from '$lib/words.server.ts';
+import { parseStats, serializeStats, updateStats } from './stats.ts';
 
 const wordLists = {
 	4: getWordleWords({ exactLength: 4 }),
@@ -14,13 +15,15 @@ export const load = (({ cookies }) => {
 	const wordLength = parseInt(cookies.get('wordle-length') || '5') as 4 | 5 | 6 | 7;
 	const wordList = wordLists[wordLength];
 	const game = new Game(cookies.get(`wordle-${wordLength}`), wordList, wordLength);
+	const stats = parseStats(cookies.get(`wordle-stats-${wordLength}`));
 
 	return {
 		wordLength,
 		guesses: game.guesses,
 		answers: game.answers,
 		answer: game.answers.length >= 6 ? game.answer : null,
-		answerUsesDigraph: game.answer.includes('ĳ')
+		answerUsesDigraph: game.answer.includes('ĳ'),
+		stats
 	};
 }) satisfies PageServerLoad;
 
@@ -61,6 +64,20 @@ export const actions = {
 
 	restart: async ({ cookies }) => {
 		const wordLength = parseInt(cookies.get('wordle-length') || '5') as 4 | 5 | 6 | 7;
+		const wordList = wordLists[wordLength];
+		const game = new Game(cookies.get(`wordle-${wordLength}`), wordList, wordLength);
+		const stats = parseStats(cookies.get(`wordle-stats-${wordLength}`));
+
+		// Determine if the game was won and how many guesses were used
+		const lastAnswer = game.answers.at(-1);
+		const won = lastAnswer === 'x'.repeat(wordLength);
+		const guessCount = won ? game.answers.length : undefined;
+
+		// Update stats
+		const newStats = updateStats(stats, won, guessCount);
+		cookies.set(`wordle-stats-${wordLength}`, serializeStats(newStats), { path: '/' });
+
+		// Delete the game cookie to start a new game
 		cookies.delete(`wordle-${wordLength}`, { path: '/' });
 	},
 
