@@ -18,9 +18,13 @@ RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
     sh get-docker.sh && \
     rm get-docker.sh
 
+# Create docker group with GID that will be overridden by group_add in docker-compose
+RUN groupadd -g 999 docker || true
+
 # Create a user for the runner
 RUN useradd -m -s /bin/bash runner && \
     usermod -aG sudo runner && \
+    usermod -aG docker runner && \
     echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Set working directory
@@ -32,6 +36,7 @@ RUN curl -o actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz -L \
     https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz && \
     tar xzf actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz && \
     rm actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz && \
+    mkdir -p /home/runner/_work && \
     chown -R runner:runner /home/runner
 
 # Switch to runner user

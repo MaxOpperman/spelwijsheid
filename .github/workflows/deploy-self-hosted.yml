@@ -50,23 +50,23 @@ jobs:
     needs: build
     steps:
       - name: Login to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Pull the latest image
-        run: docker pull ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
+        run: sudo docker pull ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
       - name: Stop and remove old container
         run: |
-          docker stop spelwijsheid || true
-          docker rm spelwijsheid || true
+          sudo docker stop spelwijsheid || true
+          sudo docker rm spelwijsheid || true
 
       - name: Run the new container
         run: |
-          docker run -d \
+          sudo docker run -d \
             --name spelwijsheid \
             --restart unless-stopped \
             -p 3000:6749 \
             ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
       - name: Clean up old images
-        run: docker image prune -af --filter "until=24h"
+        run: sudo docker image prune -af --filter "until=24h"
