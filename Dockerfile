@@ -7,17 +7,15 @@ WORKDIR /app
 ARG BASE_PATH=
 ENV BASE_PATH=${BASE_PATH}
 
-# Copy package files
+# Copy package files and scripts
 COPY package*.json ./
+COPY scripts ./scripts
 
-# Install dependencies
+# Install dependencies (this will run the preinstall script)
 RUN npm ci
 
-# Copy source code
+# Copy rest of source code
 COPY . .
-
-# Download wordlist
-RUN npm run download-wordlist
 
 # Build the application
 RUN npm run build
