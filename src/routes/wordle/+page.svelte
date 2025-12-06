@@ -1,53 +1,39 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { confetti } from '@neoconfetti/svelte';
-	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
-	import { Game } from './game';
 
-	const base = '';
+	interface FormData {
+		badGuess?: boolean;
+	}
 
 	interface Props {
 		data: PageData;
+		form: FormData | null;
 	}
-	let { data }: Props = $props();
+	let { data, form = $bindable() }: Props = $props();
+
+	/** Track loading state */
+	let isLoading = $state(false);
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
-	/** Get the appropriate word list for the given word length */
-	function getWordList(length: number): string[] {
-		switch (length) {
-			case 4:
-				return data.wordList4;
-			case 5:
-				return data.wordList5;
-			case 6:
-				return data.wordList6;
-			case 7:
-				return data.wordList7;
-			default:
-				return data.wordList5;
-		}
-	}
-
-	let wordLength = $state(5);
-	let game = $state<Game | null>(null);
-	let badGuess = $state(false);
-
 	/** Whether or not the user has won */
-	let won = $derived(game?.answers.at(-1) === 'x'.repeat(wordLength));
+	let won = $derived(data.answers.at(-1) === 'x'.repeat(data.wordLength));
 
 	/** The index of the current guess */
-	let i = $derived(won ? -1 : (game?.answers.length ?? 0));
+	let i = $derived(won ? -1 : data.answers.length);
 
 	/** The current guess */
-	let currentGuess = $derived(game?.guesses[i] || '');
+	let currentGuess = $derived(data.guesses[i] || '');
+
+	/** Whether the current guess can be submitted */
+	let submittable = $derived(currentGuess.length === data.wordLength);
 
 	/** Whether the current answer uses the Unicode digraph ĳ */
-	let answerUsesDigraph = $derived((game?.answer ?? '').includes('ĳ'));
-	/** Whether the current guess can be submitted */
-	let submittable = $derived(currentGuess.length === wordLength);
+	let answerUsesDigraph = $derived(data.answerUsesDigraph);
 
 	const { classnames, description } = $derived.by(() => {
 		/**
@@ -60,11 +46,9 @@
 		 * used for adding text for assistive technology (e.g. screen readers)
 		 */
 		let description: Record<string, string> = {};
-		if (!game) return { classnames, description };
-
-		game.answers.forEach((answer, i) => {
-			const guess = game ? game.guesses[i] : '';
-			for (let i = 0; i < wordLength; i += 1) {
+		data.answers.forEach((answer, i) => {
+			const guess = data.guesses[i];
+			for (let i = 0; i < data.wordLength; i += 1) {
 				const letter = guess[i];
 				if (answer[i] === 'x') {
 					classnames[letter] = 'exact';
@@ -78,114 +62,40 @@
 		return { classnames, description };
 	});
 
-	onMount(() => {
-		// Load game from localStorage or create new one
-		const storageKey = `wordle-${wordLength}`;
-		const saved = localStorage.getItem(storageKey);
-		const currentWordList = getWordList(wordLength);
-		game = new Game(saved ?? undefined, currentWordList, wordLength);
-	});
-
-	function changeWordLength(newLength: number) {
-		wordLength = newLength;
-		const storageKey = `wordle-${wordLength}`;
-		const saved = localStorage.getItem(storageKey);
-		const currentWordList = getWordList(wordLength);
-		game = new Game(saved ?? undefined, currentWordList, wordLength);
-	}
-
-	function saveGame() {
-		if (game) {
-			const storageKey = `wordle-${wordLength}`;
-			localStorage.setItem(storageKey, game.toString());
-		}
-	}
-
 	/**
-	 * Update the game state when a key is pressed
+	 * Modify the game state without making a trip to the server,
+	 * if client-side JavaScript is enabled
 	 */
-	function update(key: string) {
-		if (!game) return;
-
-		const currentIndex = game.answers.length;
+	function update(event: MouseEvent) {
+		event.preventDefault();
+		const key = (event.target as HTMLButtonElement).getAttribute('data-key');
 
 		if (key === 'backspace') {
 			// If the answer uses the digraph, treat ĳ as a single backspace target
-			if (answerUsesDigraph && game.guesses[currentIndex].slice(-1) === 'ĳ') {
-				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'i';
+			if (answerUsesDigraph && currentGuess.slice(-1) === 'ĳ') {
+				currentGuess = currentGuess.slice(0, -1) + 'i';
 			} else {
-				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1);
+				currentGuess = currentGuess.slice(0, -1);
 			}
-			if (badGuess) badGuess = false;
-		} else if (game.guesses[currentIndex].length < 5) {
+			if (form?.badGuess) form.badGuess = false;
+		} else if (currentGuess.length < data.wordLength) {
 			// Special case for Dutch ĳ digraph: only convert if the answer actually uses the digraph
-			if (answerUsesDigraph && game.guesses[currentIndex].slice(-1) === 'i' && key === 'j') {
-				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
+			if (answerUsesDigraph && currentGuess.slice(-1) === 'i' && key === 'j') {
+				currentGuess = currentGuess.slice(0, -1) + 'ĳ';
 			} else {
-				game.guesses[currentIndex] += key;
+				currentGuess += key;
 			}
 		} else if (
-			game.guesses[currentIndex].length === 5 &&
-			game.guesses[currentIndex].slice(-1) === 'i' &&
+			currentGuess.length === data.wordLength &&
+			currentGuess.slice(-1) === 'i' &&
 			key === 'j'
 		) {
 			if (answerUsesDigraph) {
-				game.guesses[currentIndex] = game.guesses[currentIndex].slice(0, -1) + 'ĳ';
+				currentGuess = currentGuess.slice(0, -1) + 'ĳ';
 			} else {
 				// If digraph is not used, treat 'i'+'j' as two characters; append 'j'
-				game.guesses[currentIndex] += 'j';
+				currentGuess += 'j';
 			}
-		}
-
-		// Create new Game instance to trigger reactivity
-		const serialized = game.toString();
-		const currentWordList = getWordList(wordLength);
-		game = new Game(serialized, currentWordList, wordLength);
-		saveGame();
-	} /**
-	 * Submit the current guess
-	 */
-	function enter() {
-		if (!game || !submittable) return;
-
-		const guess = game.guesses[game.answers.length].split('');
-		const valid = game.enter(guess);
-
-		if (!valid) {
-			badGuess = true;
-		} else {
-			badGuess = false;
-		}
-
-		// Create new Game instance to trigger reactivity
-		const serialized = game.toString();
-		const currentWordList = getWordList(wordLength);
-		game = new Game(serialized, currentWordList, wordLength);
-		saveGame();
-	} /**
-	 * Restart the game
-	 */
-	function restart() {
-		if (!game) return;
-		const storageKey = `wordle-${wordLength}`;
-		localStorage.removeItem(storageKey);
-		const currentWordList = getWordList(wordLength);
-		game = new Game(undefined, currentWordList, wordLength);
-		badGuess = false;
-		saveGame();
-	}
-
-	/**
-	 * Handle button clicks
-	 */
-	function handleClick(event: MouseEvent) {
-		const key = (event.target as HTMLButtonElement).getAttribute('data-key');
-		if (!key) return;
-
-		if (key === 'enter') {
-			enter();
-		} else {
-			update(key);
 		}
 	}
 
@@ -196,19 +106,11 @@
 	function keydown(event: KeyboardEvent) {
 		if (event.metaKey) return;
 
-		if (event.key === 'Enter') {
-			if (submittable) enter();
-			return;
-		}
+		if (event.key === 'Enter' && !submittable) return;
 
-		if (event.key === 'Backspace') {
-			update('backspace');
-			return;
-		}
-
-		if (event.key.length === 1 && event.key.match(/[a-z]/i)) {
-			update(event.key.toLowerCase());
-		}
+		document
+			.querySelector(`[data-key="${event.key}" i]`)
+			?.dispatchEvent(new MouseEvent('click', { cancelable: true, bubbles: true }));
 	}
 </script>
 
@@ -216,110 +118,133 @@
 
 <svelte:head>
 	<title>Wordle</title>
-	<meta name="description" content="A Wordle clone written in SvelteKit" />
+	<meta name="description" content="Nederlandse Wordle" />
 </svelte:head>
 
 <h1 class="visually-hidden">Wordle</h1>
 
-<div class="wordle-container">
-	<a class="how-to-play" href="{base}/wordle/how-to-play">Hoe te spelen</a>
+<form
+	method="post"
+	action="?/enter"
+	use:enhance={() => {
+		isLoading = true;
+		// prevent default callback from resetting the form
+		return ({ update }) => {
+			update({ reset: false }).finally(() => {
+				isLoading = false;
+			});
+		};
+	}}
+>
+	<a class="how-to-play" href="/wordle/how-to-play">Hoe te spelen</a>
 
-	<!-- Word length selector -->
-	<div class="word-length-selector">
-		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}> 4 letters </button>
-		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}> 5 letters </button>
-		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}> 6 letters </button>
-		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}> 7 letters </button>
-	</div>
-
-	<!-- Indicator showing whether the answer uses the ĳ digraph -->
-	{#if game}
-		<div class="digraph-indicator" aria-live="polite">
-			{#if answerUsesDigraph}
-				<span class="badge digraph">Gebruikt ĳ (digraph)</span>
-			{:else}
-				<span class="badge separate">Gebruikt i + j (apart)</span>
-			{/if}
-		</div>
-	{/if}
-
-	{#if game}
-		<div
-			class="grid"
-			class:playing={!won}
-			class:bad-guess={badGuess}
-			style="--word-length: {wordLength}"
-		>
-			{#each Array.from(Array(6).keys()) as row (row)}
-				{@const current = row === i}
-				<h2 class="visually-hidden">Row {row + 1}</h2>
-				<div class="row" class:current>
-					{#each Array.from(Array(wordLength).keys()) as column (column)}
-						{@const guess = current ? currentGuess : game.guesses[row]}
-						{@const answer = game.answers[row]?.[column]}
-						{@const value = guess?.[column] ?? ''}
-						{@const selected = current && column === guess.length}
-						{@const exact = answer === 'x'}
-						{@const close = answer === 'c'}
-						{@const missing = answer === '_'}
-						<div class="letter" class:exact class:close class:missing class:selected>
-							{value}
-							<span class="visually-hidden">
-								{#if exact}
-									(correct)
-								{:else if close}
-									(present)
-								{:else if missing}
-									(absent)
-								{:else}
-									empty
-								{/if}
-							</span>
-						</div>
-					{/each}
-				</div>
+	<div class="header-controls">
+		<div class="word-length-selector">
+			{#each [4, 5, 6, 7] as length (length)}
+				<button
+					type="submit"
+					formaction="?/changeLength"
+					name="length"
+					value={length}
+					class:selected={data.wordLength === length}
+					disabled={data.wordLength === length}
+				>
+					{length}
+				</button>
 			{/each}
 		</div>
 
-		<div class="controls">
-			{#if won || game.answers.length >= 6}
-				{#if !won && game.answer}
-					<p>het antwoord was "{game.answer}"</p>
-				{/if}
-				<button onclick={restart} class="restart selected">
-					{won ? 'je hebt gewonnen :)' : `spel afgelopen :(`} opnieuw spelen?
-				</button>
-			{:else}
-				<div class="keyboard">
-					<button
-						onclick={handleClick}
-						data-key="enter"
-						class:selected={submittable}
-						disabled={!submittable}>enter</button
-					>
+		{#if isLoading}
+			<div class="loading-indicator">
+				<div class="spinner"></div>
+			</div>
+		{/if}
+	</div>
 
-					<button onclick={handleClick} data-key="backspace"> terug </button>
+	<div
+		class="grid"
+		class:playing={!won}
+		class:bad-guess={form?.badGuess}
+		style="--word-length: {data.wordLength}"
+	>
+		{#each Array.from(Array(6).keys()) as row (row)}
+			{@const current = row === i}
+			<h2 class="visually-hidden">Rij {row + 1}</h2>
+			<div class="row" class:current>
+				{#each Array.from(Array(data.wordLength).keys()) as column (column)}
+					{@const guess = current ? currentGuess : data.guesses[row]}
+					{@const answer = data.answers[row]?.[column]}
+					{@const value = guess?.[column] ?? ''}
+					{@const selected = current && column === guess.length}
+					{@const exact = answer === 'x'}
+					{@const close = answer === 'c'}
+					{@const missing = answer === '_'}
+					<div class="letter" class:exact class:close class:missing class:selected>
+						{value}
+						<span class="visually-hidden">
+							{#if exact}
+								(correct)
+							{:else if close}
+								(aanwezig)
+							{:else if missing}
+								(afwezig)
+							{:else}
+								leeg
+							{/if}
+						</span>
+						<input name="guess" disabled={!current} type="hidden" {value} />
+					</div>
+				{/each}
+			</div>
+		{/each}
+	</div>
 
-					{#each ['qwertyuiop', 'asdfghjklĳ', 'zxcvbnm'] as row (row)}
-						<div class="row">
-							{#each row as letter, index (index)}
-								<button
-									onclick={handleClick}
-									data-key={letter}
-									class={classnames[letter]}
-									disabled={submittable}
-									aria-label="{letter} {description[letter] || ''}"
-								>
-									{letter}
-								</button>
-							{/each}
-						</div>
-					{/each}
-				</div>
+	<div class="controls">
+		{#if won || data.answers.length >= 6}
+			{#if !won && data.answer}
+				<p>het antwoord was "{data.answer}"</p>
 			{/if}
-		</div>
-	{/if}
-</div>
+			<button data-key="enter" class="restart selected" formaction="?/restart">
+				{won ? 'je hebt gewonnen :)' : `game over :(`} opnieuw spelen?
+			</button>
+		{:else}
+			<div class="keyboard">
+				<button data-key="enter" class:selected={submittable} disabled={!submittable}>
+					enter
+				</button>
+
+				<button
+					onclick={update}
+					data-key="backspace"
+					formaction="?/update"
+					name="key"
+					value="backspace"
+				>
+					back
+				</button>
+
+				{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row (row)}
+					<div class="row">
+						{#each row as letter, index (index)}
+							<button
+								onclick={update}
+								data-key={letter}
+								class={classnames[letter]}
+								disabled={submittable}
+								formaction="?/update"
+								name="key"
+								value={letter}
+								aria-label="{letter} {description[letter] || ''}"
+							>
+								{letter}
+							</button>
+						{/each}
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+</form>
 
 {#if won}
 	<div
@@ -335,7 +260,7 @@
 {/if}
 
 <style>
-	.wordle-container {
+	form {
 		width: 100%;
 		height: 100%;
 		display: flex;
@@ -348,32 +273,8 @@
 
 	.how-to-play {
 		color: var(--color-text);
-	}
-
-	.word-length-selector {
-		display: flex;
-		gap: 0.5rem;
-		margin: 0.5rem 0;
-	}
-
-	.word-length-selector button {
-		padding: 0.5rem 1rem;
-		border: 2px solid var(--color-primary);
-		background: var(--color-surface);
-		color: var(--color-text);
-		border-radius: 4px;
-		cursor: pointer;
-		font-weight: 500;
-		transition: all 0.2s;
-	}
-
-	.word-length-selector button:hover {
-		background: var(--color-primary-light);
-	}
-
-	.word-length-selector button.active {
-		background: var(--color-primary);
-		color: white;
+		text-decoration: none;
+		margin-bottom: 0.5rem;
 	}
 
 	.how-to-play::before {
@@ -393,8 +294,55 @@
 		top: -0.05em;
 	}
 
+	.header-controls {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 100%;
+		max-width: min(100vw, calc(var(--word-length, 5) * 8vh), calc(var(--word-length, 5) * 76px));
+		gap: 1rem;
+		position: relative;
+	}
+
+	.word-length-selector {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	/* keep the loading indicator visually right-aligned while the selector is centered */
+	.loading-indicator {
+		position: absolute;
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.word-length-selector button {
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--color-text);
+		border-radius: 4px;
+		background: transparent;
+		color: var(--color-text);
+		cursor: pointer;
+		font-size: 1rem;
+	}
+
+	.word-length-selector button.selected {
+		background: var(--color-theme-1);
+		color: white;
+		border-color: var(--color-theme-1);
+	}
+
+	.word-length-selector button:disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
 	.grid {
-		--width: min(100vw, 40vh, 380px);
+		--width: min(100vw, calc(var(--word-length, 5) * 8vh), calc(var(--word-length, 5) * 76px));
 		max-width: var(--width);
 		align-self: center;
 		justify-self: center;
@@ -419,7 +367,7 @@
 	}
 
 	.grid.playing .row.current {
-		filter: drop-shadow(3px 3px 10px var(--color-bg-0));
+		filter: drop-shadow(3px 3px 10px var(--color-theme-2));
 	}
 
 	.letter {
@@ -431,37 +379,32 @@
 		text-align: center;
 		box-sizing: border-box;
 		text-transform: lowercase;
-		border: none;
+		border: 1px solid var(--color-text);
 		font-size: calc(0.08 * var(--width));
 		border-radius: 2px;
-		background: var(--color-surface);
+		background: var(--color-bg-1);
 		margin: 0;
 		color: var(--color-text);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
 	.letter.missing {
-		background: rgba(255, 255, 255, 0.5);
+		background: var(--color-bg-0);
 		color: var(--color-text);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		opacity: 0.6;
 	}
 
 	.letter.exact {
-		background: var(--color-accent);
-		color: var(--color-text);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		background: var(--color-theme-2);
+		color: white;
+		border-color: var(--color-theme-2);
 	}
 
 	.letter.close {
-		border: 2px solid var(--color-accent);
-		color: var(--color-text);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		border: 2px solid var(--color-theme-2);
 	}
 
 	.selected {
-		outline: 2px solid var(--color-primary);
-		color: var(--color-text);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		outline: 2px solid var(--color-theme-1);
 	}
 
 	.controls {
@@ -489,18 +432,19 @@
 	.keyboard button,
 	.keyboard button:disabled {
 		--size: min(8vw, 4vh, 40px);
-		background-color: var(--color-surface);
+		background-color: var(--color-bg-1);
 		color: var(--color-text);
 		width: var(--size);
-		border: none;
+		border: 1px solid var(--color-text);
 		border-radius: 2px;
 		font-size: calc(var(--size) * 0.5);
 		margin: 0;
 	}
 
 	.keyboard button.exact {
-		background: var(--color-accent);
-		color: var(--color-surface);
+		background: var(--color-theme-2);
+		color: white;
+		border-color: var(--color-theme-2);
 	}
 
 	.keyboard button.missing {
@@ -508,12 +452,12 @@
 	}
 
 	.keyboard button.close {
-		border: 2px solid var(--color-accent);
+		border: 2px solid var(--color-theme-2);
 	}
 
 	.keyboard button:focus {
-		background: var(--color-primary);
-		color: var(--color-text);
+		background: var(--color-theme-1);
+		color: white;
 		outline: none;
 	}
 
@@ -550,33 +494,30 @@
 
 	.restart:focus,
 	.restart:hover {
-		background: var(--color-primary);
-		color: var(--color-surface);
+		background: var(--color-theme-1);
+		color: white;
 		outline: none;
 	}
 
-	.digraph-indicator {
-		margin-top: -0.5rem;
-		margin-bottom: 0.25rem;
+	.loading-indicator {
 		display: flex;
+		align-items: center;
 		justify-content: center;
 	}
 
-	.badge {
-		padding: 0.25rem 0.6rem;
-		border-radius: 999px;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--color-bg-0);
+	.spinner {
+		width: 30px;
+		height: 30px;
+		border: 3px solid rgba(var(--color-theme-1-rgb, 255, 62, 0), 0.3);
+		border-top-color: var(--color-theme-1);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
 	}
 
-	.badge.digraph {
-		background: var(--color-accent);
-	}
-
-	.badge.separate {
-		background: rgba(0, 0, 0, 0.12);
-		color: var(--color-text);
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	@keyframes wiggle {
@@ -586,19 +527,16 @@
 		10% {
 			transform: translateX(-2px);
 		}
+		20% {
+			transform: translateX(2px);
+		}
 		30% {
-			transform: translateX(4px);
-		}
-		50% {
-			transform: translateX(-6px);
-		}
-		70% {
-			transform: translateX(+4px);
-		}
-		90% {
 			transform: translateX(-2px);
 		}
-		100% {
+		40% {
+			transform: translateX(2px);
+		}
+		50% {
 			transform: translateX(0);
 		}
 	}
