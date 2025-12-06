@@ -1,10 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { dev } from '$app/environment';
 	import generateFilteredWords from '$lib/solver';
 
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
+	const base = '';
 
 	export let data: PageData;
 

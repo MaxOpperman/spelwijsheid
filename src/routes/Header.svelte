@@ -1,12 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { dev } from '$app/environment';
-	import { building } from '$app/environment';
 	import github from '$lib/images/github.svg';
 	import DarkModeToggle from '$lib/components/DarkModeToggle.svelte';
 
-	// Get base path - empty in dev, /Spelwijsheid in production build
-	const base = dev && !building ? '' : '/Spelwijsheid';
+	const base = '';
 
 	let solversOpen = false;
 	let mobileMenuOpen = false;
