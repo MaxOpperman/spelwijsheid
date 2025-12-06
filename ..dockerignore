@@ -1,0 +1,25 @@
+# Dockerignore file - excludes files from Docker build context
+node_modules
+.git
+.github
+.vscode
+*.log
+npm-debug.log*
+.DS_Store
+.env
+.env.*
+!.env.example
+build
+.svelte-kit
+dist
+coverage
+*.test.ts
+*.spec.ts
+test/
+.prettierrc
+.prettierignore
+.eslintrc
+.eslintignore
+README.md
+DOCKER_DEPLOYMENT.md
+LICENSE

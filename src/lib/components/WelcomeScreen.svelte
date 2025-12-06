@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
-
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
+	const base = '';
 
 	export let inputChars: string[];
 	export let totalPossibleWords: number;

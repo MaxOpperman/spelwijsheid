@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { confetti } from '@neoconfetti/svelte';
-	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { Game } from './game';
 
-	// Get base path - empty in dev, /Spelwijsheid in production
-	const base = dev ? '' : '/Spelwijsheid';
+	const base = '';
 
 	interface Props {
 		data: PageData;

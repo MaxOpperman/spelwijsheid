@@ -10,7 +10,7 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		// Configure for static site generation (GitHub Pages)
+		// Configure for static site generation
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
@@ -19,7 +19,7 @@ const config = {
 			strict: true
 		}),
 		paths: {
-			base: dev ? '' : process.env.BASE_PATH || '/Spelwijsheid'
+			base: dev ? '' : process.env.BASE_PATH || ''
 		}
 	}
 };
