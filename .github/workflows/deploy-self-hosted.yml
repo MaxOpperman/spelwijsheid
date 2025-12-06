@@ -65,7 +65,7 @@ jobs:
           sudo docker run -d \
             --name spelwijsheid \
             --restart unless-stopped \
-            -p 3000:6749 \
+            -p 6749:3000 \
             ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
       - name: Clean up old images
