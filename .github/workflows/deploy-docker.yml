@@ -10,8 +10,10 @@ permissions:
   packages: write
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.lowercase.outputs.owner }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,10 +45,15 @@ jobs:
           build-args: |
             BASE_PATH=
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           password: ${{ secrets.SERVER_PASSWORD }}
@@ -55,7 +62,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Pull the latest image
-            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/spelwijsheid:latest
+            docker pull ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
             # Stop and remove old container if it exists
             docker stop spelwijsheid || true
@@ -66,7 +73,8 @@ jobs:
               --name spelwijsheid \
               --restart unless-stopped \
               -p 3000:6749 \
-              ghcr.io/${{ steps.lowercase.outputs.owner }}/spelwijsheid:latest
+              ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
             # Clean up old images
             docker image prune -af --filter "until=24h"
+
