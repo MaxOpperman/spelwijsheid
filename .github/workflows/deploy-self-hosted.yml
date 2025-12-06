@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy to Self-Hosted Server
 
 on:
   push:
@@ -46,35 +46,27 @@ jobs:
             BASE_PATH=
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build
     steps:
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          port: ${{ secrets.SERVER_PORT }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script: |
-            # Login to GitHub Container Registry
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Pull the latest image
-            docker pull ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
+      - name: Pull the latest image
+        run: docker pull ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
-            # Stop and remove old container if it exists
-            docker stop spelwijsheid || true
-            docker rm spelwijsheid || true
+      - name: Stop and remove old container
+        run: |
+          docker stop spelwijsheid || true
+          docker rm spelwijsheid || true
 
-            # Run the new container
-            docker run -d \
-              --name spelwijsheid \
-              --restart unless-stopped \
-              -p 3000:6749 \
-              ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
+      - name: Run the new container
+        run: |
+          docker run -d \
+            --name spelwijsheid \
+            --restart unless-stopped \
+            -p 3000:6749 \
+            ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
-            # Clean up old images
-            docker image prune -af --filter "until=24h"
-
+      - name: Clean up old images
+        run: docker image prune -af --filter "until=24h"

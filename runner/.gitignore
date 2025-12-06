@@ -1,0 +1,4 @@
+.env
+.runner
+*.log
+_work/

@@ -1,0 +1,22 @@
+services:
+  github-runner:
+    build: .
+    container_name: github-actions-runner
+    restart: unless-stopped
+    environment:
+      - GITHUB_REPOSITORY_URL=https://github.com/MaxOpperman/spelwijsheid
+      - GITHUB_RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - RUNNER_NAME=docker-runner
+      - RUNNER_WORKDIR=_work
+      - RUNNER_LABELS=docker,self-hosted
+    volumes:
+      # Mount Docker socket so runner can control Docker on host
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persist runner data
+      - runner-data:/home/runner/_work
+    # Give access to Docker group
+    group_add:
+      - ${DOCKER_GID:-999}
+
+volumes:
+  runner-data:
