@@ -22,12 +22,13 @@ function formatTimestamp(): string {
  */
 export const handle: Handle = async ({ event, resolve }) => {
 	const startTime = Date.now();
+	let clientIp: string | undefined;
 
-	// Try to log the request, but skip if during prerendering
+	// Try to get client IP and log the request, but skip if during prerendering
 	try {
-		const clientIp = event.getClientAddress();
+		clientIp = event.getClientAddress();
 		const method = event.request.method;
-		const path = new URL(event.request.url).pathname;
+		const path = event.url.pathname;
 
 		// Log the incoming request
 		console.log(`HTTP  ${formatTimestamp()} ${clientIp} ${method} ${path}`);
@@ -38,17 +39,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Process the request
 	const response = await resolve(event);
 
-	// Try to log the response
-	try {
-		const clientIp = event.getClientAddress();
+	// Log the response if we have a client IP
+	if (clientIp) {
 		const duration = Date.now() - startTime;
-
-		// Log the response
 		console.log(
 			`HTTP  ${formatTimestamp()} ${clientIp} Returned ${response.status} in ${duration} ms`
 		);
-	} catch {
-		// Skip logging during prerendering
 	}
 
 	return response;
