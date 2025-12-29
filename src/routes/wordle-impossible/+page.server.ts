@@ -33,36 +33,6 @@ export const load = (({ cookies }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	update: async ({ request, cookies }) => {
-		const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
-		const wordList = wordLists[wordLength];
-		const game = new ImpossibleGame(
-			cookies.get(`wordle-impossible-${wordLength}`),
-			wordList,
-			wordLength
-		);
-
-		const data = await request.formData();
-		const key = data.get('key');
-
-		const i = game.guesses.length;
-		const currentGuess = game.guesses[i] || '';
-
-		if (key === 'backspace') {
-			// Store the updated current guess
-			if (i < game.guesses.length) {
-				game.guesses[i] = currentGuess.slice(0, -1);
-			}
-		} else {
-			// Store the updated current guess
-			if (i < game.guesses.length) {
-				game.guesses[i] = currentGuess + key;
-			}
-		}
-
-		cookies.set(`wordle-impossible-${wordLength}`, game.toString(), { path: '/' });
-	},
-
 	enter: async ({ request, cookies }) => {
 		const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
 		const wordList = wordLists[wordLength];

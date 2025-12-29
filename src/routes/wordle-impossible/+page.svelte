@@ -264,15 +264,7 @@
 					enter
 				</button>
 
-				<button
-					onclick={update}
-					data-key="backspace"
-					formaction="?/update"
-					name="key"
-					value="backspace"
-				>
-					back
-				</button>
+				<button onclick={update} data-key="backspace"> back </button>
 
 				{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row (row)}
 					<div class="row">
@@ -282,9 +274,6 @@
 								data-key={letter}
 								class={classnames[letter]}
 								disabled={submittable}
-								formaction="?/update"
-								name="key"
-								value={letter}
 								aria-label="{letter} {description[letter] || ''}"
 							>
 								{letter}
