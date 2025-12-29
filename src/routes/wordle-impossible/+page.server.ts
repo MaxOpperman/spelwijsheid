@@ -5,10 +5,10 @@ import { getWordleWords } from '$lib/words.server.ts';
 import { parseStats, serializeStats, updateStats } from './stats.ts';
 
 const wordLists = {
-	4: getWordleWords({ exactLength: 4 }),
-	5: getWordleWords({ exactLength: 5 }),
-	6: getWordleWords({ exactLength: 6 }),
-	7: getWordleWords({ exactLength: 7 })
+	4: getWordleWords({ exactLength: 4, splitIjDigraph: true, lowercase: true }),
+	5: getWordleWords({ exactLength: 5, splitIjDigraph: true, lowercase: true }),
+	6: getWordleWords({ exactLength: 6, splitIjDigraph: true, lowercase: true }),
+	7: getWordleWords({ exactLength: 7, splitIjDigraph: true, lowercase: true })
 };
 
 export const load = (({ cookies }) => {
@@ -19,7 +19,23 @@ export const load = (({ cookies }) => {
 		wordList,
 		wordLength
 	);
-	const stats = parseStats(cookies.get(`wordle-impossible-stats-${wordLength}`));
+	let stats = parseStats(cookies.get(`wordle-impossible-stats-${wordLength}`));
+
+	// If the game just ended, check if we need to update stats
+	if (game.endTime && game.guesses.length > 0) {
+		const lastRecordedGame = cookies.get(`wordle-impossible-last-recorded-${wordLength}`);
+		const currentGameId = `${game.startTime}-${game.endTime}`;
+
+		// Only update stats if this game hasn't been recorded yet
+		if (lastRecordedGame !== currentGameId) {
+			const won = game.isWon();
+			const timeMs = game.getElapsedTime();
+			const guessCount = won ? game.guesses.length : undefined;
+			stats = updateStats(stats, won, timeMs, guessCount);
+			cookies.set(`wordle-impossible-stats-${wordLength}`, serializeStats(stats), { path: '/' });
+			cookies.set(`wordle-impossible-last-recorded-${wordLength}`, currentGameId, { path: '/' });
+		}
+	}
 
 	return {
 		wordLength,
@@ -54,24 +70,11 @@ export const actions = {
 
 	restart: async ({ cookies }) => {
 		const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
-		const wordList = wordLists[wordLength];
-		const game = new ImpossibleGame(
-			cookies.get(`wordle-impossible-${wordLength}`),
-			wordList,
-			wordLength
-		);
-		const stats = parseStats(cookies.get(`wordle-impossible-stats-${wordLength}`));
-
-		// Determine if the game was won and calculate time
-		const won = game.isWon();
-		const timeMs = game.getElapsedTime();
-
-		// Update stats
-		const newStats = updateStats(stats, won, timeMs);
-		cookies.set(`wordle-impossible-stats-${wordLength}`, serializeStats(newStats), { path: '/' });
 
 		// Delete the game cookie to start a new game
 		cookies.delete(`wordle-impossible-${wordLength}`, { path: '/' });
+		// Also delete the last recorded game ID so a new game can be tracked
+		cookies.delete(`wordle-impossible-last-recorded-${wordLength}`, { path: '/' });
 	},
 
 	changeLength: async ({ request, cookies }) => {

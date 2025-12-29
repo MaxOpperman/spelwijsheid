@@ -3,6 +3,7 @@ export interface ImpossibleWordleStats {
 	bestTime: number | null; // in milliseconds, null if never won
 	totalTime: number; // in milliseconds
 	gamesPlayed: number;
+	guessDistribution: Record<number, number>; // Maps guess count to number of wins
 }
 
 /**
@@ -13,7 +14,8 @@ export function createDefaultStats(): ImpossibleWordleStats {
 		totalCorrectGuesses: 0,
 		bestTime: null,
 		totalTime: 0,
-		gamesPlayed: 0
+		gamesPlayed: 0,
+		guessDistribution: {}
 	};
 }
 
@@ -44,6 +46,10 @@ export function parseStats(serialized: string | undefined): ImpossibleWordleStat
 			typeof parsed.totalTime === 'number' &&
 			typeof parsed.gamesPlayed === 'number'
 		) {
+			// Ensure guessDistribution exists (for backwards compatibility)
+			if (!parsed.guessDistribution || typeof parsed.guessDistribution !== 'object') {
+				parsed.guessDistribution = {};
+			}
 			return parsed;
 		}
 	} catch {
@@ -58,13 +64,15 @@ export function parseStats(serialized: string | undefined): ImpossibleWordleStat
  * @param stats Current stats
  * @param won Whether the player won
  * @param timeMs Time taken in milliseconds
+ * @param guessCount Number of guesses used to win (optional, only for wins)
  */
 export function updateStats(
 	stats: ImpossibleWordleStats,
 	won: boolean,
-	timeMs: number
+	timeMs: number,
+	guessCount?: number
 ): ImpossibleWordleStats {
-	const newStats = { ...stats };
+	const newStats = { ...stats, guessDistribution: { ...stats.guessDistribution } };
 
 	newStats.gamesPlayed += 1;
 
@@ -74,6 +82,11 @@ export function updateStats(
 
 		if (newStats.bestTime === null || timeMs < newStats.bestTime) {
 			newStats.bestTime = timeMs;
+		}
+
+		// Track guess distribution
+		if (guessCount !== undefined && guessCount > 0) {
+			newStats.guessDistribution[guessCount] = (newStats.guessDistribution[guessCount] || 0) + 1;
 		}
 	}
 

@@ -3,7 +3,7 @@
 </svelte:head>
 
 <div class="content">
-	<h1>⚡ Onmogelijke Wordle</h1>
+	<h1>Onmogelijke Wordle</h1>
 
 	<p>
 		Welkom bij de Onmogelijke Wordle! Dit is geen gewone Wordle. Het woord verandert
@@ -24,6 +24,7 @@
 		<ol>
 			<li>Je raadt "BOATS" → Geen enkele letter komt overeen</li>
 			<li>Je raadt "GRIEF" → Nog steeds geen matches</li>
+			<li>... (meer pogingen)</li>
 			<li>
 				Je raadt "DRUNK" → Nu <strong>moet</strong> het woord een 'U' bevatten (misschien de enige overgebleven
 				klinker), maar op de verkeerde positie

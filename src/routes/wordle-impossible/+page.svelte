@@ -173,7 +173,7 @@
 	<a class="how-to-play" href="/wordle-impossible/how-to-play">Hoe te spelen</a>
 
 	<div class="header-info">
-		<h2 class="mode-title">⚡ Onmogelijke Modus</h2>
+		<h2 class="mode-title">Impossible Wordle</h2>
 		<div class="timer">
 			<span class="timer-label">Tijd:</span>
 			<span class="timer-value">{formatTime(elapsedTime)}</span>

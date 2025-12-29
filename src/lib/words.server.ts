@@ -19,6 +19,8 @@ export interface WordFilterConfig {
 	splitIjDigraph?: boolean;
 	/** Whether to normalize accented characters to their base form (e.g., ü → u). Defaults to true. */
 	normalizeAccents?: boolean;
+	/** Whether the word is a Roman numeral */
+	romanNumeral?: boolean;
 }
 
 /**
@@ -52,6 +54,16 @@ function loadRawWords(): string[] {
 }
 
 /**
+ * Check if a word is a Roman numeral
+ */
+function isRomanNumeral(word: string): boolean {
+	// Match valid Roman numerals (I, II, III, IV, V, etc.)
+	// This regex matches Roman numerals from 1 to 3999
+	const romanNumeralPattern = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
+	return romanNumeralPattern.test(word);
+}
+
+/**
  * Get filtered Dutch words based on the provided configuration
  */
 export function getFilteredWords(config: WordFilterConfig = {}): string[] {
@@ -62,13 +74,17 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		lowercase = false,
 		alphabeticOnly = false,
 		splitIjDigraph = false,
-		normalizeAccents = true
+		normalizeAccents = true,
+		romanNumeral = false
 	} = config;
 
 	const rawWords = loadRawWords();
 
 	return rawWords
 		.filter((word) => {
+			// Filter out Roman numerals
+			if (romanNumeral && isRomanNumeral(word)) return false;
+
 			// Normalize accents first if enabled (for accurate length calculation and filtering)
 			const normalizedWord = normalizeAccents ? normalizeAccentedCharacters(word) : word;
 
@@ -113,7 +129,8 @@ export function getSolverWords(config: WordFilterConfig = {}): string[] {
 	return getFilteredWords({
 		...config,
 		minLength: config.minLength ?? 4,
-		normalizeAccents: config.normalizeAccents ?? true
+		normalizeAccents: config.normalizeAccents ?? true,
+		romanNumeral: config.romanNumeral ?? false
 	});
 }
 
@@ -127,6 +144,7 @@ export function getWordleWords(config: WordFilterConfig = {}): string[] {
 		lowercase: config.lowercase ?? true,
 		alphabeticOnly: config.alphabeticOnly ?? true,
 		splitIjDigraph: config.splitIjDigraph ?? false,
-		normalizeAccents: config.normalizeAccents ?? true
+		normalizeAccents: config.normalizeAccents ?? true,
+		romanNumeral: config.romanNumeral ?? false
 	});
 }

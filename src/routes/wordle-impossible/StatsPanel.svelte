@@ -9,6 +9,14 @@
 	let { stats }: Props = $props();
 
 	const averageTime = $derived(getAverageTime(stats));
+
+	// Get guess distribution data
+	const guessDistributionData = $derived.by(() => {
+		const distribution = stats.guessDistribution || {};
+		const counts = Object.values(distribution);
+		const maxCount = Math.max(...counts, 0);
+		return { distribution, maxCount };
+	});
 </script>
 
 <div class="stats-panel">
@@ -31,6 +39,28 @@
 			<div class="stat-label">Gemiddelde Tijd</div>
 		</div>
 	</div>
+
+	{#if Object.keys(stats.guessDistribution || {}).length > 0}
+		<h4>Aantal beurten per woord</h4>
+		<div class="guess-distribution">
+			{#each Object.entries(stats.guessDistribution || {})
+				.map(([k, v]) => ({ guessNum: parseInt(k), count: v }))
+				.sort((a, b) => a.guessNum - b.guessNum) as { guessNum, count } (guessNum)}
+				{@const percentage =
+					guessDistributionData.maxCount > 0 ? (count / guessDistributionData.maxCount) * 100 : 0}
+				<div class="distribution-row">
+					<div class="guess-number">{guessNum}</div>
+					<div class="distribution-bar-container">
+						<div
+							class="distribution-bar"
+							style="width: {Math.max(percentage, count > 0 ? 7 : 0)}%"
+						></div>
+						<span class="distribution-count">{count}</span>
+					</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -49,6 +79,12 @@
 	.stats-panel h3 {
 		margin: 0 0 0.75rem 0;
 		font-size: 1.1rem;
+		color: var(--color-text);
+	}
+
+	.stats-panel h4 {
+		margin: 1rem 0 0.5rem 0;
+		font-size: 0.95rem;
 		color: var(--color-text);
 	}
 
@@ -79,6 +115,57 @@
 		line-height: 1.2;
 	}
 
+	.guess-distribution {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		text-align: left;
+		max-width: 100%;
+		margin: 0 auto;
+		padding: 0 0.5rem;
+		box-sizing: border-box;
+	}
+
+	.distribution-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.guess-number {
+		font-weight: bold;
+		min-width: 1.25rem;
+		color: var(--color-text);
+		font-size: 0.9rem;
+	}
+
+	.distribution-bar-container {
+		flex: 1;
+		background: var(--color-bg-0);
+		border-radius: 3px;
+		height: 1.75rem;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.distribution-bar {
+		background: var(--color-theme-2);
+		height: 100%;
+		border-radius: 3px;
+		transition: width 0.5s ease;
+	}
+
+	.distribution-count {
+		position: absolute;
+		left: 0.5rem;
+		top: 50%;
+		transform: translateY(-50%);
+		color: var(--color-text);
+		font-weight: bold;
+		font-size: 0.9rem;
+		z-index: 1;
+	}
+
 	@media (max-width: 600px) {
 		.stat-value {
 			font-size: 1.5rem;
@@ -90,6 +177,18 @@
 
 		.stats-panel {
 			padding: 0.5rem;
+		}
+
+		.guess-distribution {
+			padding: 0 0.25rem;
+		}
+
+		.distribution-bar-container {
+			height: 1.5rem;
+		}
+
+		.distribution-count {
+			font-size: 0.8rem;
 		}
 	}
 </style>
