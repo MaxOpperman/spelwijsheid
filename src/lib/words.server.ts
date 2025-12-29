@@ -19,8 +19,8 @@ export interface WordFilterConfig {
 	splitIjDigraph?: boolean;
 	/** Whether to normalize accented characters to their base form (e.g., ü → u). Defaults to true. */
 	normalizeAccents?: boolean;
-	/** Whether the word is a Roman numeral */
-	romanNumeral?: boolean;
+	/** Whether to exclude Roman numerals from the results */
+	excludeRomanNumeral?: boolean;
 }
 
 /**
@@ -75,7 +75,7 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		alphabeticOnly = false,
 		splitIjDigraph = false,
 		normalizeAccents = true,
-		romanNumeral = false
+		excludeRomanNumeral = false
 	} = config;
 
 	const rawWords = loadRawWords();
@@ -83,7 +83,7 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 	return rawWords
 		.filter((word) => {
 			// Filter out Roman numerals
-			if (romanNumeral && isRomanNumeral(word)) return false;
+			if (excludeRomanNumeral && isRomanNumeral(word)) return false;
 
 			// Normalize accents first if enabled (for accurate length calculation and filtering)
 			const normalizedWord = normalizeAccents ? normalizeAccentedCharacters(word) : word;
@@ -130,7 +130,7 @@ export function getSolverWords(config: WordFilterConfig = {}): string[] {
 		...config,
 		minLength: config.minLength ?? 4,
 		normalizeAccents: config.normalizeAccents ?? true,
-		romanNumeral: config.romanNumeral ?? false
+		excludeRomanNumeral: config.excludeRomanNumeral ?? false
 	});
 }
 
@@ -145,6 +145,6 @@ export function getWordleWords(config: WordFilterConfig = {}): string[] {
 		alphabeticOnly: config.alphabeticOnly ?? true,
 		splitIjDigraph: config.splitIjDigraph ?? false,
 		normalizeAccents: config.normalizeAccents ?? true,
-		romanNumeral: config.romanNumeral ?? false
+		excludeRomanNumeral: config.excludeRomanNumeral ?? false
 	});
 }

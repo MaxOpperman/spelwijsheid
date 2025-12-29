@@ -40,9 +40,6 @@
 		}
 	});
 
-	/** The current guess index */
-	let _currentGuessIndex = $derived(won ? -1 : data.guesses.length);
-
 	/** The current guess text */
 	let currentGuess = $state('');
 
@@ -201,8 +198,9 @@
 		</div>
 
 		{#if isLoading}
-			<div class="loading-indicator">
+			<div class="loading-indicator" role="status" aria-live="polite">
 				<div class="spinner"></div>
+				<span class="visually-hidden">Laden...</span>
 			</div>
 		{/if}
 	</div>

@@ -21,10 +21,6 @@
 		mobileMenuOpen = !mobileMenuOpen;
 	}
 
-	function closeMenu() {
-		mobileMenuOpen = false;
-	}
-
 	function closeMenuAndSubmenu() {
 		mobileMenuOpen = false;
 		gamesOpen = false;
@@ -71,7 +67,7 @@
 							? 'page'
 							: undefined}
 					>
-						<a href="{base}/spelwijze" onclick={closeMenu}>Spelwijze</a>
+						<a href="{base}/spelwijze" onclick={closeMenuAndSubmenu}>Spelwijze</a>
 					</li>
 					<li
 						aria-current={page.url.pathname.startsWith('/wordle') &&
@@ -80,12 +76,12 @@
 							? 'page'
 							: undefined}
 					>
-						<a href="{base}/wordle" onclick={closeMenu}>Wordle</a>
+						<a href="{base}/wordle" onclick={closeMenuAndSubmenu}>Wordle</a>
 					</li>
 					<li
 						aria-current={page.url.pathname.startsWith('/wordle-impossible') ? 'page' : undefined}
 					>
-						<a href="{base}/wordle-impossible" onclick={closeMenu}>Impossible Wordle</a>
+						<a href="{base}/wordle-impossible" onclick={closeMenuAndSubmenu}>Impossible Wordle</a>
 					</li>
 				</ul>
 			</li>
@@ -95,10 +91,10 @@
 				</button>
 				<ul class="submenu">
 					<li aria-current={page.url.pathname.startsWith('/wordle-solver') ? 'page' : undefined}>
-						<a href="{base}/wordle-solver" onclick={closeMenu}>Wordle Solver</a>
+						<a href="{base}/wordle-solver" onclick={closeMenuAndSubmenu}>Wordle Solver</a>
 					</li>
 					<li aria-current={page.url.pathname.startsWith('/spelwijze-solver') ? 'page' : undefined}>
-						<a href="{base}/spelwijze-solver" onclick={closeMenu}>Spelwijze Solver</a>
+						<a href="{base}/spelwijze-solver" onclick={closeMenuAndSubmenu}>Spelwijze Solver</a>
 					</li>
 				</ul>
 			</li>

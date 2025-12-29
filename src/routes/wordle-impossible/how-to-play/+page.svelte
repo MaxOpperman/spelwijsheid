@@ -22,12 +22,12 @@
 	<section>
 		<h2>Voorbeeld</h2>
 		<ol>
-			<li>Je raadt "BOATS" → Geen enkele letter komt overeen</li>
-			<li>Je raadt "GRIEF" → Nog steeds geen matches</li>
+			<li>Je raadt "SPUIT" → Geen enkele letter komt overeen</li>
+			<li>Je raadt "PLANK" → Nog steeds geen matches</li>
 			<li>... (meer pogingen)</li>
 			<li>
-				Je raadt "DRUNK" → Nu <strong>moet</strong> het woord een 'U' bevatten (misschien de enige overgebleven
-				klinker), maar op de verkeerde positie
+				Je raadt "GROND" → Nu <strong>moet</strong> het woord een 'O' bevatten (misschien de enige overgebleven
+				klinker), maar op de verkeerde positie.
 			</li>
 			<li>Het spel gaat door totdat je het juiste woord raadt!</li>
 		</ol>

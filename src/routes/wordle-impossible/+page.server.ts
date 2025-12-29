@@ -24,7 +24,12 @@ export const load = (({ cookies }) => {
 	// If the game just ended, check if we need to update stats
 	if (game.endTime && game.guesses.length > 0) {
 		const lastRecordedGame = cookies.get(`wordle-impossible-last-recorded-${wordLength}`);
-		const currentGameId = `${game.startTime}-${game.endTime}`;
+		// Create a more robust game ID that includes:
+		// - startTime: when the game began
+		// - endTime: when the game finished
+		// - guessCount: number of guesses made (prevents duplicate entries if times match)
+		// - first/last guess: adds uniqueness based on actual game content
+		const currentGameId = `${game.startTime}-${game.endTime}-${game.guesses.length}-${game.guesses[0]}-${game.guesses[game.guesses.length - 1]}`;
 
 		// Only update stats if this game hasn't been recorded yet
 		if (lastRecordedGame !== currentGameId) {

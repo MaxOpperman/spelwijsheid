@@ -86,10 +86,29 @@ export class ImpossibleGame {
 	}
 
 	/**
-	 * Choose the answer pattern that maximizes remaining possibilities
+	 * Choose the answer pattern that maximizes remaining possibilities.
+	 *
+	 * This is the core of the "impossible" game mechanics:
+	 * 1. For each word in the current possibility set, compute what pattern would be shown
+	 *    if that word were the answer (e.g., "xxc__" means exact, exact, close, wrong, wrong)
+	 * 2. Group all possible words by their pattern - words that produce the same pattern are grouped together
+	 * 3. Select the pattern group with the MOST words - this keeps the maximum number of possibilities alive
+	 * 4. Update the possibility set to only include words from the chosen pattern group
+	 * 5. Return the chosen pattern to display to the player
+	 *
+	 * Example: If player guesses "house" and we have 100 possible words:
+	 * - 30 words would produce pattern "x____" (h correct, rest wrong)
+	 * - 50 words would produce pattern "_x___" (o correct, rest wrong)
+	 * - 20 words would produce pattern "xxxxx" (perfect match)
+	 * We choose pattern "_x___" because it keeps 50 possibilities alive (the most),
+	 * making it harder for the player to narrow down the answer.
+	 *
+	 * @param guess The player's guess
+	 * @returns The answer pattern that maximizes remaining word possibilities
 	 */
 	private chooseAdversarialAnswer(guess: string): string {
 		// Group possible words by the answer pattern they would produce
+		// Key: pattern string (e.g., "xxc__"), Value: array of words that produce this pattern
 		const patternGroups = new Map<string, string[]>();
 
 		for (const word of this.possibleWords) {
@@ -100,27 +119,32 @@ export class ImpossibleGame {
 			patternGroups.get(pattern)!.push(word);
 		}
 
-		// Find the pattern with the most words (maximizes difficulty)
+		// Find the pattern with the most words (maximizes remaining possibilities = maximizes difficulty)
+		// Collect all patterns that tie for the maximum count to ensure uniform random selection
 		let maxCount = 0;
-		let bestPattern = '';
-		let bestWords: string[] = [];
+		const tiedPatterns: Array<{ pattern: string; words: string[] }> = [];
 
 		for (const [pattern, words] of patternGroups) {
 			if (words.length > maxCount) {
+				// Found a new maximum - clear previous ties and start fresh
 				maxCount = words.length;
-				bestPattern = pattern;
-				bestWords = words;
-			} else if (words.length === maxCount && Math.random() < 0.5) {
-				// Add some randomization when counts are equal
-				bestPattern = pattern;
-				bestWords = words;
+				tiedPatterns.length = 0;
+				tiedPatterns.push({ pattern, words });
+			} else if (words.length === maxCount) {
+				// This pattern ties with the current maximum - add it to the collection
+				tiedPatterns.push({ pattern, words });
 			}
 		}
 
-		// Update possible words to only those matching the chosen pattern
-		this.possibleWords = bestWords;
+		// Randomly select from tied patterns with uniform distribution
+		// This ensures fair randomization when multiple patterns have the same count
+		const selected = tiedPatterns[Math.floor(Math.random() * tiedPatterns.length)];
 
-		return bestPattern;
+		// Update possible words to only those matching the chosen pattern
+		// This ensures future guesses are evaluated against a consistent set
+		this.possibleWords = selected.words;
+
+		return selected.pattern;
 	}
 
 	/**
@@ -128,8 +152,15 @@ export class ImpossibleGame {
 	 */
 	getCurrentAnswer(): string {
 		if (this.possibleWords.length === 0) {
-			// Shouldn't happen, but fall back to a random word
-			return this.wordList[Math.floor(Math.random() * this.wordList.length)];
+			// This should never happen - it indicates a bug in the adversarial algorithm
+			// where all possible words have been eliminated, which breaks the game's consistency
+			const errorMsg =
+				`Critical error: No possible words remaining after ${this.guesses.length} guesses. ` +
+				`Last guess: "${this.guesses[this.guesses.length - 1]}", ` +
+				`Last answer: "${this.answers[this.answers.length - 1]}". ` +
+				`This indicates a bug in chooseAdversarialAnswer or filterPossibleWords.`;
+			console.error(errorMsg);
+			throw new Error(errorMsg);
 		}
 		// Return a random word from remaining possibilities
 		return this.possibleWords[Math.floor(Math.random() * this.possibleWords.length)];
