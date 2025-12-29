@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from '@sveltejs/adapter-node';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const dev = process.argv.includes('dev');
@@ -10,14 +10,8 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		// Configure for static site generation
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: '404.html',
-			precompress: false,
-			strict: false
-		}),
+		// Use adapter for server-side rendering
+		adapter: adapter(),
 		paths: {
 			base: dev ? '' : process.env.BASE_PATH || ''
 		}
