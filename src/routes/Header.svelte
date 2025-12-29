@@ -67,11 +67,15 @@
 			</li>
 			<li
 				aria-current={page.url.pathname.startsWith('/wordle') &&
-				!page.url.pathname.startsWith('/wordle-solver')
+				!page.url.pathname.startsWith('/wordle-solver') &&
+				!page.url.pathname.startsWith('/wordle-impossible')
 					? 'page'
 					: undefined}
 			>
 				<a href="{base}/wordle" onclick={closeMenuAndSubmenu}>Wordle</a>
+			</li>
+			<li aria-current={page.url.pathname.startsWith('/wordle-impossible') ? 'page' : undefined}>
+				<a href="{base}/wordle-impossible" onclick={closeMenuAndSubmenu}>⚡ Onmogelijk</a>
 			</li>
 			<li class="has-submenu" class:submenu-open={solversOpen}>
 				<button class="submenu-toggle" onclick={toggleSolvers} aria-expanded={solversOpen}>
