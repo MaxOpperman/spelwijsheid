@@ -10,7 +10,7 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		// Use Node adapter for server-side rendering
+		// Use adapter for server-side rendering
 		adapter: adapter(),
 		paths: {
 			base: dev ? '' : process.env.BASE_PATH || ''
