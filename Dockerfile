@@ -29,8 +29,11 @@ WORKDIR /app
 COPY package*.json ./
 COPY scripts ./scripts
 
-# Install only production dependencies
-RUN npm ci --omit=dev
+# Download wordlist first (preinstall script)
+RUN node scripts/download-wordlist.js
+
+# Install only production dependencies (skip prepare script which needs husky)
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy built files assets from builder
 COPY --from=builder /app/build ./build
