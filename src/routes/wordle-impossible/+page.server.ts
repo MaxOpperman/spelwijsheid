@@ -5,10 +5,30 @@ import { getWordleWords } from '$lib/words.server.ts';
 import { parseStats, serializeStats, updateStats } from './stats.ts';
 
 const wordLists = {
-	4: getWordleWords({ exactLength: 4, splitIjDigraph: true, lowercase: true }),
-	5: getWordleWords({ exactLength: 5, splitIjDigraph: true, lowercase: true }),
-	6: getWordleWords({ exactLength: 6, splitIjDigraph: true, lowercase: true }),
-	7: getWordleWords({ exactLength: 7, splitIjDigraph: true, lowercase: true })
+	4: getWordleWords({
+		exactLength: 4,
+		splitIjDigraph: true,
+		lowercase: true,
+		excludeRomanNumeral: true
+	}),
+	5: getWordleWords({
+		exactLength: 5,
+		splitIjDigraph: true,
+		lowercase: true,
+		excludeRomanNumeral: true
+	}),
+	6: getWordleWords({
+		exactLength: 6,
+		splitIjDigraph: true,
+		lowercase: true,
+		excludeRomanNumeral: true
+	}),
+	7: getWordleWords({
+		exactLength: 7,
+		splitIjDigraph: true,
+		lowercase: true,
+		excludeRomanNumeral: true
+	})
 };
 
 export const load = (({ cookies }) => {
