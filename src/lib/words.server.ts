@@ -54,13 +54,14 @@ function loadRawWords(): string[] {
 }
 
 /**
- * Check if a word is a Roman numeral
+ * Check if a word is a Roman numeral and returns true if it is.
+ * Returns false for the empty string.
  */
-function isRomanNumeral(word: string): boolean {
+export function isRomanNumeral(word: string): boolean {
 	// Match valid Roman numerals (I, II, III, IV, V, etc.)
 	// This regex matches Roman numerals from 1 to 3999
 	const romanNumeralPattern = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
-	return romanNumeralPattern.test(word);
+	return romanNumeralPattern.test(word) && word.length > 0;
 }
 
 /**
@@ -75,7 +76,7 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		alphabeticOnly = false,
 		splitIjDigraph = false,
 		normalizeAccents = true,
-		excludeRomanNumeral = false
+		excludeRomanNumeral = true
 	} = config;
 
 	const rawWords = loadRawWords();
@@ -145,6 +146,6 @@ export function getWordleWords(config: WordFilterConfig = {}): string[] {
 		alphabeticOnly: config.alphabeticOnly ?? true,
 		splitIjDigraph: config.splitIjDigraph ?? false,
 		normalizeAccents: config.normalizeAccents ?? true,
-		excludeRomanNumeral: config.excludeRomanNumeral ?? false
+		excludeRomanNumeral: config.excludeRomanNumeral ?? true
 	});
 }
