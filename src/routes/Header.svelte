@@ -5,8 +5,13 @@
 
 	const base = '';
 
+	let gamesOpen = false;
 	let solversOpen = false;
 	let mobileMenuOpen = false;
+
+	function toggleGames() {
+		gamesOpen = !gamesOpen;
+	}
 
 	function toggleSolvers() {
 		solversOpen = !solversOpen;
@@ -16,12 +21,9 @@
 		mobileMenuOpen = !mobileMenuOpen;
 	}
 
-	function closeMenu() {
-		mobileMenuOpen = false;
-	}
-
 	function closeMenuAndSubmenu() {
 		mobileMenuOpen = false;
+		gamesOpen = false;
 		solversOpen = false;
 	}
 </script>
@@ -54,24 +56,34 @@
 			>
 				<a href="{base}/" onclick={closeMenuAndSubmenu}>Home</a>
 			</li>
-			<li aria-current={page.url.pathname === base + '/about' ? 'page' : undefined}>
-				<a href="{base}/about" onclick={closeMenuAndSubmenu}>About</a>
-			</li>
-			<li
-				aria-current={page.url.pathname.startsWith('/spelwijze') &&
-				!page.url.pathname.startsWith('/spelwijze-solver')
-					? 'page'
-					: undefined}
-			>
-				<a href="{base}/spelwijze" onclick={closeMenuAndSubmenu}>Spelwijze</a>
-			</li>
-			<li
-				aria-current={page.url.pathname.startsWith('/wordle') &&
-				!page.url.pathname.startsWith('/wordle-solver')
-					? 'page'
-					: undefined}
-			>
-				<a href="{base}/wordle" onclick={closeMenuAndSubmenu}>Wordle</a>
+			<li class="has-submenu" class:submenu-open={gamesOpen}>
+				<button class="submenu-toggle" onclick={toggleGames} aria-expanded={gamesOpen}>
+					Games <span class="arrow">▼</span>
+				</button>
+				<ul class="submenu">
+					<li
+						aria-current={page.url.pathname.startsWith('/spelwijze') &&
+						!page.url.pathname.startsWith('/spelwijze-solver')
+							? 'page'
+							: undefined}
+					>
+						<a href="{base}/spelwijze" onclick={closeMenuAndSubmenu}>Spelwijze</a>
+					</li>
+					<li
+						aria-current={page.url.pathname.startsWith('/wordle') &&
+						!page.url.pathname.startsWith('/wordle-solver') &&
+						!page.url.pathname.startsWith('/wordle-impossible')
+							? 'page'
+							: undefined}
+					>
+						<a href="{base}/wordle" onclick={closeMenuAndSubmenu}>Wordle</a>
+					</li>
+					<li
+						aria-current={page.url.pathname.startsWith('/wordle-impossible') ? 'page' : undefined}
+					>
+						<a href="{base}/wordle-impossible" onclick={closeMenuAndSubmenu}>Impossible Wordle</a>
+					</li>
+				</ul>
 			</li>
 			<li class="has-submenu" class:submenu-open={solversOpen}>
 				<button class="submenu-toggle" onclick={toggleSolvers} aria-expanded={solversOpen}>
@@ -79,12 +91,15 @@
 				</button>
 				<ul class="submenu">
 					<li aria-current={page.url.pathname.startsWith('/wordle-solver') ? 'page' : undefined}>
-						<a href="{base}/wordle-solver" onclick={closeMenu}>Wordle Solver</a>
+						<a href="{base}/wordle-solver" onclick={closeMenuAndSubmenu}>Wordle Solver</a>
 					</li>
 					<li aria-current={page.url.pathname.startsWith('/spelwijze-solver') ? 'page' : undefined}>
-						<a href="{base}/spelwijze-solver" onclick={closeMenu}>Spelwijze Solver</a>
+						<a href="{base}/spelwijze-solver" onclick={closeMenuAndSubmenu}>Spelwijze Solver</a>
 					</li>
 				</ul>
+			</li>
+			<li aria-current={page.url.pathname === base + '/about' ? 'page' : undefined}>
+				<a href="{base}/about" onclick={closeMenuAndSubmenu}>About</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
