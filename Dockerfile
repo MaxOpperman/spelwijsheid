@@ -25,15 +25,21 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-# Install serve to run the static site
-RUN npm install -g serve
+# Copy package files for production dependencies
+COPY package*.json ./
 
-# Copy built files and static assets from builder
+# Install only production dependencies
+RUN npm ci --omit=dev
+
+# Copy built files assets from builder
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/static ./static
 
 # Expose port
 EXPOSE 3000
 
-# Run the application
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Set environment to production
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Run the SvelteKit Node server
+CMD ["node", "build/index.js"]
