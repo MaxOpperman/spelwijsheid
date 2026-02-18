@@ -3,6 +3,7 @@
 	import { confetti } from '@neoconfetti/svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
@@ -129,16 +130,14 @@
 		}
 	}
 
-	function handleHint() {
-		if (!game || won) return;
-		// Placeholder for hint functionality
-		alert('Hint functionality coming soon!');
-	}
-
 	function formatTime(seconds: number): string {
 		const mins = Math.floor(seconds / 60);
 		const secs = seconds % 60;
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
+	}
+
+	function goHome() {
+		goto('/');
 	}
 </script>
 
@@ -151,11 +150,10 @@
 
 <div class="game-container">
 	<div class="header">
-		<button class="back-button" onclick={() => (window.location.href = '/')}> ← Queens </button>
+		<button class="back-button" onclick={goHome}> ← Queens </button>
 		<div class="timer">⏱ {formatTime(elapsedTime)}</div>
 		<div class="controls-right">
 			<button class="control-button" onclick={handleClear}>Clear</button>
-			<button class="settings-button">⚙</button>
 		</div>
 	</div>
 
@@ -192,7 +190,6 @@
 
 		<div class="bottom-controls">
 			<button class="action-button" onclick={handleUndo}>Undo</button>
-			<button class="action-button" onclick={handleHint}>Hint</button>
 		</div>
 
 		{#if won}
@@ -292,8 +289,7 @@
 		align-items: center;
 	}
 
-	.control-button,
-	.settings-button {
+	.control-button {
 		padding: 0.5rem 1rem;
 		background: var(--color-bg-1);
 		border: 1px solid var(--color-text);
@@ -303,16 +299,10 @@
 		font-size: 0.9rem;
 	}
 
-	.control-button:hover,
-	.settings-button:hover {
+	.control-button:hover {
 		background: var(--color-theme-1);
 		color: white;
 		border-color: var(--color-theme-1);
-	}
-
-	.settings-button {
-		font-size: 1.2rem;
-		padding: 0.5rem 0.75rem;
 	}
 
 	.board {

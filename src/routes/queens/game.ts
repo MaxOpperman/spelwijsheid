@@ -343,10 +343,8 @@ export class QueensGame {
 	setCross(row: number, col: number) {
 		const cell = this.puzzle.board[row][col];
 		if (cell.state === 'empty') {
-			if (
-				this.history.length === 0 ||
-				this.history[this.history.length - 1] !== this.getBoardState()
-			) {
+			// Only save state if this is the first move in a drag operation
+			if (this.history.length === 0) {
 				this.saveState();
 			}
 			cell.state = 'cross';
