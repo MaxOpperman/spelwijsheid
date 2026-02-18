@@ -4,7 +4,7 @@ services:
     container_name: github-actions-runner
     restart: unless-stopped
     environment:
-      - GITHUB_REPOSITORY_URL=https://github.com/MaxOpperman/spelwijsheid
+      - GITHUB_REPOSITORY_URL=${GITHUB_REPOSITORY_URL}
       - GITHUB_RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
       - RUNNER_NAME=docker-runner
       - RUNNER_WORKDIR=_work

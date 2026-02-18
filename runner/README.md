@@ -7,7 +7,9 @@ This directory contains everything needed to run a GitHub Actions self-hosted ru
 ### 1. Get a Runner Token
 
 Go to your repository settings to get a new runner token:
-https://github.com/MaxOpperman/spelwijsheid/settings/actions/runners/new
+`https://github.com/OWNER/REPO/settings/actions/runners/new`
+
+Replace `OWNER/REPO` with your GitHub username/organization and repository name.
 
 Copy the token from the configuration command.
 
@@ -19,7 +21,9 @@ Create a `.env` file from the example:
 cp .env.example .env
 ```
 
-Edit `.env` and add your `GITHUB_RUNNER_TOKEN`.
+Edit `.env` and add:
+- Your repository URL in `GITHUB_REPOSITORY_URL` (e.g., `https://github.com/OWNER/REPO`)
+- Your runner token in `GITHUB_RUNNER_TOKEN`
 
 ### 3. Get Docker Group ID
 
