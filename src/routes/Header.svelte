@@ -83,6 +83,9 @@
 					>
 						<a href="{base}/wordle-impossible" onclick={closeMenuAndSubmenu}>Impossible Wordle</a>
 					</li>
+					<li aria-current={page.url.pathname.startsWith('/queens') ? 'page' : undefined}>
+						<a href="{base}/queens" onclick={closeMenuAndSubmenu}>N-Queens</a>
+					</li>
 				</ul>
 			</li>
 			<li class="has-submenu" class:submenu-open={solversOpen}>
