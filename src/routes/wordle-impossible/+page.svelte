@@ -135,7 +135,12 @@
 	 * Format elapsed time
 	 */
 	function formatTime(seconds: number): string {
-		return seconds.toFixed(1) + 's';
+		const mins = Math.floor(seconds / 60);
+		const secs = (seconds % 60).toFixed(1);
+		if (mins > 0) {
+			return `${mins}m ${secs}s`;
+		}
+		return secs + 's';
 	}
 </script>
 

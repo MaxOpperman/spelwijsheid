@@ -99,88 +99,110 @@ function generateRegions(size: number): number[][] {
 		.fill(0)
 		.map(() => Array(size).fill(-1));
 
-	const cellsPerRegion = new Map<number, number>();
-
-	// Initialize with one cell per region
-	const startPositions: { row: number; col: number }[] = [];
-	for (let i = 0; i < size; i++) {
-		let row, col;
-		let attempts = 0;
-		do {
-			row = Math.floor(Math.random() * size);
-			col = Math.floor(Math.random() * size);
-			attempts++;
-		} while (regions[row][col] !== -1 && attempts < 100);
-
-		if (regions[row][col] === -1) {
-			regions[row][col] = i;
-			cellsPerRegion.set(i, 1);
-			startPositions.push({ row, col });
-		}
-	}
-
-	// Expand regions using flood fill
-	const queue: { row: number; col: number; region: number }[] = startPositions.map((pos, i) => ({
-		...pos,
-		region: i
-	}));
-
-	while (queue.length > 0) {
-		const { row, col, region } = queue.shift()!;
-
-		// Try to expand in all 4 directions
-		const directions = [
-			[0, 1],
-			[1, 0],
-			[0, -1],
-			[-1, 0]
-		];
-		// Randomize direction order
-		directions.sort(() => Math.random() - 0.5);
-
-		for (const [dr, dc] of directions) {
-			const newRow = row + dr;
-			const newCol = col + dc;
-
-			if (
-				newRow >= 0 &&
-				newRow < size &&
-				newCol >= 0 &&
-				newCol < size &&
-				regions[newRow][newCol] === -1
-			) {
-				regions[newRow][newCol] = region;
-				cellsPerRegion.set(region, (cellsPerRegion.get(region) || 0) + 1);
-				queue.push({ row: newRow, col: newCol, region });
-			}
-		}
-	}
-
-	// Fill any remaining cells
+	// Get all cells and shuffle them
+	const allCells: { row: number; col: number }[] = [];
 	for (let row = 0; row < size; row++) {
 		for (let col = 0; col < size; col++) {
-			if (regions[row][col] === -1) {
-				// Find nearest region
-				for (const [dr, dc] of [
-					[0, 1],
-					[1, 0],
-					[0, -1],
-					[-1, 0]
-				]) {
-					const newRow = row + dr;
-					const newCol = col + dc;
-					if (
-						newRow >= 0 &&
-						newRow < size &&
-						newCol >= 0 &&
-						newCol < size &&
-						regions[newRow][newCol] !== -1
-					) {
-						regions[row][col] = regions[newRow][newCol];
-						break;
+			allCells.push({ row, col });
+		}
+	}
+
+	// Shuffle cells
+	for (let i = allCells.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[allCells[i], allCells[j]] = [allCells[j], allCells[i]];
+	}
+
+	// Pick first N cells as seed positions (guaranteed to be unique)
+	const startPositions: { row: number; col: number; region: number }[] = [];
+	for (let i = 0; i < size; i++) {
+		const { row, col } = allCells[i];
+		regions[row][col] = i;
+		startPositions.push({ row, col, region: i });
+	}
+
+	// Expand regions using flood fill with round-robin to keep regions balanced
+	const queues: { row: number; col: number }[][] = startPositions.map((pos) => [
+		{ row: pos.row, col: pos.col }
+	]);
+
+	let currentRegion = 0;
+	let activeCellsRemaining = size * size - size; // Total cells minus seed cells
+
+	while (activeCellsRemaining > 0) {
+		let foundCell = false;
+
+		// Try to expand current region
+		const queue = queues[currentRegion];
+		if (queue.length > 0) {
+			const { row, col } = queue.shift()!;
+
+			// Try to expand in all 4 directions
+			const directions = [
+				[0, 1],
+				[1, 0],
+				[0, -1],
+				[-1, 0]
+			];
+			// Randomize direction order
+			directions.sort(() => Math.random() - 0.5);
+
+			for (const [dr, dc] of directions) {
+				const newRow = row + dr;
+				const newCol = col + dc;
+
+				if (
+					newRow >= 0 &&
+					newRow < size &&
+					newCol >= 0 &&
+					newCol < size &&
+					regions[newRow][newCol] === -1
+				) {
+					regions[newRow][newCol] = currentRegion;
+					queue.push({ row: newRow, col: newCol });
+					activeCellsRemaining--;
+					foundCell = true;
+				}
+			}
+		}
+
+		// Move to next region (round-robin)
+		currentRegion = (currentRegion + 1) % size;
+
+		// If we've gone through all regions and found no cells to expand, we're done
+		if (!foundCell && currentRegion === 0) {
+			// Check if any cells are still unassigned
+			let hasUnassigned = false;
+			outerLoop: for (let row = 0; row < size; row++) {
+				for (let col = 0; col < size; col++) {
+					if (regions[row][col] === -1) {
+						// Assign to nearest region
+						for (const [dr, dc] of [
+							[0, 1],
+							[1, 0],
+							[0, -1],
+							[-1, 0]
+						]) {
+							const newRow = row + dr;
+							const newCol = col + dc;
+							if (
+								newRow >= 0 &&
+								newRow < size &&
+								newCol >= 0 &&
+								newCol < size &&
+								regions[newRow][newCol] !== -1
+							) {
+								regions[row][col] = regions[newRow][newCol];
+								activeCellsRemaining--;
+								hasUnassigned = true;
+								break outerLoop;
+							}
+						}
 					}
 				}
 			}
+
+			if (!hasUnassigned) break;
 		}
 	}
 
@@ -251,7 +273,7 @@ function findSolution(regions: number[][], size: number): { row: number; col: nu
 /**
  * Generate a new N-Queens puzzle
  */
-export function generatePuzzle(size: number = 8): Puzzle {
+export function generatePuzzle(size: number): Puzzle {
 	let regions: number[][];
 	let solution: { row: number; col: number }[] | null = null;
 
@@ -265,6 +287,20 @@ export function generatePuzzle(size: number = 8): Puzzle {
 
 	if (!solution) {
 		throw new Error('Failed to generate a valid puzzle');
+	}
+
+	// Verify we have exactly 'size' regions (0 to size-1)
+	const uniqueRegions = new Set<number>();
+	for (let row = 0; row < size; row++) {
+		for (let col = 0; col < size; col++) {
+			uniqueRegions.add(regions![row][col]);
+		}
+	}
+
+	// If we don't have exactly 'size' regions, regenerate
+	if (uniqueRegions.size !== size) {
+		console.warn(`Expected ${size} regions but got ${uniqueRegions.size}, regenerating...`);
+		return generatePuzzle(size);
 	}
 
 	// Create the board
@@ -335,6 +371,8 @@ export class QueensGame {
 		}
 
 		this.moves++;
+		// Create deep copy of board to trigger Svelte reactivity
+		this.puzzle.board = this.puzzle.board.map((row) => [...row]);
 	}
 
 	/**
@@ -344,11 +382,13 @@ export class QueensGame {
 		const cell = this.puzzle.board[row][col];
 		if (cell.state === 'empty') {
 			// Only save state if this is the first move in a drag operation
-			if (this.history.length === 0) {
+			if (this.history.length === 0 || this.moves === 0) {
 				this.saveState();
 			}
 			cell.state = 'cross';
 			this.moves++;
+			// Create deep copy of board to trigger Svelte reactivity
+			this.puzzle.board = this.puzzle.board.map((row) => [...row]);
 		}
 	}
 
@@ -370,6 +410,8 @@ export class QueensGame {
 					this.puzzle.board[row][col].state = previousState[row][col];
 				}
 			}
+			// Create deep copy of board to trigger Svelte reactivity
+			this.puzzle.board = this.puzzle.board.map((row) => [...row]);
 		}
 	}
 
@@ -383,6 +425,8 @@ export class QueensGame {
 				this.puzzle.board[row][col].state = 'empty';
 			}
 		}
+		// Create deep copy of board to trigger Svelte reactivity
+		this.puzzle.board = this.puzzle.board.map((row) => [...row]);
 	}
 
 	/**
