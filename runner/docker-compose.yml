@@ -1,0 +1,25 @@
+services:
+  github-runner:
+    build:
+      context: .
+      args:
+        - RUNNER_VERSION=${RUNNER_VERSION}
+        - DOCKER_GID=${DOCKER_GID}
+    container_name: github-actions-runner
+    restart: unless-stopped
+    environment:
+      - GITHUB_REPOSITORY_URL=${GITHUB_REPOSITORY_URL}
+      - GITHUB_RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - RUNNER_NAME=${RUNNER_NAME}
+      - RUNNER_WORKDIR=${RUNNER_WORKDIR}
+      - RUNNER_LABELS=${RUNNER_LABELS}
+    volumes:
+      # Mount Docker socket so runner can control Docker on host
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persist runner data
+      - runner-data:/home/runner/${RUNNER_WORKDIR}
+    # Give access to Docker socket
+    privileged: true
+
+volumes:
+  runner-data:
