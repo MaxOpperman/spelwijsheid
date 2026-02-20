@@ -27,7 +27,7 @@ The app will be available at `http://localhost:3000`
 
 ### Self-Hosted with GitHub Actions
 
-See the `runner/` directory for instructions on setting up a self-hosted GitHub Actions runner. You can customize the host port by setting the `HOST_PORT` environment variable on your runner.
+See the `runner/` directory for instructions on setting up a self-hosted GitHub Actions runner. You can customize the host port by setting the `HOST_PORT` GitHub repository secret in your repository settings.
 
 ## Future work
 
