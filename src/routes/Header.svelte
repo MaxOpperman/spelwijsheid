@@ -86,6 +86,9 @@
 					<li aria-current={page.url.pathname.startsWith('/queens') ? 'page' : undefined}>
 						<a href="{base}/queens" onclick={closeMenuAndSubmenu}>N-Queens</a>
 					</li>
+					<li aria-current={page.url.pathname.startsWith('/categories') ? 'page' : undefined}>
+						<a href="{base}/categories" onclick={closeMenuAndSubmenu}>Categories</a>
+					</li>
 				</ul>
 			</li>
 			<li class="has-submenu" class:submenu-open={solversOpen}>
