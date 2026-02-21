@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { env } from '$env/dynamic/private';
 import { createSession, getSession, updateSession, deleteSession } from './game-store.ts';
+import { isCorrectGuess } from '$lib/utils';
 
 export const prerender = false;
 
@@ -105,7 +106,7 @@ export const actions = {
 		const guess = (formData.get('guess') as string)?.trim().toLowerCase();
 		if (!guess) return;
 
-		const correct = guess === game.word.toLowerCase();
+		const correct = isCorrectGuess(guess, game.word);
 
 		if (correct) {
 			updateSession(sessionId!, { solved: true });
