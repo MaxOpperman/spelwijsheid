@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import github from '$lib/images/github.svg';
 	import DarkModeToggle from '$lib/components/DarkModeToggle.svelte';
+	import LangDropdown from '$lib/components/LangDropdown.svelte';
+	import { t } from '$lib/i18n';
 
 	const base = '';
 
@@ -30,9 +31,7 @@
 
 <header>
 	<div class="corner">
-		<a href="https://github.com/MaxOpperman/Spelwijsheid">
-			<img src={github} alt="GitHub" />
-		</a>
+		<DarkModeToggle />
 	</div>
 
 	<button
@@ -54,11 +53,11 @@
 					? 'page'
 					: undefined}
 			>
-				<a href="{base}/" onclick={closeMenuAndSubmenu}>Home</a>
+				<a href="{base}/" onclick={closeMenuAndSubmenu}>{$t('nav.home')}</a>
 			</li>
 			<li class="has-submenu" class:submenu-open={gamesOpen}>
 				<button class="submenu-toggle" onclick={toggleGames} aria-expanded={gamesOpen}>
-					Games <span class="arrow">▼</span>
+					{$t('nav.games')} <span class="arrow">▼</span>
 				</button>
 				<ul class="submenu">
 					<li
@@ -81,10 +80,12 @@
 					<li
 						aria-current={page.url.pathname.startsWith('/wordle-impossible') ? 'page' : undefined}
 					>
-						<a href="{base}/wordle-impossible" onclick={closeMenuAndSubmenu}>Impossible Wordle</a>
+						<a href="{base}/wordle-impossible" onclick={closeMenuAndSubmenu}
+							>{$t('nav.wordleImpossible')}</a
+						>
 					</li>
 					<li aria-current={page.url.pathname.startsWith('/queens') ? 'page' : undefined}>
-						<a href="{base}/queens" onclick={closeMenuAndSubmenu}>N-Queens</a>
+						<a href="{base}/queens" onclick={closeMenuAndSubmenu}>{$t('nav.queens')}</a>
 					</li>
 					<li aria-current={page.url.pathname.startsWith('/pinpoint') ? 'page' : undefined}>
 						<a href="{base}/pinpoint" onclick={closeMenuAndSubmenu}>Pinpoint</a>
@@ -93,19 +94,33 @@
 			</li>
 			<li class="has-submenu" class:submenu-open={solversOpen}>
 				<button class="submenu-toggle" onclick={toggleSolvers} aria-expanded={solversOpen}>
-					Solvers <span class="arrow">▼</span>
+					{$t('nav.solvers')} <span class="arrow">▼</span>
 				</button>
 				<ul class="submenu">
 					<li aria-current={page.url.pathname.startsWith('/wordle-solver') ? 'page' : undefined}>
-						<a href="{base}/wordle-solver" onclick={closeMenuAndSubmenu}>Wordle Solver</a>
+						<a href="{base}/wordle-solver" onclick={closeMenuAndSubmenu}>{$t('nav.wordleSolver')}</a
+						>
 					</li>
 					<li aria-current={page.url.pathname.startsWith('/spelwijze-solver') ? 'page' : undefined}>
-						<a href="{base}/spelwijze-solver" onclick={closeMenuAndSubmenu}>Spelwijze Solver</a>
+						<a href="{base}/spelwijze-solver" onclick={closeMenuAndSubmenu}
+							>{$t('nav.spelwijzeSolver')}</a
+						>
 					</li>
 				</ul>
 			</li>
 			<li aria-current={page.url.pathname === base + '/about' ? 'page' : undefined}>
-				<a href="{base}/about" onclick={closeMenuAndSubmenu}>About</a>
+				<a href="{base}/about" onclick={closeMenuAndSubmenu}>{$t('nav.about')}</a>
+			</li>
+			<li>
+				<a
+					href="https://github.com/MaxOpperman/Spelwijsheid"
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="GitHub"
+					onclick={closeMenuAndSubmenu}
+				>
+					<i class="fa-brands fa-github" style="font-size: 1.1rem;"></i>
+				</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
@@ -114,7 +129,7 @@
 	</nav>
 
 	<div class="corner">
-		<DarkModeToggle />
+		<LangDropdown />
 	</div>
 </header>
 
@@ -135,20 +150,6 @@
 		width: auto;
 		height: 3em;
 		margin: 0 0.5rem; /* Add horizontal margin */
-	}
-
-	.corner a {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 3em;
-		height: 3em;
-	}
-
-	.corner img {
-		width: 2em;
-		height: 2em;
-		object-fit: contain;
 	}
 
 	.mobile-menu-toggle {

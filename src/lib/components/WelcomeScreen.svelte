@@ -1,5 +1,6 @@
 <script lang="ts">
 	const base = '';
+	import { t } from '$lib/i18n';
 
 	export let inputChars: string[];
 	export let totalPossibleWords: number;
@@ -13,22 +14,20 @@
 <h1>Spelwijze</h1>
 
 <div class="help-link">
-	<a href="{base}/spelwijze/how-to-play">Hoe werkt het spel?</a>
+	<a href="{base}/spelwijze/how-to-play">{$t('spelwijze.howItWorks')}</a>
 </div>
 
 <div class="welcome-screen">
 	<div class="welcome-header">
 		<div class="welcome-icon">🎯</div>
-		<h2>Welkom bij Spelwijze!</h2>
-		<p class="welcome-subtitle">Vind alle Nederlandse woorden met de gegeven letters</p>
+		<h2>{$t('spelwijze.welcome')}</h2>
+		<p class="welcome-subtitle">{$t('spelwijze.subtitle')}</p>
 	</div>
 
 	<div class="game-preview">
 		<div class="challenge-section">
-			<h3>🎲 Vandaag's Uitdaging</h3>
-			<p class="challenge-description">
-				Gebruik deze letters om zo veel mogelijk woorden te vinden:
-			</p>
+			<h3>{$t('spelwijze.todaysChallenge')}</h3>
+			<p class="challenge-description">{$t('spelwijze.useLetters')}</p>
 
 			<div class="letters-display">
 				{#each inputChars || [] as char, index (index)}
@@ -41,11 +40,11 @@
 			<div class="letter-legend">
 				<div class="legend-item">
 					<span class="legend-color mandatory-color"></span>
-					<span>Verplichte letter (moet in elk woord)</span>
+					<span>{$t('spelwijze.requiredLetter')}</span>
 				</div>
 				<div class="legend-item">
 					<span class="legend-color optional-color"></span>
-					<span>Optionele letters</span>
+					<span>{$t('spelwijze.optionalLetters')}</span>
 				</div>
 			</div>
 		</div>
@@ -54,15 +53,15 @@
 			<div class="game-stats-preview">
 				<div class="stat-card">
 					<div class="stat-number">{totalPossibleWords}</div>
-					<div class="stat-label">Mogelijke woorden</div>
+					<div class="stat-label">{$t('spelwijze.possibleWordsLabel')}</div>
 				</div>
 				<div class="stat-card">
 					<div class="stat-number">{inputChars.length}</div>
-					<div class="stat-label">Letters om mee te spelen</div>
+					<div class="stat-label">{$t('spelwijze.lettersToPlay')}</div>
 				</div>
 				<div class="stat-card">
 					<div class="stat-number">∞</div>
-					<div class="stat-label">Tijd om te spelen</div>
+					<div class="stat-label">{$t('spelwijze.timeToPlay')}</div>
 				</div>
 			</div>
 
@@ -70,32 +69,38 @@
 				{#if hasSavedGame}
 					{#if gamePaused}
 						<button class="continue-button-hero" onclick={onResumeGame}>
-							▶️ Doorgaan met spel
+							{$t('spelwijze.continueGame')}
 						</button>
 					{:else}
 						<button class="continue-button-hero" onclick={onStartGame}>
-							🚀 Start het nieuwe spel!
+							{$t('spelwijze.startNewGame')}
 						</button>
 					{/if}
 				{:else}
-					<button class="start-button-hero" onclick={onStartGame}> 🚀 Start het spel! </button>
+					<button class="start-button-hero" onclick={onStartGame}>
+						{$t('spelwijze.startGame')}
+					</button>
 				{/if}
-				<button class="new-game-button" onclick={onNewGame}> 🎲 Nieuwe letters </button>
+				<button class="new-game-button" onclick={onNewGame}> {$t('spelwijze.newLetters')} </button>
 			</div>
 
 			<div class="game-tips">
-				<h4>💡 Spelregels:</h4>
+				<h4>{$t('spelwijze.rules')}</h4>
 				<ul>
-					<li>Elk woord <strong>moet</strong> de groene letter bevatten.</li>
-					<li>Je mag alleen de andere letters gebruiken die zichtbaar zijn.</li>
-					<li>Je voortgang wordt automatisch opgeslagen.</li>
-					<li>Probeer alle {totalPossibleWords} woorden te vinden!</li>
+					<li>
+						{$t('spelwijze.rule1Pre')}<strong>{$t('spelwijze.rule1Em')}</strong>{$t(
+							'spelwijze.rule1Post'
+						)}
+					</li>
+					<li>{$t('spelwijze.rule2')}</li>
+					<li>{$t('spelwijze.rule3')}</li>
+					<li>{$t('spelwijze.rule4', { n: totalPossibleWords })}</li>
 				</ul>
 			</div>
 		{:else}
 			<div class="loading-state">
 				<div class="loading-spinner"></div>
-				<p class="loading-text">Genereren van perfecte lettercombinatie...</p>
+				<p class="loading-text">{$t('spelwijze.generating')}</p>
 			</div>
 		{/if}
 	</div>

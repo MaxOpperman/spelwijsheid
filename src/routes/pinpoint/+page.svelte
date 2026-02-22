@@ -3,6 +3,7 @@
 	import { tick } from 'svelte';
 	import { capitalizeFirstChar } from '$lib/utils';
 	import type { PageData } from './$types';
+	import { t } from '$lib/i18n';
 
 	interface Props {
 		data: PageData;
@@ -40,21 +41,20 @@
 
 <div class="page">
 	<div class="how-to-play-wrap">
-		<a class="how-to-play" href="/pinpoint/how-to-play">How to play</a>
+		<a class="how-to-play" href="/pinpoint/how-to-play">{$t('common.howToPlay')}</a>
 	</div>
 	<h1>Pinpoint</h1>
-	<p class="subtitle">Guess the word. A new clue reveals after every wrong answer.</p>
+	<p class="subtitle">{$t('pinpoint.subtitle')}</p>
 
 	{#if isGenerating}
 		<div class="generating">
 			<span class="spinner"></span>
-			Generating a new puzzle…
+			{$t('pinpoint.generating')}
 		</div>
 	{:else if !data.started}
 		<div class="welcome">
 			<p class="welcome-desc">
-				Each round, the AI generates a secret word. You get up to 5 clues — one revealed per wrong
-				guess. Can you guess it from the first clue?
+				{$t('pinpoint.welcomeDesc')}
 			</p>
 			<form
 				method="POST"
@@ -67,7 +67,7 @@
 					};
 				}}
 			>
-				<button type="submit" class="start-btn">Start Game</button>
+				<button type="submit" class="start-btn">{$t('pinpoint.startGame')}</button>
 			</form>
 		</div>
 	{:else}
@@ -87,7 +87,7 @@
 					{:else if data.solved}
 						<span class="clue-bonus">✓ {capitalizeFirstChar(clue)}</span>
 					{:else}
-						<span class="clue-placeholder">CLUE {i + 1}</span>
+						<span class="clue-placeholder">{$t('pinpoint.clue', { n: i + 1 })}</span>
 					{/if}
 				</div>
 			{/each}
@@ -98,7 +98,9 @@
 				</div>
 			{:else if data.failed}
 				<div class="band failed-band">
-					<span class="answer-text">The answer was: {capitalizeFirstChar(data.word)}</span>
+					<span class="answer-text"
+						>{$t('pinpoint.theAnswerWas', { word: capitalizeFirstChar(data.word) })}</span
+					>
 				</div>
 			{/if}
 		</div>
@@ -137,8 +139,10 @@
 					autocomplete="off"
 					disabled={isGuessing}
 				/>
-				<span class="clue-counter">{data.revealed} of 5</span>
-				<button type="submit" disabled={isGuessing || !guessValue.trim()}>Guess</button>
+				<span class="clue-counter">{$t('pinpoint.clueCounter', { revealed: data.revealed })}</span>
+				<button type="submit" disabled={isGuessing || !guessValue.trim()}
+					>{$t('pinpoint.guess')}</button
+				>
 			</form>
 		{:else}
 			<form
@@ -153,11 +157,12 @@
 					};
 				}}
 			>
-				<button type="submit" class="new-game-btn">New Game</button>
+				<button type="submit" class="new-game-btn">{$t('common.newGame')}</button>
 			</form>
 			<form method="POST" action="?/pausePlaying" use:enhance>
 				<button type="submit" class="pause-playing-btn">
-					<i class="fa-solid fa-circle-pause"></i> Pause playing
+					<i class="fa-solid fa-circle-pause"></i>
+					{$t('pinpoint.pausePlaying')}
 				</button>
 			</form>
 		{/if}

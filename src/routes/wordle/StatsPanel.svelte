@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { WordleStats } from './stats.ts';
+	import { t } from '$lib/i18n';
 
 	interface Props {
 		stats: WordleStats;
@@ -9,27 +10,27 @@
 </script>
 
 <div class="stats-panel">
-	<h3>Statistieken</h3>
+	<h3>{$t('wordle.stats')}</h3>
 	<div class="stats-overview">
 		<div class="stat-item">
 			<div class="stat-value">{stats.gamesPlayed}</div>
-			<div class="stat-label">Gespeeld</div>
+			<div class="stat-label">{$t('wordle.played')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{stats.gamesWon}</div>
-			<div class="stat-label">Gewonnen</div>
+			<div class="stat-label">{$t('wordle.won')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{stats.currentStreak}</div>
-			<div class="stat-label">Huidige Reeks</div>
+			<div class="stat-label">{$t('wordle.currentStreak')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{stats.maxStreak}</div>
-			<div class="stat-label">Beste Reeks</div>
+			<div class="stat-label">{$t('wordle.bestStreak')}</div>
 		</div>
 	</div>
 
-	<h4>Aantal beurten per woord</h4>
+	<h4>{$t('wordle.guessDistribution')}</h4>
 	<div class="guess-distribution">
 		{#each [1, 2, 3, 4, 5, 6] as guessNum (guessNum)}
 			{@const count = stats.guessDistribution[guessNum as 1 | 2 | 3 | 4 | 5 | 6]}

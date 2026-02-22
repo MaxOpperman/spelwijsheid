@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import generateFilteredWords from '$lib/solver';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { t } from '$lib/i18n';
 
 	const base = '';
 
@@ -114,14 +115,14 @@
 	<title>Spelwijsheid</title>
 </svelte:head>
 
-<h1>Spelwijsheid - Spelwijze Oplossingen</h1>
+<h1>{$t('spelwijzeSolver.title')}</h1>
 
 <div class="help-link">
-	<a href="{base}/spelwijze-solver/how-to-play">Hoe werkt de Spelwijze Solver?</a>
+	<a href="{base}/spelwijze-solver/how-to-play">{$t('spelwijzeSolver.howItWorks')}</a>
 </div>
 
 <fieldset>
-	<legend>Voer maximaal {MAX_CHARS} karakters in:</legend>
+	<legend>{$t('spelwijzeSolver.enterMax', { n: MAX_CHARS })}</legend>
 	<div class="input-grid">
 		{#each chars as _char, index (index)}
 			<input
@@ -131,7 +132,9 @@
 				maxlength={index === 0 ? 1 : 2}
 				placeholder={index === 0 ? '!' : '?'}
 				class:selected={index === 0}
-				title={index === 0 ? 'Verplichte letter' : `Letter ${index + 1}`}
+				title={index === 0
+					? $t('spelwijzeSolver.requiredLetter')
+					: $t('spelwijzeSolver.letterN', { n: index + 1 })}
 				oninput={(event: Event) => handleInput(event as InputEvent, index)}
 				onkeydown={(event: KeyboardEvent) => handleKeydown(event, index)}
 			/>
@@ -141,21 +144,21 @@
 	<div class="options">
 		<label>
 			<input type="checkbox" bind:checked={lowercaseMode} />
-			Hoofdletterongevoelig zoeken
+			{$t('spelwijzeSolver.caseInsensitive')}
 		</label>
 		<label>
 			<input type="checkbox" bind:checked={ignoreAccents} />
-			Negeer accenten (bijv. ü → u)
+			{$t('spelwijzeSolver.ignoreAccents')}
 		</label>
 
 		<div class="sort-control">
-			<span class="sort-label">Sorteer op:</span>
+			<span class="sort-label">{$t('spelwijzeSolver.sortBy')}</span>
 			<div class="toggle-buttons">
 				<button type="button" class:active={sortByLength} onclick={() => (sortByLength = true)}>
-					Lengte
+					{$t('spelwijzeSolver.sortByLength')}
 				</button>
 				<button type="button" class:active={!sortByLength} onclick={() => (sortByLength = false)}>
-					Alfabetisch
+					{$t('spelwijzeSolver.sortAlpha')}
 				</button>
 			</div>
 		</div>
@@ -164,7 +167,7 @@
 
 <div class="results-section">
 	{#if inputChars.length >= 1}
-		<h2>Gevonden woorden ({results.length}):</h2>
+		<h2>{$t('spelwijzeSolver.foundWords', { n: results.length })}</h2>
 		{#if results.length > 0}
 			<ul>
 				{#each results as word (word)}
@@ -181,10 +184,10 @@
 				{/each}
 			</ul>
 		{:else}
-			<p>Geen woorden gevonden met deze letters.</p>
+			<p>{$t('spelwijzeSolver.noWords')}</p>
 		{/if}
 	{:else}
-		<p>Voer ten minste 1 karakter in om woorden te genereren.</p>
+		<p>{$t('spelwijzeSolver.enterAtLeast')}</p>
 	{/if}
 </div>
 

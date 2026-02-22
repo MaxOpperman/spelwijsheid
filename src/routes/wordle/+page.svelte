@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
 	import StatsPanel from './StatsPanel.svelte';
+	import { t } from '$lib/i18n';
 
 	interface FormData {
 		badGuess?: boolean;
@@ -203,18 +204,19 @@
 	<div class="controls">
 		{#if won || data.answers.length >= 6}
 			{#if !won && data.answer}
-				<p>het antwoord was "{data.answer}"</p>
+				<p>{$t('wordle.theAnswerWas', { answer: data.answer })}</p>
 			{/if}
 
 			<StatsPanel stats={data.stats} />
 
 			<button data-key="enter" class="restart selected" formaction="?/restart">
-				{won ? 'je hebt gewonnen :)' : `game over :(`} opnieuw spelen?
+				{won ? $t('wordle.youWon') : $t('wordle.gameOver')}
+				{$t('wordle.playAgain')}
 			</button>
 		{:else}
 			<div class="keyboard">
 				<button data-key="enter" class:selected={submittable} disabled={!submittable}>
-					enter
+					{$t('wordle.enter')}
 				</button>
 
 				<button
@@ -224,7 +226,7 @@
 					name="key"
 					value="backspace"
 				>
-					back
+					{$t('wordle.back')}
 				</button>
 
 				{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row (row)}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { QueensStats } from './stats';
 	import { formatTime } from './stats';
+	import { t } from '$lib/i18n';
 
 	interface Props {
 		stats: QueensStats;
@@ -17,29 +18,29 @@
 </script>
 
 <div class="stats-panel">
-	<h3>🎉 Puzzel Opgelost! 🎉</h3>
+	<h3>{$t('queens.puzzleSolved')}</h3>
 	<div class="current-time">
-		<div class="current-time-label">Jouw Tijd</div>
+		<div class="current-time-label">{$t('queens.yourTime')}</div>
 		<div class="current-time-value">{formatTime(currentTime)}</div>
 	</div>
 
 	<div class="stats-overview">
 		<div class="stat-item">
 			<div class="stat-value">{stats.gamesWon}</div>
-			<div class="stat-label">Voltooid</div>
+			<div class="stat-label">{$t('queens.completed')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{formatTime(stats.fastestTime)}</div>
-			<div class="stat-label">Snelste</div>
+			<div class="stat-label">{$t('queens.fastest')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{formatTime(stats.averageTime)}</div>
-			<div class="stat-label">Gemiddelde</div>
+			<div class="stat-label">{$t('queens.average')}</div>
 		</div>
 	</div>
 
 	{#if sortedSizes.length > 0}
-		<h4>Gemiddelde per Bordgrootte</h4>
+		<h4>{$t('queens.avgPerBoardSize')}</h4>
 		<div class="size-stats">
 			{#each sortedSizes as size (size)}
 				{@const sizeData = stats.sizeTimes[size]}
@@ -49,11 +50,12 @@
 					<div class="size-info">
 						<span class="size-avg">{formatTime(avgTime)}</span>
 						<span class="size-count"
-							>({sizeData.count} spel{sizeData.count !== 1 ? 'len' : ''})</span
+							>({sizeData.count}
+							{sizeData.count !== 1 ? $t('queens.gamePlural') : $t('queens.gameSingular')})</span
 						>
 					</div>
 					<div class="size-fastest">
-						Snelste: {formatTime(sizeData.fastestTime)}
+						{$t('queens.fastest')}: {formatTime(sizeData.fastestTime)}
 					</div>
 				</div>
 			{/each}

@@ -4,6 +4,7 @@
 	import generateFilteredWords, { generateRandomChars } from '$lib/solver';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import GameView from './GameView.svelte';
+	import { t } from '$lib/i18n';
 
 	export let wordList: string[];
 
@@ -239,8 +240,8 @@
 
 {#if !isReady}
 	<div class="loading">
-		<h2>Laden...</h2>
-		<p>Het spel wordt voorbereid...</p>
+		<h2>{$t('common.loading')}</h2>
+		<p>{$t('gameState.preparingGame')}</p>
 	</div>
 {:else if !gameStarted}
 	<WelcomeScreen
