@@ -29,22 +29,34 @@ Then create exactly 5 clues for it.
 Respond with ONLY this JSON, no other text:
 {"word": "your answer here", "clues": ["hardest", "clue 2", "clue 3", "clue 4", "easiest"]}`;
 
-	const res = await fetch(apiUrl + '/api/chat', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			model: env.OLLAMA_MODEL || 'gpt-oss',
-			messages: [
-				{ role: 'system', content: systemPrompt },
-				{ role: 'user', content: userPrompt }
-			],
-			options: {
-				temperature: 1.5,
-				top_p: 0.9
-			},
-			stream: false
-		})
+	console.log('Requesting puzzle from AI API...: ', {
+		apiUrl,
+		model: env.OLLAMA_MODEL || 'gpt-oss'
 	});
+
+	let res: Response;
+	try {
+		res = await fetch(apiUrl + '/api/chat', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				model: env.OLLAMA_MODEL || 'gpt-oss',
+				messages: [
+					{ role: 'system', content: systemPrompt },
+					{ role: 'user', content: userPrompt }
+				],
+				options: {
+					temperature: 1.5,
+					top_p: 0.9
+				},
+				stream: false
+			})
+		});
+	} catch (err) {
+		const cause = err instanceof Error ? (err.cause ?? err) : err;
+		console.error('fetch to AI API failed:', cause);
+		throw err;
+	}
 
 	if (!res.ok) {
 		throw new Error(`AI API returned ${res.status}`);
