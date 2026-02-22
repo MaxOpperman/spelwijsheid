@@ -82,7 +82,7 @@
 	</div>
 
 	<p>
-		<a href="/queens">← Terug naar het spel</a>
+		<a href="/queens"><i class="fa-solid fa-arrow-left"></i> Terug naar het spel</a>
 	</p>
 </div>
 
