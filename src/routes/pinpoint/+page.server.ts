@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { env } from '$env/dynamic/private';
 import { createSession, getSession, updateSession, deleteSession } from './game-store.ts';
 import { isCorrectGuess } from '$lib/utils';
+import type { Cookies } from '@sveltejs/kit';
 
 export const prerender = false;
 
@@ -29,22 +30,29 @@ Then create exactly 5 clues for it.
 Respond with ONLY this JSON, no other text:
 {"word": "your answer here", "clues": ["hardest", "clue 2", "clue 3", "clue 4", "easiest"]}`;
 
-	const res = await fetch(apiUrl + '/api/chat', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			model: env.OLLAMA_MODEL || 'gpt-oss',
-			messages: [
-				{ role: 'system', content: systemPrompt },
-				{ role: 'user', content: userPrompt }
-			],
-			options: {
-				temperature: 1.5,
-				top_p: 0.9
-			},
-			stream: false
-		})
-	});
+	let res: Response;
+	try {
+		res = await fetch(apiUrl + '/api/chat', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				model: env.OLLAMA_MODEL || 'gpt-oss',
+				messages: [
+					{ role: 'system', content: systemPrompt },
+					{ role: 'user', content: userPrompt }
+				],
+				options: {
+					temperature: 1.5,
+					top_p: 0.9
+				},
+				stream: false
+			})
+		});
+	} catch (err) {
+		const cause = err instanceof Error ? (err.cause ?? err) : err;
+		const causeMsg = cause instanceof Error ? cause.message : String(cause);
+		throw new Error(`AI API fetch failed [url=${apiUrl}/api/chat]: ${causeMsg}`);
+	}
 
 	if (!res.ok) {
 		throw new Error(`AI API returned ${res.status}`);
@@ -75,26 +83,30 @@ Respond with ONLY this JSON, no other text:
 	return { word: parsed.word.trim(), clues: parsed.clues.map((c) => c.trim()) };
 }
 
+async function startNewGame(cookies: Cookies): Promise<void> {
+	const puzzle = await generatePuzzle();
+	const newId = createSession({
+		word: puzzle.word,
+		clues: puzzle.clues,
+		revealed: 1,
+		solved: false,
+		failed: false,
+		previousGuesses: []
+	});
+	cookies.set(COOKIE_NAME, newId, COOKIE_OPTS);
+}
+
 export const load = (async ({ cookies }) => {
 	const sessionId = cookies.get(COOKIE_NAME);
-	let game = sessionId ? getSession(sessionId) : null;
+	const game = sessionId ? getSession(sessionId) : null;
 
 	if (!game) {
-		const puzzle = await generatePuzzle();
-		const newId = createSession({
-			word: puzzle.word,
-			clues: puzzle.clues,
-			revealed: 1,
-			solved: false,
-			failed: false,
-			previousGuesses: []
-		});
-		cookies.set(COOKIE_NAME, newId, COOKIE_OPTS);
-		game = getSession(newId)!;
+		return { started: false as const };
 	}
 
 	// The word stays on the server; only send it once the game is over
 	return {
+		started: true as const,
 		clues: game.clues,
 		revealed: game.revealed,
 		solved: game.solved,
@@ -105,6 +117,10 @@ export const load = (async ({ cookies }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
+	startGame: async ({ cookies }) => {
+		await startNewGame(cookies);
+	},
+
 	guess: async ({ request, cookies }) => {
 		const sessionId = cookies.get(COOKIE_NAME);
 		const game = sessionId ? getSession(sessionId) : null;
@@ -128,11 +144,15 @@ export const actions = {
 		}
 	},
 
+	pausePlaying: async ({ cookies }) => {
+		const sessionId = cookies.get(COOKIE_NAME);
+		if (sessionId) deleteSession(sessionId);
+		cookies.delete(COOKIE_NAME, { path: '/pinpoint' });
+	},
+
 	newGame: async ({ cookies }) => {
 		const sessionId = cookies.get(COOKIE_NAME);
-		if (sessionId) {
-			deleteSession(sessionId);
-			cookies.delete(COOKIE_NAME, { path: '/pinpoint' });
-		}
+		if (sessionId) deleteSession(sessionId);
+		await startNewGame(cookies);
 	}
 } satisfies Actions;

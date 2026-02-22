@@ -50,6 +50,26 @@
 			<span class="spinner"></span>
 			Generating a new puzzle…
 		</div>
+	{:else if !data.started}
+		<div class="welcome">
+			<p class="welcome-desc">
+				Each round, the AI generates a secret word. You get up to 5 clues — one revealed per wrong
+				guess. Can you guess it from the first clue?
+			</p>
+			<form
+				method="POST"
+				action="?/startGame"
+				use:enhance={() => {
+					isGenerating = true;
+					return async ({ update }) => {
+						await update();
+						isGenerating = false;
+					};
+				}}
+			>
+				<button type="submit" class="start-btn">Start Game</button>
+			</form>
+		</div>
 	{:else}
 		<div class="board">
 			{#each data.clues as clue, i (i)}
@@ -134,6 +154,11 @@
 				}}
 			>
 				<button type="submit" class="new-game-btn">New Game</button>
+			</form>
+			<form method="POST" action="?/pausePlaying" use:enhance>
+				<button type="submit" class="pause-playing-btn">
+					<i class="fa-solid fa-circle-pause"></i> Pause playing
+				</button>
 			</form>
 		{/if}
 	{/if}
@@ -308,6 +333,60 @@
 		text-align: center;
 		font-size: 1rem !important;
 		color: var(--color-primary) !important;
+	}
+
+	.pause-playing-btn {
+		display: block;
+		width: 100%;
+		text-align: center;
+		background: none;
+		border: none;
+		font-family: inherit;
+		font-size: 0.9rem;
+		color: var(--color-text-muted);
+		cursor: pointer;
+		padding: 0.4rem 0;
+		margin-top: 0.5rem;
+		transition: color 0.15s;
+	}
+
+	.pause-playing-btn:hover {
+		color: var(--color-text);
+	}
+
+	/* Welcome screen */
+	.welcome {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+		padding: 2rem 1rem;
+		text-align: center;
+	}
+
+	.welcome-desc {
+		color: var(--color-text-light);
+		font-size: 1rem;
+		line-height: 1.6;
+		max-width: 400px;
+		margin: 0;
+	}
+
+	.start-btn {
+		background: var(--color-primary);
+		color: #fff;
+		border: none;
+		border-radius: 8px;
+		padding: 0.75rem 2.5rem;
+		font-size: 1.1rem;
+		font-weight: 700;
+		font-family: inherit;
+		cursor: pointer;
+		transition: opacity 0.15s;
+	}
+
+	.start-btn:hover {
+		opacity: 0.88;
 	}
 
 	/* Generating spinner */
