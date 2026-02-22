@@ -8,7 +8,6 @@
  */
 export function capitalizeFirstChar(word: string | null): string {
 	if (!word) return '';
-	if (word.length === 0) return word;
 	return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
@@ -44,8 +43,8 @@ function editDistance(a: string, b: string): number {
 /**
  * Returns the number of typos (edit distance) that are tolerated for a given answer.
  * Tolerance scales with word length to be lenient on longer words:
- * - ≤ 4 characters: 0 (exact match required)
- * - 5–7 characters: 1 (one typo allowed)
+ * - <= 4 characters: 0 (exact match required)
+ * - 5-7 characters: 1 (one typo allowed)
  * - 8+ characters: 2 (two typos allowed)
  * Whitespace is excluded from the length calculation.
  * @param word - The correct answer to compute the tolerance for

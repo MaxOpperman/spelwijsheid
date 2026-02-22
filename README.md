@@ -6,7 +6,7 @@ This app contains some games that I like to play and some that I was eager to pr
 - Impossible Wordle (adverse choosing of words while you guess)
 - Spelwijze (Volkskrant App Game)
 - N-Queens (LinkedIn Game)
-- Categories (LinkedIn Game)
+- Pinpoint (LinkedIn Game)
 
 ## Solvers
 
@@ -43,9 +43,9 @@ Configure the connection via environment variables (copy `.env.example` to `.env
 | `OLLAMA_API_URL` | `http://localhost:11434` | Base URL of the Ollama API       |
 | `OLLAMA_MODEL`   | `gpt-oss`                | Model name to use for generation |
 
-**Session security** — the AI response (including any secret answer) is never serialised into the browser cookie. Instead, the server creates an in-memory session keyed by a random UUID; only the UUID is written to an `httpOnly` cookie. Sessions expire after 24 hours and are pruned lazily. See `src/routes/categories/game-store.ts`.
+**Session security** — the AI response (including any secret answer) is never serialised into the browser cookie. Instead, the server creates an in-memory session keyed by a random UUID; only the UUID is written to an `httpOnly` cookie. Sessions expire after 24 hours and are pruned lazily. See `src/routes/pinpoint/game-store.ts`.
 
-**Fuzzy answer matching** — user input is compared against the correct answer using Levenshtein edit distance. Tolerance scales with answer length (0 for <= 4 chars, 1 for 5–7, 2 for 8+).
+**Fuzzy answer matching** — user input is compared against the correct answer using Levenshtein edit distance. Tolerance scales with answer length (0 for <= 4 chars, 1 for 5-7, 2 for 8+).
 
 ## Future work
 

@@ -5,9 +5,9 @@ import { isCorrectGuess } from '$lib/utils';
 
 export const prerender = false;
 
-const COOKIE_NAME = 'categories-session';
+const COOKIE_NAME = 'pinpoint-session';
 const COOKIE_OPTS = {
-	path: '/categories',
+	path: '/pinpoint',
 	httpOnly: true,
 	sameSite: 'lax',
 	maxAge: 60 * 60 * 24 // 24 hours
@@ -21,9 +21,10 @@ async function generatePuzzle(): Promise<{ word: string; clues: string[] }> {
 	const userPrompt = `Create a word association puzzle. 
 Choose an interesting, common English word or short phrase (1-3 words) as the secret answer.
 Then create exactly 5 clues for it.
+- The clues are never EXACT equal to the answer, but they should be clearly associated with it.
 - The clues go from HARDEST (most abstract/indirect) to EASIEST (most obvious).
 - Each clue is 1-5 words only.
-- The clues should evoke associations with the word but not directly state its meaning.
+- The clues should evoke associations with the word or should be related to it in some way, but they should not be so direct that the answer is immediately obvious from the first clue.
 
 Respond with ONLY this JSON, no other text:
 {"word": "your answer here", "clues": ["hardest", "clue 2", "clue 3", "clue 4", "easiest"]}`;
@@ -58,7 +59,14 @@ Respond with ONLY this JSON, no other text:
 		throw new Error('AI did not return valid JSON');
 	}
 
-	const parsed = JSON.parse(jsonMatch[0]) as { word: string; clues: string[] };
+	let parsed: { word: string; clues: string[] };
+	try {
+		parsed = JSON.parse(jsonMatch[0]) as { word: string; clues: string[] };
+	} catch (err) {
+		throw new Error(
+			'AI returned malformed JSON: ' + (err instanceof Error ? err.message : String(err))
+		);
+	}
 
 	if (!parsed.word || !Array.isArray(parsed.clues) || parsed.clues.length !== 5) {
 		throw new Error('AI returned unexpected puzzle format');
@@ -124,7 +132,7 @@ export const actions = {
 		const sessionId = cookies.get(COOKIE_NAME);
 		if (sessionId) {
 			deleteSession(sessionId);
-			cookies.delete(COOKIE_NAME, { path: '/categories' });
+			cookies.delete(COOKIE_NAME, { path: '/pinpoint' });
 		}
 	}
 } satisfies Actions;

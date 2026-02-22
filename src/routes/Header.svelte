@@ -86,8 +86,8 @@
 					<li aria-current={page.url.pathname.startsWith('/queens') ? 'page' : undefined}>
 						<a href="{base}/queens" onclick={closeMenuAndSubmenu}>N-Queens</a>
 					</li>
-					<li aria-current={page.url.pathname.startsWith('/categories') ? 'page' : undefined}>
-						<a href="{base}/categories" onclick={closeMenuAndSubmenu}>Categories</a>
+					<li aria-current={page.url.pathname.startsWith('/pinpoint') ? 'page' : undefined}>
+						<a href="{base}/pinpoint" onclick={closeMenuAndSubmenu}>Pinpoint</a>
 					</li>
 				</ul>
 			</li>

@@ -81,7 +81,7 @@
 	</section>
 
 	<div class="back-link">
-		<a href="{base}/spelwijze">← Terug naar het spel</a>
+		<a href="{base}/spelwijze"><i class="fa-solid fa-arrow-left"></i> Terug naar het spel</a>
 	</div>
 </div>
 

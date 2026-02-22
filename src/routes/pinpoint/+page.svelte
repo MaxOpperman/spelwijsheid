@@ -28,19 +28,21 @@
 		'#1d4ed8' // darkest
 	];
 
-	// text color on dark bands
 	function textColor(index: number) {
 		return index >= 3 ? '#fff' : '#1e3a5f';
 	}
 </script>
 
 <svelte:head>
-	<title>Categories – Spelwijsheid</title>
+	<title>Pinpoint - Spelwijsheid</title>
 	<meta name="description" content="Guess the word from progressive clues" />
 </svelte:head>
 
 <div class="page">
-	<h1>Categories</h1>
+	<div class="how-to-play-wrap">
+		<a class="how-to-play" href="/pinpoint/how-to-play">How to play</a>
+	</div>
+	<h1>Pinpoint</h1>
 	<p class="subtitle">Guess the word. A new clue reveals after every wrong answer.</p>
 
 	{#if isGenerating}
@@ -60,11 +62,10 @@
 					style:background-color={bandColors[i]}
 					style:color={textColor(i)}
 				>
-					{#if data.solved && i === data.clues.length - 1 && data.revealed <= data.clues.length}
-						<!-- only show answer row once, handled below -->
-					{/if}
 					{#if revealed}
 						<span class="clue-text">{capitalizeFirstChar(clue)}</span>
+					{:else if data.solved}
+						<span class="clue-bonus">✓ {capitalizeFirstChar(clue)}</span>
 					{:else}
 						<span class="clue-placeholder">CLUE {i + 1}</span>
 					{/if}
@@ -146,15 +147,43 @@
 		font-family: inherit;
 	}
 
+	.how-to-play {
+		display: inline-block;
+		color: var(--color-primary);
+		text-decoration: none;
+		margin-bottom: 0.5rem;
+		font-size: 0.9rem;
+	}
+
+	.how-to-play-wrap {
+		text-align: center;
+		margin-bottom: 0.75rem;
+	}
+
+	.how-to-play::before {
+		content: 'i';
+		display: inline-block;
+		font-size: 0.8em;
+		font-weight: 900;
+		width: 1em;
+		height: 1em;
+		padding: 0.2em;
+		line-height: 1;
+		border: 1.5px solid var(--color-primary);
+		border-radius: 50%;
+		text-align: center;
+		margin: 0 0.5em 0 0;
+	}
+
 	h1 {
 		font-size: 1.8rem;
 		font-weight: 700;
 		margin-bottom: 0.25rem;
-		color: #1e3a5f;
+		color: var(--color-text);
 	}
 
 	.subtitle {
-		color: #666;
+		color: var(--color-text-light);
 		margin-bottom: 1.5rem;
 		font-size: 0.95rem;
 	}
@@ -189,6 +218,16 @@
 		opacity: 0.65;
 	}
 
+	.clue-bonus {
+		background: rgba(255, 255, 255, 0.92);
+		color: #1e3a5f;
+		border-radius: 6px;
+		padding: 0.3rem 0.9rem;
+		font-size: 1rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+	}
+
 	.answer-band {
 		font-size: 1.3rem;
 		font-weight: 700;
@@ -200,13 +239,13 @@
 	}
 
 	.failed-band {
-		background-color: #f87171 !important;
-		color: #fff !important;
+		background-color: var(--color-warning) !important;
+		color: var(--color-surface) !important;
 	}
 
 	/* Previous wrong guesses */
 	.previous-guesses {
-		color: #888;
+		color: var(--color-text-muted);
 		font-size: 0.9rem;
 		margin-bottom: 0.75rem;
 		min-height: 1.4rem;
@@ -221,10 +260,10 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		border: 1px solid #ddd;
+		border: 1px solid var(--color-primary-light);
 		border-radius: 8px;
 		padding: 0.5rem 0.75rem;
-		background: #fff;
+		background: var(--color-surface);
 	}
 
 	.guess-form input {
@@ -234,12 +273,12 @@
 		font-size: 1rem;
 		font-family: inherit;
 		background: transparent;
-		color: #1e3a5f;
+		color: var(--color-text);
 	}
 
 	.clue-counter {
 		font-size: 0.85rem;
-		color: #aaa;
+		color: var(--color-text-muted);
 		white-space: nowrap;
 	}
 
@@ -248,7 +287,7 @@
 		border: none;
 		font-size: 1rem;
 		font-weight: 700;
-		color: #1d4ed8;
+		color: var(--color-primary);
 		cursor: pointer;
 		padding: 0.25rem 0.5rem;
 		border-radius: 6px;
@@ -256,11 +295,11 @@
 	}
 
 	.guess-form button:hover:not(:disabled) {
-		background: #eff6ff;
+		background: var(--color-primary-light);
 	}
 
 	.guess-form button:disabled {
-		color: #ccc;
+		color: var(--color-text-muted);
 		cursor: not-allowed;
 	}
 
@@ -268,7 +307,7 @@
 		flex: 1;
 		text-align: center;
 		font-size: 1rem !important;
-		color: #1d4ed8 !important;
+		color: var(--color-primary) !important;
 	}
 
 	/* Generating spinner */
@@ -276,7 +315,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		color: #666;
+		color: var(--color-text-light);
 		font-size: 1rem;
 		padding: 2rem 0;
 	}
@@ -284,8 +323,8 @@
 	.spinner {
 		width: 20px;
 		height: 20px;
-		border: 3px solid #e5e7eb;
-		border-top-color: #3b82f6;
+		border: 3px solid var(--color-bg-2);
+		border-top-color: var(--color-primary);
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
 		flex-shrink: 0;
@@ -294,40 +333,6 @@
 	@keyframes spin {
 		to {
 			transform: rotate(360deg);
-		}
-	}
-
-	/* Dark mode */
-	@media (prefers-color-scheme: dark) {
-		h1 {
-			color: #e0f2fe;
-		}
-		.subtitle {
-			color: #aaa;
-		}
-		.previous-guesses {
-			color: #999;
-		}
-
-		.guess-form {
-			background: #1e293b;
-			border-color: #334155;
-		}
-
-		.guess-form input {
-			color: #e0f2fe;
-		}
-
-		.guess-form button {
-			color: #60a5fa;
-		}
-
-		.guess-form button:hover:not(:disabled) {
-			background: #1e3a5f;
-		}
-
-		.generating {
-			color: #aaa;
 		}
 	}
 </style>
