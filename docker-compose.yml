@@ -8,6 +8,6 @@ services:
       - '3000:3000'
     restart: unless-stopped
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - 'host.docker.internal:host-gateway' # For accessing Ollama API on the host machine
     environment:
       - NODE_ENV=production
