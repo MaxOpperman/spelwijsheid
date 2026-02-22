@@ -66,6 +66,8 @@ jobs:
             --name spelwijsheid \
             --restart unless-stopped \
             -p ${{ secrets.HOST_PORT }}:3000 \
+            -e OLLAMA_API_URL=${{ secrets.OLLAMA_API_URL }} \
+            -e OLLAMA_MODEL=${{ secrets.OLLAMA_MODEL }} \
             ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
 
       - name: Clean up old images
