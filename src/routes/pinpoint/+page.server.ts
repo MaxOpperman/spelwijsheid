@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { env } from '$env/dynamic/private';
 import { createSession, getSession, updateSession, deleteSession } from './game-store.ts';
 import { isCorrectGuess } from '$lib/utils';
+import type { Cookies } from '@sveltejs/kit';
 
 export const prerender = false;
 
@@ -82,6 +83,19 @@ Respond with ONLY this JSON, no other text:
 	return { word: parsed.word.trim(), clues: parsed.clues.map((c) => c.trim()) };
 }
 
+async function startNewGame(cookies: Cookies): Promise<void> {
+	const puzzle = await generatePuzzle();
+	const newId = createSession({
+		word: puzzle.word,
+		clues: puzzle.clues,
+		revealed: 1,
+		solved: false,
+		failed: false,
+		previousGuesses: []
+	});
+	cookies.set(COOKIE_NAME, newId, COOKIE_OPTS);
+}
+
 export const load = (async ({ cookies }) => {
 	const sessionId = cookies.get(COOKIE_NAME);
 	const game = sessionId ? getSession(sessionId) : null;
@@ -104,16 +118,7 @@ export const load = (async ({ cookies }) => {
 
 export const actions = {
 	startGame: async ({ cookies }) => {
-		const puzzle = await generatePuzzle();
-		const newId = createSession({
-			word: puzzle.word,
-			clues: puzzle.clues,
-			revealed: 1,
-			solved: false,
-			failed: false,
-			previousGuesses: []
-		});
-		cookies.set(COOKIE_NAME, newId, COOKIE_OPTS);
+		await startNewGame(cookies);
 	},
 
 	guess: async ({ request, cookies }) => {
@@ -148,16 +153,6 @@ export const actions = {
 	newGame: async ({ cookies }) => {
 		const sessionId = cookies.get(COOKIE_NAME);
 		if (sessionId) deleteSession(sessionId);
-
-		const puzzle = await generatePuzzle();
-		const newId = createSession({
-			word: puzzle.word,
-			clues: puzzle.clues,
-			revealed: 1,
-			solved: false,
-			failed: false,
-			previousGuesses: []
-		});
-		cookies.set(COOKIE_NAME, newId, COOKIE_OPTS);
+		await startNewGame(cookies);
 	}
 } satisfies Actions;
