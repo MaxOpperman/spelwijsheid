@@ -16,7 +16,7 @@
 	let gameStarted = false;
 	let gamePaused = false;
 	let foundWords: string[] = [];
-	let totalPossibleWords = 0;
+	let totalPossibleWords: number;
 	let gameComplete = false;
 	let score = 0;
 	let timeStarted: number | null = null;
@@ -27,9 +27,9 @@
 	let gameId = '';
 	let wordInput = '';
 	let elapsedTime = 0;
-	let formattedTime = '0:00';
-	let completionPercentage = 0;
-	let hasSavedGame = false;
+	let formattedTime: string;
+	let completionPercentage: number;
+	let hasSavedGame: boolean;
 	let isReady = false; // Track if component is ready
 
 	// Load game state from cookies on mount

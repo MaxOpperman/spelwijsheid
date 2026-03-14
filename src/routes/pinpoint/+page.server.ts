@@ -3,6 +3,7 @@ import { env } from '$env/dynamic/private';
 import { createSession, getSession, updateSession, deleteSession } from './game-store.ts';
 import { isCorrectGuess } from '$lib/utils';
 import type { Cookies } from '@sveltejs/kit';
+import { Locale } from '$lib/stores/locale.ts';
 
 export const prerender = false;
 
@@ -14,20 +15,70 @@ const COOKIE_OPTS = {
 	maxAge: 60 * 60 * 24 // 24 hours
 } as const;
 
-async function generatePuzzle(): Promise<{ word: string; clues: string[] }> {
+// Helper to get locale from cookies or fallback
+function getLocaleFromCookies(cookies: Cookies): Locale {
+	const cookieLocale = cookies.get('locale');
+	if (
+		cookieLocale === Locale.NL_NL ||
+		cookieLocale === Locale.EN_GB ||
+		cookieLocale === Locale.EN_US
+	) {
+		return cookieLocale as Locale;
+	}
+	return Locale.EN_US;
+}
+
+async function generatePuzzle(locale: Locale): Promise<{ word: string; clues: string[] }> {
+	// typeguard function input to disable prompt attacks
+	if (locale !== Locale.NL_NL && locale !== Locale.EN_GB && locale !== Locale.EN_US) {
+		throw new Error('Invalid locale');
+	}
 	const apiUrl = env.OLLAMA_API_URL || 'http://localhost:11434';
 
-	const systemPrompt = `You are a puzzle creator. When asked, you output ONLY valid JSON and nothing else.`;
+	// Language-specific instructions
+	let languageInstruction = '';
+	if (locale === Locale.NL_NL) {
+		languageInstruction = '\nAll clues AND the answer must be in Dutch.';
+	} else if (locale === Locale.EN_GB || locale === Locale.EN_US) {
+		languageInstruction = '\nAll clues and the answer must be in English.';
+	}
 
-	const userPrompt = `Create a word association puzzle. 
-Choose an interesting, common English word or short phrase (1-3 words) as the secret answer.
-Then create exactly 5 clues for it.
-- The clues are never EXACT equal to the answer, but they should be clearly associated with it.
-- The clues go from HARDEST (most abstract/indirect) to EASIEST (most obvious).
-- Each clue is 1-5 words only.
-- The clues should evoke associations with the word or should be related to it in some way, but they should not be so direct that the answer is immediately obvious from the first clue.
+	const systemPrompt = `You are a puzzle creator for a guessing game. When asked, you output ONLY valid JSON and nothing else. ${languageInstruction}`;
 
-Respond with ONLY this JSON, no other text:
+	const userPrompt = `Create a guessing puzzle similar to LinkedIn Crossclimb.
+
+Step 1 — Choose a category or phrase pattern.
+
+Step 2 — The answer must be a single word whenever possible.
+
+Examples:
+- dresses
+- senses
+- statues
+- mushrooms
+- lion (for phrases like "sea lion", "mountain lion")
+
+Step 3 — Generate exactly 5 clues.
+
+STRICT CLUE RULES:
+- Clues must be examples, members, or phrases that belong to the category.
+- Clues MUST NOT define or describe the answer.
+- Clues MUST NOT contain the answer word itself.
+- Clues must be 1-5 words.
+- Clues must be concrete nouns or short phrases (not explanations).
+
+Difficulty:
+- Clue 1 = most obscure example
+- Clue 3 = moderately recognizable
+- Clue 5 = very recognizable
+
+Clue 5 rule:
+- Must include a short explanatory hint in parentheses.
+
+Example structure:
+{"word": "mushrooms", "clues": ["Enoki", "Oyster", "Shiitake", "White Button", "Portobello (large edible fungus)"]}
+
+Output ONLY this JSON structure:
 {"word": "your answer here", "clues": ["hardest", "clue 2", "clue 3", "clue 4", "easiest"]}`;
 
 	let res: Response;
@@ -51,7 +102,7 @@ Respond with ONLY this JSON, no other text:
 	} catch (err) {
 		const cause = err instanceof Error ? (err.cause ?? err) : err;
 		const causeMsg = cause instanceof Error ? cause.message : String(cause);
-		throw new Error(`AI API fetch failed [url=${apiUrl}/api/chat]: ${causeMsg}`);
+		throw new Error(`AI API fetch failed [url=${apiUrl}/api/chat]: ${causeMsg}`, { cause: err });
 	}
 
 	if (!res.ok) {
@@ -72,7 +123,8 @@ Respond with ONLY this JSON, no other text:
 		parsed = JSON.parse(jsonMatch[0]) as { word: string; clues: string[] };
 	} catch (err) {
 		throw new Error(
-			'AI returned malformed JSON: ' + (err instanceof Error ? err.message : String(err))
+			'AI returned malformed JSON: ' + (err instanceof Error ? err.message : String(err)),
+			{ cause: err }
 		);
 	}
 
@@ -84,7 +136,8 @@ Respond with ONLY this JSON, no other text:
 }
 
 async function startNewGame(cookies: Cookies): Promise<void> {
-	const puzzle = await generatePuzzle();
+	const locale = getLocaleFromCookies(cookies);
+	const puzzle = await generatePuzzle(locale);
 	const newId = createSession({
 		word: puzzle.word,
 		clues: puzzle.clues,
