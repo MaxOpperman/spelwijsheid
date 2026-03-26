@@ -1,6 +1,7 @@
 <script lang="ts">
 	import welcome from '$lib/images/svelte-welcome.webp';
 	import welcomeFallback from '$lib/images/svelte-welcome.png';
+	import { t } from '$lib/i18n';
 </script>
 
 <svelte:head>
@@ -17,10 +18,10 @@
 			</picture>
 		</span>
 
-		Welke walvis kan alle puzzels oplossen?
+		{$t('home.pun')}
 		<br />
 		<br />
-		De Oréka!
+		{$t('home.punAnswer')}
 	</h1>
 </section>
 

@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
 	import StatsPanel from './StatsPanel.svelte';
+	import { t } from '$lib/i18n';
 
 	interface FormData {
 		badGuess?: boolean;
@@ -172,16 +173,17 @@
 		};
 	}}
 >
-	<a class="how-to-play" href="/wordle-impossible/how-to-play">Hoe te spelen</a>
+	<a class="how-to-play" href="/wordle-impossible/how-to-play">{$t('wordleImpossible.howToPlay')}</a
+	>
 
 	<div class="header-info">
 		<h2 class="mode-title">Impossible Wordle</h2>
 		<div class="timer">
-			<span class="timer-label">Tijd:</span>
+			<span class="timer-label">{$t('wordleImpossible.time')}</span>
 			<span class="timer-value">{formatTime(elapsedTime)}</span>
 		</div>
 		<div class="guess-counter">
-			<span class="counter-label">Pogingen:</span>
+			<span class="counter-label">{$t('wordleImpossible.guesses')}</span>
 			<span class="counter-value">{data.guesses.length}</span>
 		</div>
 	</div>
@@ -205,7 +207,7 @@
 		{#if isLoading}
 			<div class="loading-indicator" role="status" aria-live="polite">
 				<div class="spinner"></div>
-				<span class="visually-hidden">Laden...</span>
+				<span class="visually-hidden">{$t('wordleImpossible.loading')}</span>
 			</div>
 		{/if}
 	</div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Header from './Header.svelte';
 	import '../app.css';
+	import { t } from '$lib/i18n';
 
 	let { children } = $props();
 </script>
@@ -14,9 +15,8 @@
 
 	<footer>
 		<p>
-			Follow me on LinkedIn <a href="https://linkedin.com/in/max-opperman"
-				>https://linkedin.com/in/max-opperman</a
-			>!
+			{$t('layout.followLinkedIn')}
+			<a href="https://linkedin.com/in/max-opperman">https://linkedin.com/in/max-opperman</a>!
 		</p>
 	</footer>
 </div>

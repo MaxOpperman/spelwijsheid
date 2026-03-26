@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { t } from '$lib/i18n';
 
 	interface Props {
 		data: PageData;
@@ -232,7 +233,7 @@
 
 <div class="solver-container">
 	<h1>Wordle Solver</h1>
-	<p class="description">Voer in wat je weet over het woord om mogelijke oplossingen te vinden</p>
+	<p class="description">{$t('wordleSolver.description')}</p>
 
 	<!-- Word length selector -->
 	<div class="word-length-selector">
@@ -244,7 +245,7 @@
 
 	<div class="solver-grid">
 		<section class="input-section">
-			<h2>Exact Posities (Groen)</h2>
+			<h2>{$t('wordleSolver.exactPositions')}</h2>
 			<div class="exact-positions">
 				{#each exactPositions as letter, i (i)}
 					<input
@@ -262,12 +263,12 @@
 		</section>
 
 		<section class="input-section">
-			<h2>Goede Letter, Verkeede Posities (Geel)</h2>
-			<p class="hint">Voer letters in die in het woord voorkomen maar niet op deze posities</p>
+			<h2>{$t('wordleSolver.wrongPositions')}</h2>
+			<p class="hint">{$t('wordleSolver.wrongPositionsHint')}</p>
 			<div class="wrong-positions">
 				{#each wrongPositions as letters, i (i)}
 					<div class="position-group">
-						<div class="position-label">Positie {i + 1}</div>
+						<div class="position-label">{$t('wordleSolver.position', { n: i + 1 })}</div>
 						<input
 							type="text"
 							bind:this={wrongInputRefs[i]}
@@ -290,12 +291,12 @@
 		</section>
 
 		<section class="input-section">
-			<h2>Absente Letters (Grijs)</h2>
-			<p class="hint">Voer letters in die niet in het woord voorkomen</p>
+			<h2>{$t('wordleSolver.absentLetters')}</h2>
+			<p class="hint">{$t('wordleSolver.absentLettersHint')}</p>
 			<input
 				type="text"
 				bind:value={absentLetters}
-				placeholder="letters die niet voorkomen"
+				placeholder={$t('wordleSolver.absentPlaceholder')}
 				class="text-input"
 			/>
 		</section>
@@ -303,18 +304,18 @@
 		<section class="input-section options-section">
 			<label class="checkbox-label">
 				<input type="checkbox" bind:checked={allowIjDigraph} />
-				Sta 'ĳ' digraaf toe (behandel 'ij' als één teken)
+				{$t('wordleSolver.digraph')}
 			</label>
 		</section>
 
 		<div class="actions">
-			<button onclick={reset} class="reset-button">Reset</button>
+			<button onclick={reset} class="reset-button">{$t('common.reset')}</button>
 		</div>
 	</div>
 
 	{#if possibleWords.length > 0}
 		<section class="results">
-			<h2>Mogelijke Woorden ({possibleWords.length})</h2>
+			<h2>{$t('wordleSolver.possibleWords', { n: possibleWords.length })}</h2>
 			<div class="words-grid">
 				{#each possibleWords.slice(0, maxDisplayedWords) as word (word)}
 					<div class="word-card">{word}</div>
@@ -323,16 +324,18 @@
 			{#if possibleWords.length > maxDisplayedWords}
 				<div class="show-more-container">
 					<p class="note">
-						Toont de eerste {maxDisplayedWords} van {possibleWords.length} resultaten
+						{$t('wordleSolver.showing', { shown: maxDisplayedWords, total: possibleWords.length })}
 					</p>
-					<button onclick={showMoreWords} class="show-more-button">Toon Meer Oplossingen</button>
+					<button onclick={showMoreWords} class="show-more-button"
+						>{$t('wordleSolver.showMore')}</button
+					>
 				</div>
 			{/if}
 		</section>
 	{:else if possibleWords.length === 0 && (exactPositions.some((p) => p !== null) || wrongPositions.some((p) => p.length > 0) || absentLetters)}
 		<section class="results">
 			<p class="no-results">
-				Geen overeenkomende woorden gevonden. Probeer je criteria aan te passen.
+				{$t('wordleSolver.noResults')}
 			</p>
 		</section>
 	{/if}

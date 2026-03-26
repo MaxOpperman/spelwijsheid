@@ -4,6 +4,7 @@
 	import generateFilteredWords, { generateRandomChars } from '$lib/solver';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import GameView from './GameView.svelte';
+	import { t } from '$lib/i18n';
 
 	export let wordList: string[];
 
@@ -15,7 +16,7 @@
 	let gameStarted = false;
 	let gamePaused = false;
 	let foundWords: string[] = [];
-	let totalPossibleWords = 0;
+	let totalPossibleWords: number;
 	let gameComplete = false;
 	let score = 0;
 	let timeStarted: number | null = null;
@@ -26,9 +27,9 @@
 	let gameId = '';
 	let wordInput = '';
 	let elapsedTime = 0;
-	let formattedTime = '0:00';
-	let completionPercentage = 0;
-	let hasSavedGame = false;
+	let formattedTime: string;
+	let completionPercentage: number;
+	let hasSavedGame: boolean;
 	let isReady = false; // Track if component is ready
 
 	// Load game state from cookies on mount
@@ -239,8 +240,8 @@
 
 {#if !isReady}
 	<div class="loading">
-		<h2>Laden...</h2>
-		<p>Het spel wordt voorbereid...</p>
+		<h2>{$t('common.loading')}</h2>
+		<p>{$t('gameState.preparingGame')}</p>
 	</div>
 {:else if !gameStarted}
 	<WelcomeScreen

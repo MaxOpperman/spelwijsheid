@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '$lib/i18n';
 	export let chars: string[];
 	export let foundWords: string[];
 	export let gameComplete: boolean;
@@ -26,24 +27,24 @@
 
 		<div class="game-stats">
 			<div class="stat">
-				<span class="label">Tijd:</span>
+				<span class="label">{$t('spelwijze.timeLabel')}</span>
 				<span class="value">{formattedTime}</span>
 			</div>
 			<div class="stat">
-				<span class="label">Gevonden:</span>
+				<span class="label">{$t('spelwijze.foundLabel')}</span>
 				<span class="value">{foundWords.length}/{totalPossibleWords}</span>
 			</div>
 			<div class="stat">
-				<span class="label">Voortgang:</span>
+				<span class="label">{$t('spelwijze.progressLabel')}</span>
 				<span class="value">{completionPercentage}%</span>
 			</div>
 		</div>
 
 		<div class="game-controls">
 			{#if gamePaused}
-				<button class="resume-button" onclick={onResumeGame}> ▶️ Doorgaan </button>
+				<button class="resume-button" onclick={onResumeGame}> {$t('spelwijze.resumeBtn')} </button>
 			{:else}
-				<button class="pause-button" onclick={onPauseGame}> ⏸️ Pauzeren </button>
+				<button class="pause-button" onclick={onPauseGame}> {$t('spelwijze.pauseBtn')} </button>
 			{/if}
 		</div>
 	</div>
@@ -53,12 +54,14 @@
 			<input
 				type="text"
 				bind:value={wordInput}
-				placeholder={gamePaused ? 'Spel is gepauzeerd...' : 'Typ een woord...'}
+				placeholder={gamePaused
+					? $t('spelwijze.pausedPlaceholder')
+					: $t('spelwijze.typePlaceholder')}
 				onkeydown={onKeydown}
 				disabled={gameComplete || gamePaused}
 			/>
 			<button onclick={onSubmitWord} disabled={gameComplete || gamePaused || !wordInput}>
-				Toevoegen
+				{$t('spelwijze.addBtn')}
 			</button>
 		</div>
 	</div>
@@ -68,7 +71,7 @@
 	</div>
 
 	<div class="found-words">
-		<h3>Gevonden woorden ({foundWords.length}):</h3>
+		<h3>{$t('spelwijze.foundWords', { n: foundWords.length })}</h3>
 		{#if foundWords.length > 0}
 			<div class="words-grid">
 				{#each foundWords as word (word)}
@@ -78,25 +81,25 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="no-words">Nog geen woorden gevonden. Begin met typen!</p>
+			<p class="no-words">{$t('spelwijze.noWordsYet')}</p>
 		{/if}
 	</div>
 
 	<div class="game-actions">
-		<button class="reset-button" onclick={onResetGame}> Nieuw spel </button>
+		<button class="reset-button" onclick={onResetGame}> {$t('spelwijze.gameNewGame')} </button>
 	</div>
 </div>
 
 {#if gameComplete}
 	<div class="completion-modal">
 		<div class="modal-content">
-			<h2>🎉 Gefeliciteerd!</h2>
-			<p>Je hebt alle {totalPossibleWords} woorden gevonden!</p>
+			<h2>{$t('spelwijze.congratulations')}</h2>
+			<p>{$t('spelwijze.allWordsFound', { n: totalPossibleWords })}</p>
 			<div class="final-stats">
-				<div>Tijd: {formattedTime}</div>
-				<div>Score: {score} punten</div>
+				<div>{$t('spelwijze.timeLabel')} {formattedTime}</div>
+				<div>{$t('spelwijze.score', { n: score })}</div>
 			</div>
-			<button onclick={onResetGame}>Speel opnieuw</button>
+			<button onclick={onResetGame}>{$t('spelwijze.playAgain')}</button>
 		</div>
 	</div>
 {/if}

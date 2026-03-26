@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ImpossibleWordleStats } from './stats.ts';
 	import { formatTime, getAverageTime } from './stats.ts';
+	import { t } from '$lib/i18n';
 
 	interface Props {
 		stats: ImpossibleWordleStats;
@@ -20,28 +21,28 @@
 </script>
 
 <div class="stats-panel">
-	<h3>Statistieken</h3>
+	<h3>{$t('wordleImpossible.stats')}</h3>
 	<div class="stats-overview">
 		<div class="stat-item">
 			<div class="stat-value">{stats.gamesPlayed}</div>
-			<div class="stat-label">Gespeeld</div>
+			<div class="stat-label">{$t('wordleImpossible.played')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{stats.totalCorrectGuesses}</div>
-			<div class="stat-label">Correct</div>
+			<div class="stat-label">{$t('wordleImpossible.correct')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{formatTime(stats.bestTime)}</div>
-			<div class="stat-label">Beste Tijd</div>
+			<div class="stat-label">{$t('wordleImpossible.bestTime')}</div>
 		</div>
 		<div class="stat-item">
 			<div class="stat-value">{formatTime(averageTime)}</div>
-			<div class="stat-label">Gemiddelde Tijd</div>
+			<div class="stat-label">{$t('wordleImpossible.avgTime')}</div>
 		</div>
 	</div>
 
 	{#if Object.keys(stats.guessDistribution || {}).length > 0}
-		<h4>Aantal beurten per woord</h4>
+		<h4>{$t('wordleImpossible.guessDistribution')}</h4>
 		<div class="guess-distribution">
 			{#each Object.entries(stats.guessDistribution || {})
 				.map(([k, v]) => ({ guessNum: parseInt(k), count: v }))

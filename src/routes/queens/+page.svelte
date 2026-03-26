@@ -5,6 +5,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import StatsPanel from './StatsPanel.svelte';
 	import { getStats } from './stats';
+	import { t } from '$lib/i18n';
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
@@ -243,12 +244,12 @@
 </svelte:head>
 
 <div class="game-container">
-	<a class="how-to-play" href="/queens/how-to-play">Hoe te spelen</a>
+	<a class="how-to-play" href="/queens/how-to-play">{$t('queens.howToPlay')}</a>
 
 	<div class="header-controls">
 		<div class="timer">⏱ {formatTime(elapsedTime)}</div>
 		<div class="controls-right">
-			<button class="control-button" onclick={handleClear}>Bord Legen</button>
+			<button class="control-button" onclick={handleClear}>{$t('queens.clearBoard')}</button>
 		</div>
 	</div>
 
@@ -291,16 +292,18 @@
 
 		{#if !won}
 			<div class="bottom-controls">
-				<button class="action-button" onclick={handleUndo}>Undo</button>
+				<button class="action-button" onclick={handleUndo}>{$t('common.undo')}</button>
 			</div>
 		{/if}
 
 		{#if won}
 			<StatsPanel {stats} currentTime={elapsedTime} />
-			<button class="new-game-button" onclick={() => startNewGame()}> Nieuw Spel </button>
+			<button class="new-game-button" onclick={() => startNewGame()}>
+				{$t('queens.newGame')}
+			</button>
 		{/if}
 	{:else}
-		<div class="loading">Loading...</div>
+		<div class="loading">{$t('common.loading')}</div>
 	{/if}
 </div>
 
