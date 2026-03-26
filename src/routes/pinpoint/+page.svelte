@@ -135,7 +135,7 @@
 					bind:value={guessValue}
 					bind:this={guessInput}
 					use:focusInput
-					placeholder="Guess the category…"
+					placeholder={$t('pinpoint.guessPlaceholder')}
 					autocomplete="off"
 					disabled={isGuessing}
 				/>

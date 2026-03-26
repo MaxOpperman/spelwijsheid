@@ -36,6 +36,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'common.reset': 'Reset',
 		'common.undo': 'Undo',
 		'common.time': 'Time',
+		'common.selectLanguage': 'Select language',
 
 		// Pinpoint
 		'pinpoint.subtitle': 'Guess the word. A new clue reveals after every wrong answer.',
@@ -202,6 +203,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'common.reset': 'Reset',
 		'common.undo': 'Undo',
 		'common.time': 'Time',
+		'common.selectLanguage': 'Select language',
 
 		// Pinpoint
 		'pinpoint.subtitle': 'Guess the word. A new clue reveals after every wrong answer.',
@@ -368,6 +370,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'common.reset': 'Reset',
 		'common.undo': 'Ongedaan maken',
 		'common.time': 'Tijd',
+		'common.selectLanguage': 'Selecteer taal',
 
 		// Pinpoint
 		'pinpoint.subtitle': 'Raad het woord. Een nieuwe aanwijzing verschijnt na elk fout antwoord.',

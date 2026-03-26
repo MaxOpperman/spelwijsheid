@@ -1,28 +1,99 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { locale, LOCALES, type Locale } from '$lib/stores/locale';
+	import { t } from '$lib/i18n';
 
 	let open = $state(false);
 	let current = $derived(LOCALES.find((l) => l.value === $locale) ?? LOCALES[0]);
+	let triggerBtn = $state<HTMLButtonElement | undefined>(undefined);
+	let menuEl = $state<HTMLUListElement | undefined>(undefined);
+
+	function getMenuItems(): HTMLButtonElement[] {
+		return menuEl
+			? Array.from(menuEl.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'))
+			: [];
+	}
+
+	async function openMenu(focusLast = false) {
+		open = true;
+		await tick();
+		const items = getMenuItems();
+		if (focusLast) {
+			items[items.length - 1]?.focus();
+		} else {
+			const activeIndex = LOCALES.findIndex((l) => l.value === $locale);
+			items[activeIndex >= 0 ? activeIndex : 0]?.focus();
+		}
+	}
+
+	function closeMenu() {
+		open = false;
+		triggerBtn?.focus();
+	}
 
 	function select(value: Locale) {
 		locale.set(value);
 		open = false;
+		triggerBtn?.focus();
 	}
 
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') open = false;
+	function onTriggerKeydown(e: KeyboardEvent) {
+		if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			openMenu(false);
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			openMenu(true);
+		} else if (e.key === 'Escape' && open) {
+			open = false;
+		}
+	}
+
+	function onMenuKeydown(e: KeyboardEvent) {
+		const items = getMenuItems();
+		const index = items.indexOf(document.activeElement as HTMLButtonElement);
+		switch (e.key) {
+			case 'ArrowDown':
+				e.preventDefault();
+				items[(index + 1) % items.length]?.focus();
+				break;
+			case 'ArrowUp':
+				e.preventDefault();
+				items[(index - 1 + items.length) % items.length]?.focus();
+				break;
+			case 'Home':
+				e.preventDefault();
+				items[0]?.focus();
+				break;
+			case 'End':
+				e.preventDefault();
+				items[items.length - 1]?.focus();
+				break;
+			case 'Escape':
+				closeMenu();
+				break;
+			case 'Tab':
+				open = false;
+				break;
+		}
+	}
+
+	function onWindowKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && open) open = false;
 	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onWindowKeydown} />
 
 <div class="lang-dropdown" class:open>
 	<button
+		bind:this={triggerBtn}
 		class="lang-trigger"
-		onclick={() => (open = !open)}
-		aria-haspopup="listbox"
+		onclick={() => (open ? closeMenu() : openMenu())}
+		onkeydown={onTriggerKeydown}
+		aria-haspopup="menu"
 		aria-expanded={open}
-		aria-label="Select language"
+		aria-label={$t('common.selectLanguage')}
 		title={current.label}
 	>
 		<span class="fi fi-{current.countryCode} fis"></span>
@@ -31,10 +102,22 @@
 
 	{#if open}
 		<div class="backdrop" role="presentation" onclick={() => (open = false)}></div>
-		<ul class="lang-menu" role="listbox">
+		<ul
+			bind:this={menuEl}
+			class="lang-menu"
+			role="menu"
+			aria-label={$t('common.selectLanguage')}
+			onkeydown={onMenuKeydown}
+		>
 			{#each LOCALES as loc (loc.value)}
-				<li role="option" aria-selected={loc.value === $locale}>
-					<button onclick={() => select(loc.value)} class:active={loc.value === $locale}>
+				<li role="presentation">
+					<button
+						role="menuitemradio"
+						aria-checked={loc.value === $locale}
+						onclick={() => select(loc.value)}
+						class:active={loc.value === $locale}
+						tabindex="-1"
+					>
 						<span class="fi fi-{loc.countryCode} fis"></span>
 						<span class="label">{loc.label}</span>
 					</button>
