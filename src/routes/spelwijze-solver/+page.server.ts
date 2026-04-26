@@ -1,15 +1,16 @@
 import type { PageServerLoad } from './$types.js';
 import { getSolverWords } from '$lib/words.server.js';
 
-export const load = (() => {
+export const load = (({ cookies }) => {
+	const locale = cookies.get('locale') ?? 'en-US';
 	return {
 		/**
-		 * The list of Dutch words for the solver (with normalized accents)
+		 * The list of words for the solver (with normalized accents), selected based on the user's locale.
 		 */
-		wordList: getSolverWords(),
+		wordList: getSolverWords({ locale }),
 		/**
-		 * The list of Dutch words for the solver (with original accents)
+		 * The list of words for the solver (with original accents), selected based on the user's locale.
 		 */
-		wordListWithAccents: getSolverWords({ normalizeAccents: false })
+		wordListWithAccents: getSolverWords({ locale, normalizeAccents: false })
 	};
 }) satisfies PageServerLoad;

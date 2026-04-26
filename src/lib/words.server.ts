@@ -21,6 +21,17 @@ export interface WordFilterConfig {
 	normalizeAccents?: boolean;
 	/** Whether to exclude Roman numerals from the results */
 	excludeRomanNumeral?: boolean;
+	/** Locale string used to select the appropriate dictionary (e.g. 'nl-NL', 'en-US', 'en-GB') */
+	locale?: string;
+}
+
+/**
+ * Derive the language ('nl' or 'en') from a locale string.
+ * Defaults to Dutch ('nl') when the locale is unrecognised.
+ */
+function getLanguage(locale?: string): 'nl' | 'en' {
+	if (locale?.startsWith('en')) return 'en';
+	return 'nl';
 }
 
 /**
@@ -31,26 +42,30 @@ export function normalizeAccentedCharacters(text: string): string {
 	return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-let cachedWords: string[] | null = null;
+const wordCache: Map<'nl' | 'en', string[]> = new Map();
 
 /**
- * Load the raw word list from the dictionary-nl package
+ * Load the raw word list for the given language.
+ * Uses a per-language cache so each file is read at most once.
  */
-function loadRawWords(): string[] {
-	if (cachedWords === null) {
-		// Path to the OpenTaal wordlist in the static directory
-		const filePath = path.resolve('static/wordlist.txt');
+function loadRawWords(language: 'nl' | 'en' = 'nl'): string[] {
+	if (!wordCache.has(language)) {
+		const fileName = language === 'en' ? 'wordlist-en.txt' : 'wordlist.txt';
+		const filePath = path.resolve(`static/${fileName}`);
 		const fileContent = readFileSync(filePath, 'utf-8');
-		cachedWords = Array.from(
-			new Set(
-				fileContent
-					.split('\n')
-					.map((line) => line.trim())
-					.filter((word) => word.length > 0)
+		wordCache.set(
+			language,
+			Array.from(
+				new Set(
+					fileContent
+						.split('\n')
+						.map((line) => line.trim())
+						.filter((word) => word.length > 0)
+				)
 			)
 		);
 	}
-	return cachedWords;
+	return wordCache.get(language)!;
 }
 
 /**
@@ -65,7 +80,10 @@ export function isRomanNumeral(word: string): boolean {
 }
 
 /**
- * Get filtered Dutch words based on the provided configuration
+ * Get filtered words based on the provided configuration.
+ * The language (and therefore which dictionary file is used) is determined by the
+ * `locale` field in the config.  Dutch-specific processing (ij digraph handling)
+ * is skipped for English locales.
  */
 export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 	const {
@@ -76,10 +94,15 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		alphabeticOnly = false,
 		splitIjDigraph = false,
 		normalizeAccents = true,
-		excludeRomanNumeral = true
+		excludeRomanNumeral = true,
+		locale
 	} = config;
 
-	const rawWords = loadRawWords();
+	const language = getLanguage(locale);
+	// English has no ij digraph: always treat i and j as individual characters.
+	const effectiveSplitIj = language === 'en' ? true : splitIjDigraph;
+
+	const rawWords = loadRawWords(language);
 
 	return rawWords
 		.filter((word) => {
@@ -89,9 +112,9 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 			// Normalize accents first if enabled (for accurate length calculation and filtering)
 			const normalizedWord = normalizeAccents ? normalizeAccentedCharacters(word) : word;
 
-			// For digraph mode (splitIjDigraph = false), convert 'ij' to 'ĳ' for length calculation
-			// For split mode (splitIjDigraph = true), keep 'ij' as two characters
-			const processedWord = splitIjDigraph
+			// For digraph mode (effectiveSplitIj = false), convert 'ij' to 'ĳ' for length calculation
+			// For split mode (effectiveSplitIj = true), keep 'ij' as two characters
+			const processedWord = effectiveSplitIj
 				? normalizedWord
 				: normalizedWord.replace(/ij/g, 'ĳ').replace(/IJ/g, 'Ĳ').replace(/Ij/g, 'Ĳ');
 
@@ -112,7 +135,7 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 			let processedWord = normalizeAccents ? normalizeAccentedCharacters(word) : word;
 
 			// Convert based on mode
-			if (splitIjDigraph) {
+			if (effectiveSplitIj) {
 				// Split mode: keep ij as two characters (original format from OpenTaal)
 				return lowercase ? processedWord.toLowerCase() : processedWord;
 			} else {

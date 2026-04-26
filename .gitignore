@@ -24,3 +24,4 @@ vite.config.ts.timestamp-*
 
 # Downloaded wordlist
 static/wordlist.txt
+static/wordlist-en.txt
