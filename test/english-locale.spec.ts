@@ -6,7 +6,7 @@ describe('English locale word loading', () => {
 		it('should return 5-letter English words for en-US', () => {
 			const words = getWordleWords({ exactLength: 5, locale: 'en-US' });
 			expect(words.length).toBeGreaterThan(0);
-			// Common 5-letter English words
+			// Common 5-letter English words present in both locales
 			expect(words).toContain('apple');
 			expect(words).toContain('hello');
 			expect(words).toContain('world');
@@ -39,6 +39,31 @@ describe('English locale word loading', () => {
 			words.slice(0, 20).forEach((word) => {
 				expect(word).toMatch(/^[a-z]+$/);
 			});
+		});
+	});
+
+	describe('en-US and en-GB have distinct dictionaries', () => {
+		it('en-US contains American spellings that are absent from en-GB', () => {
+			const usWords = getWordleWords({ exactLength: 5, locale: 'en-US' });
+			const gbWords = getWordleWords({ exactLength: 5, locale: 'en-GB' });
+			// "color" is the US spelling; en-GB should use "colour"
+			expect(usWords).toContain('color');
+			expect(gbWords).not.toContain('color');
+		});
+
+		it('en-GB contains British spellings that are absent from en-US', () => {
+			const usWords = getWordleWords({ exactLength: 6, locale: 'en-US' });
+			const gbWords = getWordleWords({ exactLength: 6, locale: 'en-GB' });
+			// "colour" is the GB spelling; en-US should use "color"
+			expect(gbWords).toContain('colour');
+			expect(usWords).not.toContain('colour');
+		});
+
+		it('en-US and en-GB 5-letter word lists are not identical', () => {
+			const usWords = getWordleWords({ exactLength: 5, locale: 'en-US' });
+			const gbWords = getWordleWords({ exactLength: 5, locale: 'en-GB' });
+			// The two lists should differ in content
+			expect(usWords).not.toEqual(gbWords);
 		});
 	});
 
@@ -83,7 +108,7 @@ describe('English locale word loading', () => {
 
 	describe('English locale ij digraph handling', () => {
 		it('should treat ij as two separate characters in English (no digraph conversion)', () => {
-			// The word "bijou" contains 'ij' - it should be counted as 5 chars (b-i-j-o-u), not 4
+			// "bijou" contains 'ij' - it should be counted as 5 chars (b-i-j-o-u), not 4
 			const fiveLetterWords = getWordleWords({ exactLength: 5, locale: 'en-US' });
 			expect(fiveLetterWords).toContain('bijou');
 		});

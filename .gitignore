@@ -22,6 +22,7 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Downloaded wordlist
+# Downloaded wordlists
 static/wordlist.txt
-static/wordlist-en.txt
+static/wordlist-en-us.txt
+static/wordlist-en-gb.txt

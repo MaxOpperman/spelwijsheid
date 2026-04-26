@@ -1,4 +1,4 @@
-import { createWriteStream } from 'fs';
+import { createWriteStream, writeFileSync } from 'fs';
 import { mkdir } from 'fs/promises';
 import { pipeline } from 'stream/promises';
 import { dirname } from 'path';
@@ -10,9 +10,16 @@ const NL_LICENSE_URL =
 	'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/LICENSE.txt';
 const NL_OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist.txt', import.meta.url));
 
-const EN_WORDLIST_URL =
-	'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt';
-const EN_OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist-en.txt', import.meta.url));
+/**
+ * Hunspell .dic dictionaries from wooorm/dictionaries.
+ * These provide distinct, curated word lists for each English locale.
+ */
+const EN_US_DIC_URL =
+	'https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/en/index.dic';
+const EN_GB_DIC_URL =
+	'https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/en-GB/index.dic';
+const EN_US_OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist-en-us.txt', import.meta.url));
+const EN_GB_OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist-en-gb.txt', import.meta.url));
 
 async function downloadFile(url, outputPath) {
 	const response = await fetch(url);
@@ -21,6 +28,42 @@ async function downloadFile(url, outputPath) {
 	}
 	const fileStream = createWriteStream(outputPath);
 	await pipeline(response.body, fileStream);
+}
+
+/**
+ * Parse a Hunspell .dic file and return an array of unique lowercase alphabetic words.
+ *
+ * Hunspell .dic format:
+ *   Line 1 : word count (skip)
+ *   Line N : word[/affixes]   – everything after the first '/' is stripped
+ */
+function parseHunspellDic(content) {
+	const lines = content.split('\n');
+	// Skip the first line (word count header)
+	const words = lines
+		.slice(1)
+		.map((line) => {
+			const slashIndex = line.indexOf('/');
+			return (slashIndex !== -1 ? line.slice(0, slashIndex) : line).trim().toLowerCase();
+		})
+		.filter((word) => /^[a-z]+$/.test(word));
+
+	return [...new Set(words)];
+}
+
+async function downloadEnglishWordlist(url, outputPath, label) {
+	console.log(`Downloading ${label} wordlist (wooorm/dictionaries)...`);
+	console.log(`URL: ${url}`);
+	console.log(`Output: ${outputPath}`);
+
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`Failed to download ${url}: ${response.statusText}`);
+	}
+	const content = await response.text();
+	const words = parseHunspellDic(content);
+	writeFileSync(outputPath, words.join('\n'), 'utf-8');
+	console.log(`✓ ${label} wordlist downloaded successfully! (${words.length} words)`);
 }
 
 async function downloadWordlists() {
@@ -44,13 +87,9 @@ async function downloadWordlists() {
 		await downloadFile(NL_WORDLIST_URL, NL_OUTPUT_PATH);
 		console.log('✓ Dutch wordlist downloaded successfully!');
 
-		// Download English wordlist (dwyl/english-words)
-		console.log('Downloading English wordlist (dwyl/english-words)...');
-		console.log(`URL: ${EN_WORDLIST_URL}`);
-		console.log(`Output: ${EN_OUTPUT_PATH}`);
-
-		await downloadFile(EN_WORDLIST_URL, EN_OUTPUT_PATH);
-		console.log('✓ English wordlist downloaded successfully!');
+		// Download English wordlists (distinct dictionaries per locale)
+		await downloadEnglishWordlist(EN_US_DIC_URL, EN_US_OUTPUT_PATH, 'English (US)');
+		await downloadEnglishWordlist(EN_GB_DIC_URL, EN_GB_OUTPUT_PATH, 'English (GB)');
 	} catch (error) {
 		console.error('Error downloading wordlists:', error);
 		process.exit(1);

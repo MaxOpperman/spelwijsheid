@@ -26,12 +26,31 @@ export interface WordFilterConfig {
 }
 
 /**
- * Derive the language ('nl' or 'en') from a locale string.
- * Defaults to Dutch ('nl') when the locale is unrecognised.
+ * Map each supported locale to its dictionary filename in the static directory.
+ * Unrecognised locales fall back to the Dutch wordlist.
  */
-function getLanguage(locale?: string): 'nl' | 'en' {
-	if (locale?.startsWith('en')) return 'en';
-	return 'nl';
+const WORDLIST_FILE_BY_LOCALE: Record<string, string> = {
+	'en-US': 'wordlist-en-us.txt',
+	'en-GB': 'wordlist-en-gb.txt',
+	'nl-NL': 'wordlist.txt'
+};
+
+/**
+ * Resolve the wordlist filename for the given locale.
+ * Falls back to Dutch when the locale is unrecognised.
+ */
+function getWordlistFile(locale?: string): string {
+	if (locale && locale in WORDLIST_FILE_BY_LOCALE) {
+		return WORDLIST_FILE_BY_LOCALE[locale];
+	}
+	return 'wordlist.txt';
+}
+
+/**
+ * Return true when the locale uses English (and therefore has no ij digraph).
+ */
+function isEnglishLocale(locale?: string): boolean {
+	return !!locale?.startsWith('en');
 }
 
 /**
@@ -42,19 +61,20 @@ export function normalizeAccentedCharacters(text: string): string {
 	return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-const wordCache: Map<'nl' | 'en', string[]> = new Map();
+const wordCache: Map<string, string[]> = new Map();
 
 /**
- * Load the raw word list for the given language.
- * Uses a per-language cache so each file is read at most once.
+ * Load the raw word list for the given locale.
+ * Uses a per-locale cache so each file is read at most once.
  */
-function loadRawWords(language: 'nl' | 'en' = 'nl'): string[] {
-	if (!wordCache.has(language)) {
-		const fileName = language === 'en' ? 'wordlist-en.txt' : 'wordlist.txt';
+function loadRawWords(locale?: string): string[] {
+	const cacheKey = locale ?? 'nl-NL';
+	if (!wordCache.has(cacheKey)) {
+		const fileName = getWordlistFile(locale);
 		const filePath = path.resolve(`static/${fileName}`);
 		const fileContent = readFileSync(filePath, 'utf-8');
 		wordCache.set(
-			language,
+			cacheKey,
 			Array.from(
 				new Set(
 					fileContent
@@ -65,7 +85,7 @@ function loadRawWords(language: 'nl' | 'en' = 'nl'): string[] {
 			)
 		);
 	}
-	return wordCache.get(language)!;
+	return wordCache.get(cacheKey)!;
 }
 
 /**
@@ -98,11 +118,11 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		locale
 	} = config;
 
-	const language = getLanguage(locale);
+	const language = isEnglishLocale(locale);
 	// English has no ij digraph: always treat i and j as individual characters.
-	const effectiveSplitIj = language === 'en' ? true : splitIjDigraph;
+	const effectiveSplitIj = language ? true : splitIjDigraph;
 
-	const rawWords = loadRawWords(language);
+	const rawWords = loadRawWords(locale);
 
 	return rawWords
 		.filter((word) => {
