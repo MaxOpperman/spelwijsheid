@@ -237,10 +237,18 @@
 
 	<!-- Word length selector -->
 	<div class="word-length-selector">
-		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}> 4 letters </button>
-		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}> 5 letters </button>
-		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}> 6 letters </button>
-		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}> 7 letters </button>
+		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}
+			>{$t('wordleSolver.nLetters', { n: 4 })}</button
+		>
+		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}
+			>{$t('wordleSolver.nLetters', { n: 5 })}</button
+		>
+		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}
+			>{$t('wordleSolver.nLetters', { n: 6 })}</button
+		>
+		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}
+			>{$t('wordleSolver.nLetters', { n: 7 })}</button
+		>
 	</div>
 
 	<div class="solver-grid">
