@@ -28,8 +28,8 @@ export const load = (({ cookies }) => {
 	const locale = cookies.get('locale') ?? 'en-US';
 	const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
 	const wordList = getWordList(locale, wordLength);
-	const game = new Game(cookies.get(`wordle-${wordLength}`), wordList, wordLength);
-	const stats = parseStats(cookies.get(`wordle-stats-${wordLength}`));
+	const game = new Game(cookies.get(`wordle-${locale}-${wordLength}`), wordList, wordLength);
+	const stats = parseStats(cookies.get(`wordle-stats-${locale}-${wordLength}`));
 
 	return {
 		wordLength,
@@ -46,7 +46,7 @@ export const actions = {
 		const locale = cookies.get('locale') ?? 'en-US';
 		const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
 		const wordList = getWordList(locale, wordLength);
-		const game = new Game(cookies.get(`wordle-${wordLength}`), wordList, wordLength);
+		const game = new Game(cookies.get(`wordle-${locale}-${wordLength}`), wordList, wordLength);
 
 		const data = await request.formData();
 		const key = data.get('key');
@@ -59,14 +59,14 @@ export const actions = {
 			game.guesses[i] += key;
 		}
 
-		cookies.set(`wordle-${wordLength}`, game.toString(), { path: '/' });
+		cookies.set(`wordle-${locale}-${wordLength}`, game.toString(), { path: '/' });
 	},
 
 	enter: async ({ request, cookies }) => {
 		const locale = cookies.get('locale') ?? 'en-US';
 		const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
 		const wordList = getWordList(locale, wordLength);
-		const game = new Game(cookies.get(`wordle-${wordLength}`), wordList, wordLength);
+		const game = new Game(cookies.get(`wordle-${locale}-${wordLength}`), wordList, wordLength);
 
 		const data = await request.formData();
 		const guess = data.getAll('guess') as string[];
@@ -75,15 +75,15 @@ export const actions = {
 			return fail(400, { badGuess: true });
 		}
 
-		cookies.set(`wordle-${wordLength}`, game.toString(), { path: '/' });
+		cookies.set(`wordle-${locale}-${wordLength}`, game.toString(), { path: '/' });
 	},
 
 	restart: async ({ cookies }) => {
 		const locale = cookies.get('locale') ?? 'en-US';
 		const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
 		const wordList = getWordList(locale, wordLength);
-		const game = new Game(cookies.get(`wordle-${wordLength}`), wordList, wordLength);
-		const stats = parseStats(cookies.get(`wordle-stats-${wordLength}`));
+		const game = new Game(cookies.get(`wordle-${locale}-${wordLength}`), wordList, wordLength);
+		const stats = parseStats(cookies.get(`wordle-stats-${locale}-${wordLength}`));
 
 		// Determine if the game was won and how many guesses were used
 		const lastAnswer = game.answers.at(-1);
@@ -92,10 +92,10 @@ export const actions = {
 
 		// Update stats
 		const newStats = updateStats(stats, won, guessCount);
-		cookies.set(`wordle-stats-${wordLength}`, serializeStats(newStats), { path: '/' });
+		cookies.set(`wordle-stats-${locale}-${wordLength}`, serializeStats(newStats), { path: '/' });
 
 		// Delete the game cookie to start a new game
-		cookies.delete(`wordle-${wordLength}`, { path: '/' });
+		cookies.delete(`wordle-${locale}-${wordLength}`, { path: '/' });
 	},
 
 	changeLength: async ({ request, cookies }) => {

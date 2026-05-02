@@ -7,6 +7,7 @@ export const load = (({ cookies }) => {
 		/**
 		 * The list of words for the Spelwijze game, selected based on the user's locale.
 		 */
-		wordList: getSolverWords({ locale })
+		wordList: getSolverWords({ locale }),
+		locale
 	};
 }) satisfies PageServerLoad;

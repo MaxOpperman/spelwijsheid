@@ -49,9 +49,11 @@ function getWordlistFile(locale?: string): string {
 
 /**
  * Return true when the locale uses English (and therefore has no ij digraph).
+ * When no locale is provided, the default wordlist is English (en-US), so also returns true.
  */
 function isEnglishLocale(locale?: string): boolean {
-	return !!locale?.startsWith('en');
+	if (!locale) return true; // default wordlist is en-US
+	return locale.startsWith('en');
 }
 
 /**
@@ -66,16 +68,15 @@ const wordCache: Map<string, string[]> = new Map();
 
 /**
  * Load the raw word list for the given locale.
- * Uses a per-locale cache so each file is read at most once.
+ * Uses a per-file cache (keyed by filename) so each file is read at most once.
  */
 function loadRawWords(locale?: string): string[] {
-	const cacheKey = locale ?? 'nl-NL';
-	if (!wordCache.has(cacheKey)) {
-		const fileName = getWordlistFile(locale);
+	const fileName = getWordlistFile(locale);
+	if (!wordCache.has(fileName)) {
 		const filePath = path.resolve(`static/${fileName}`);
 		const fileContent = readFileSync(filePath, 'utf-8');
 		wordCache.set(
-			cacheKey,
+			fileName,
 			Array.from(
 				new Set(
 					fileContent
@@ -86,7 +87,7 @@ function loadRawWords(locale?: string): string[] {
 			)
 		);
 	}
-	return wordCache.get(cacheKey)!;
+	return wordCache.get(fileName)!;
 }
 
 /**

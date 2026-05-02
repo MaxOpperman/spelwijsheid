@@ -7,6 +7,9 @@
 	import { t } from '$lib/i18n';
 
 	export let wordList: string[];
+	export let locale: string = 'en-US';
+
+	const COOKIE_NAME = `spelwijze_game_${locale}`;
 
 	const MAX_CHARS = 10; // 1 mandatory + up to 9 optional (6-10 total range)
 
@@ -78,14 +81,14 @@
 			elapsedTime: timeStarted ? Math.floor((currentTime - timeStarted - pausedTime) / 1000) : 0
 		};
 
-		document.cookie = `spelwijze_game=${JSON.stringify(gameState)}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
+		document.cookie = `${COOKIE_NAME}=${JSON.stringify(gameState)}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
 	}
 
 	function loadGameFromCookie() {
 		if (!browser) return;
 
 		const cookies = document.cookie.split(';');
-		const gameCookie = cookies.find((c) => c.trim().startsWith('spelwijze_game='));
+		const gameCookie = cookies.find((c) => c.trim().startsWith(`${COOKIE_NAME}=`));
 
 		if (gameCookie) {
 			try {
@@ -235,7 +238,7 @@
 	}
 
 	// Check if there's a saved game that can be continued
-	$: hasSavedGame = browser && document.cookie.includes('spelwijze_game') && gameId !== '';
+	$: hasSavedGame = browser && document.cookie.includes(COOKIE_NAME) && gameId !== '';
 </script>
 
 {#if !isReady}

@@ -99,10 +99,16 @@ describe('English locale word loading', () => {
 	});
 
 	describe('Default locale behaviour', () => {
-		it('should use Dutch words when no locale is specified (backward compatibility)', () => {
+		it('should use English (US) words when no locale is specified', () => {
 			const defaultWords = getWordleWords({ exactLength: 5 });
-			const nlWords = getWordleWords({ exactLength: 5, locale: 'nl-NL' });
-			expect(defaultWords).toEqual(nlWords);
+			const enUSWords = getWordleWords({ exactLength: 5, locale: 'en-US' });
+			expect(defaultWords).toEqual(enUSWords);
+		});
+
+		it('should not return Dutch words when no locale is specified', () => {
+			const defaultWords = new Set(getWordleWords({ exactLength: 5 }));
+			const nlWords = new Set(getWordleWords({ exactLength: 5, locale: 'nl-NL' }));
+			expect(defaultWords).not.toEqual(nlWords);
 		});
 	});
 

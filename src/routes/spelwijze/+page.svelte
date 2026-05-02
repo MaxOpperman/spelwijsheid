@@ -9,4 +9,4 @@
 	<title>Spelwijze - Spelwijsheid</title>
 </svelte:head>
 
-<GameState wordList={data.wordList} />
+<GameState wordList={data.wordList} locale={data.locale} />
