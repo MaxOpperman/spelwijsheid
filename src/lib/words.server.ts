@@ -32,7 +32,7 @@ export interface WordFilterConfig {
 const WORDLIST_FILE_BY_LOCALE: Record<string, string> = {
 	'en-US': 'wordlist-en-us.txt',
 	'en-GB': 'wordlist-en-gb.txt',
-	'nl-NL': 'wordlist.txt'
+	'nl-NL': 'wordlist-nl-nl.txt'
 };
 
 /**
@@ -43,7 +43,8 @@ function getWordlistFile(locale?: string): string {
 	if (locale && locale in WORDLIST_FILE_BY_LOCALE) {
 		return WORDLIST_FILE_BY_LOCALE[locale];
 	}
-	return 'wordlist.txt';
+	console.error(`Unrecognized locale "${locale}", defaulting to English US wordlist.`);
+	return WORDLIST_FILE_BY_LOCALE['en-US']; // Default to English US wordlist for unrecognized locales
 }
 
 /**

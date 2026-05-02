@@ -8,7 +8,7 @@ const NL_WORDLIST_URL =
 	'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt';
 const NL_LICENSE_URL =
 	'https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/LICENSE.txt';
-const NL_OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist.txt', import.meta.url));
+const NL_OUTPUT_PATH = fileURLToPath(new URL('../static/wordlist-nl-nl.txt', import.meta.url));
 
 /**
  * Hunspell .dic dictionaries from wooorm/dictionaries.

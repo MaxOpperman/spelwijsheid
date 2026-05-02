@@ -23,6 +23,6 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 # Downloaded wordlists
-static/wordlist.txt
+static/wordlist-nl-nl.txt
 static/wordlist-en-us.txt
 static/wordlist-en-gb.txt
