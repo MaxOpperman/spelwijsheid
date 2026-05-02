@@ -111,6 +111,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
 		// Wordle Solver
 		'wordleSolver.description': 'Enter what you know about the word to find possible solutions',
+		'wordleSolver.nLetters': '{n} letters',
 		'wordleSolver.exactPositions': 'Exact Positions (Green)',
 		'wordleSolver.wrongPositions': 'Correct Letter, Wrong Positions (Yellow)',
 		'wordleSolver.wrongPositionsHint':
@@ -278,6 +279,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
 		// Wordle Solver
 		'wordleSolver.description': 'Enter what you know about the word to find possible solutions',
+		'wordleSolver.nLetters': '{n} characters',
 		'wordleSolver.exactPositions': 'Exact Positions (Green)',
 		'wordleSolver.wrongPositions': 'Correct Character, Wrong Positions (Yellow)',
 		'wordleSolver.wrongPositionsHint':
@@ -446,6 +448,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Wordle Solver
 		'wordleSolver.description':
 			'Voer in wat je weet over het woord om mogelijke oplossingen te vinden',
+		'wordleSolver.nLetters': '{n} letters',
 		'wordleSolver.exactPositions': 'Exact Posities (Groen)',
 		'wordleSolver.wrongPositions': 'Goede Letter, Verkeerde Posities (Geel)',
 		'wordleSolver.wrongPositionsHint':
