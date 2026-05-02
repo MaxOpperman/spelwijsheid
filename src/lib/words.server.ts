@@ -37,14 +37,16 @@ const WORDLIST_FILE_BY_LOCALE: Record<string, string> = {
 
 /**
  * Resolve the wordlist filename for the given locale.
- * Falls back to Dutch when the locale is unrecognised.
+ * Falls back to English (US) when no locale is specified or the locale is unrecognised.
  */
 function getWordlistFile(locale?: string): string {
 	if (locale && locale in WORDLIST_FILE_BY_LOCALE) {
 		return WORDLIST_FILE_BY_LOCALE[locale];
 	}
-	console.error(`Unrecognized locale "${locale}", defaulting to English US wordlist.`);
-	return WORDLIST_FILE_BY_LOCALE['en-US']; // Default to English US wordlist for unrecognized locales
+	if (locale) {
+		console.error(`Unrecognized locale "${locale}", defaulting to English US wordlist.`);
+	}
+	return WORDLIST_FILE_BY_LOCALE['en-US'];
 }
 
 /**
