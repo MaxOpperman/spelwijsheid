@@ -1,11 +1,29 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { t } from '$lib/i18n';
+	import { locale } from '$lib/stores/locale';
+	import { invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		data: PageData;
 	}
 	let { data }: Props = $props();
+
+	const isDutch = $derived($locale === 'nl-NL');
+
+	/** Reload page data whenever the locale changes so the correct word list is used */
+	onMount(() => {
+		let initialised = false;
+		const unsubscribe = locale.subscribe(() => {
+			if (!initialised) {
+				initialised = true;
+				return;
+			}
+			invalidateAll();
+		});
+		return unsubscribe;
+	});
 
 	/** Get the appropriate word list for the given word length and digraph setting */
 	function getWordList(length: number, splitIj: boolean): string[] {
@@ -92,10 +110,10 @@
 			return;
 		}
 
-		if (value === 'i' && allowIjDigraph) {
+		if (value === 'i' && allowIjDigraph && isDutch) {
 			input.maxLength = 2;
 			exactPositions[index] = value;
-		} else if (value === 'ij' && allowIjDigraph) {
+		} else if (value === 'ij' && allowIjDigraph && isDutch) {
 			exactPositions[index] = value;
 			input.maxLength = 1;
 			if (index < 4) focusInput(exactInputRefs, index + 1);
@@ -135,9 +153,9 @@
 			return;
 		}
 
-		if (value === 'i' && allowIjDigraph) {
+		if (value === 'i' && allowIjDigraph && isDutch) {
 			input.maxLength = 2;
-		} else if ((value === 'ij' && allowIjDigraph) || value.length === 1) {
+		} else if ((value === 'ij' && allowIjDigraph && isDutch) || value.length === 1) {
 			addWrongPosition(index, value.length === 2 ? value : value[0]);
 			input.value = '';
 			input.maxLength = 2;
@@ -237,10 +255,18 @@
 
 	<!-- Word length selector -->
 	<div class="word-length-selector">
-		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}> 4 letters </button>
-		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}> 5 letters </button>
-		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}> 6 letters </button>
-		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}> 7 letters </button>
+		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}
+			>{$t('wordleSolver.nLetters', { n: 4 })}</button
+		>
+		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}
+			>{$t('wordleSolver.nLetters', { n: 5 })}</button
+		>
+		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}
+			>{$t('wordleSolver.nLetters', { n: 6 })}</button
+		>
+		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}
+			>{$t('wordleSolver.nLetters', { n: 7 })}</button
+		>
 	</div>
 
 	<div class="solver-grid">
@@ -301,12 +327,14 @@
 			/>
 		</section>
 
-		<section class="input-section options-section">
-			<label class="checkbox-label">
-				<input type="checkbox" bind:checked={allowIjDigraph} />
-				{$t('wordleSolver.digraph')}
-			</label>
-		</section>
+		{#if isDutch}
+			<section class="input-section options-section">
+				<label class="checkbox-label">
+					<input type="checkbox" bind:checked={allowIjDigraph} />
+					{$t('wordleSolver.digraph')}
+				</label>
+			</section>
+		{/if}
 
 		<div class="actions">
 			<button onclick={reset} class="reset-button">{$t('common.reset')}</button>

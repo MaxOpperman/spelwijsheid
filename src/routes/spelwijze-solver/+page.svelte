@@ -3,6 +3,7 @@
 	import generateFilteredWords from '$lib/solver';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { t } from '$lib/i18n';
+	import { locale } from '$lib/stores/locale';
 
 	const base = '';
 
@@ -11,6 +12,8 @@
 	}
 
 	let { data }: Props = $props();
+
+	const isDutch = $derived($locale === 'nl-NL');
 
 	const MAX_CHARS = 8;
 
@@ -78,7 +81,7 @@
 
 		if (value.length === 1) {
 			chars[index] = value;
-			if (value === 'i' && index < chars.length) {
+			if (isDutch && value === 'i' && index < chars.length) {
 				input.maxLength = 2;
 			} else {
 				input.maxLength = 1;
@@ -87,7 +90,7 @@
 				}
 			}
 		} else if (value.length === 2) {
-			if (value === 'ij') {
+			if (isDutch && value === 'ij') {
 				chars[index] = value;
 				if (index < chars.length - 1) {
 					focusNextInput(index);

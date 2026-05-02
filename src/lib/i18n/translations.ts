@@ -124,6 +124,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'wordleSolver.showing': 'Showing the first {shown} of {total} results',
 		'wordleSolver.showMore': 'Show More Solutions',
 		'wordleSolver.noResults': 'No matching words found. Try adjusting your criteria.',
+		'wordleSolver.nLetters': '{n} characters',
 
 		// Spelwijze (WelcomeScreen)
 		'spelwijze.howItWorks': 'How does the game work?',
@@ -291,6 +292,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'wordleSolver.showing': 'Showing the first {shown} of {total} results',
 		'wordleSolver.showMore': 'Show More Solutions',
 		'wordleSolver.noResults': 'No matching words found. Try adjusting your criteria.',
+		'wordleSolver.nLetters': '{n} characters',
 
 		// Spelwijze (WelcomeScreen)
 		'spelwijze.howItWorks': 'How does the game work?',
@@ -460,6 +462,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'wordleSolver.showMore': 'Toon Meer Oplossingen',
 		'wordleSolver.noResults':
 			'Geen overeenkomende woorden gevonden. Probeer je criteria aan te passen.',
+		'wordleSolver.nLetters': '{n} letters',
 
 		// Spelwijze (WelcomeScreen)
 		'spelwijze.howItWorks': 'Hoe werkt het spel?',

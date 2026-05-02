@@ -21,6 +21,41 @@ export interface WordFilterConfig {
 	normalizeAccents?: boolean;
 	/** Whether to exclude Roman numerals from the results */
 	excludeRomanNumeral?: boolean;
+	/** Locale string used to select the appropriate dictionary (e.g. 'nl-NL', 'en-US', 'en-GB') */
+	locale?: string;
+}
+
+/**
+ * Map each supported locale to its dictionary filename in the static directory.
+ * Unrecognised locales fall back to the English (US) wordlist.
+ */
+const WORDLIST_FILE_BY_LOCALE: Record<string, string> = {
+	'en-US': 'wordlist-en-us.txt',
+	'en-GB': 'wordlist-en-gb.txt',
+	'nl-NL': 'wordlist-nl-nl.txt'
+};
+
+/**
+ * Resolve the wordlist filename for the given locale.
+ * Falls back to English (US) when no locale is specified or the locale is unrecognised.
+ */
+function getWordlistFile(locale?: string): string {
+	if (locale && locale in WORDLIST_FILE_BY_LOCALE) {
+		return WORDLIST_FILE_BY_LOCALE[locale];
+	}
+	if (locale) {
+		console.warn(`Unrecognized locale "${locale}", defaulting to English US wordlist.`);
+	}
+	return WORDLIST_FILE_BY_LOCALE['en-US'];
+}
+
+/**
+ * Return true when the locale uses English (and therefore has no ij digraph).
+ * When no locale is provided, the default wordlist is English (en-US), so also returns true.
+ */
+function isEnglishLocale(locale?: string): boolean {
+	if (!locale) return true; // default wordlist is en-US
+	return locale.startsWith('en');
 }
 
 /**
@@ -31,26 +66,30 @@ export function normalizeAccentedCharacters(text: string): string {
 	return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-let cachedWords: string[] | null = null;
+const wordCache: Map<string, string[]> = new Map();
 
 /**
- * Load the raw word list from the dictionary-nl package
+ * Load the raw word list for the given locale.
+ * Uses a per-file cache (keyed by filename) so each file is read at most once.
  */
-function loadRawWords(): string[] {
-	if (cachedWords === null) {
-		// Path to the OpenTaal wordlist in the static directory
-		const filePath = path.resolve('static/wordlist.txt');
+function loadRawWords(locale?: string): string[] {
+	const fileName = getWordlistFile(locale);
+	if (!wordCache.has(fileName)) {
+		const filePath = path.resolve(`static/${fileName}`);
 		const fileContent = readFileSync(filePath, 'utf-8');
-		cachedWords = Array.from(
-			new Set(
-				fileContent
-					.split('\n')
-					.map((line) => line.trim())
-					.filter((word) => word.length > 0)
+		wordCache.set(
+			fileName,
+			Array.from(
+				new Set(
+					fileContent
+						.split('\n')
+						.map((line) => line.trim())
+						.filter((word) => word.length > 0)
+				)
 			)
 		);
 	}
-	return cachedWords;
+	return wordCache.get(fileName)!;
 }
 
 /**
@@ -65,7 +104,10 @@ export function isRomanNumeral(word: string): boolean {
 }
 
 /**
- * Get filtered Dutch words based on the provided configuration
+ * Get filtered words based on the provided configuration.
+ * The language (and therefore which dictionary file is used) is determined by the
+ * `locale` field in the config.  Dutch-specific processing (ij digraph handling)
+ * is skipped for English locales.
  */
 export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 	const {
@@ -76,10 +118,14 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		alphabeticOnly = false,
 		splitIjDigraph = false,
 		normalizeAccents = true,
-		excludeRomanNumeral = true
+		excludeRomanNumeral = true,
+		locale
 	} = config;
 
-	const rawWords = loadRawWords();
+	// English has no ij digraph: always treat i and j as individual characters.
+	const effectiveSplitIj = isEnglishLocale(locale) ? true : splitIjDigraph;
+
+	const rawWords = loadRawWords(locale);
 
 	return rawWords
 		.filter((word) => {
@@ -89,9 +135,9 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 			// Normalize accents first if enabled (for accurate length calculation and filtering)
 			const normalizedWord = normalizeAccents ? normalizeAccentedCharacters(word) : word;
 
-			// For digraph mode (splitIjDigraph = false), convert 'ij' to 'ĳ' for length calculation
-			// For split mode (splitIjDigraph = true), keep 'ij' as two characters
-			const processedWord = splitIjDigraph
+			// For digraph mode (effectiveSplitIj = false), convert 'ij' to 'ĳ' for length calculation
+			// For split mode (effectiveSplitIj = true), keep 'ij' as two characters
+			const processedWord = effectiveSplitIj
 				? normalizedWord
 				: normalizedWord.replace(/ij/g, 'ĳ').replace(/IJ/g, 'Ĳ').replace(/Ij/g, 'Ĳ');
 
@@ -112,7 +158,7 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 			let processedWord = normalizeAccents ? normalizeAccentedCharacters(word) : word;
 
 			// Convert based on mode
-			if (splitIjDigraph) {
+			if (effectiveSplitIj) {
 				// Split mode: keep ij as two characters (original format from OpenTaal)
 				return lowercase ? processedWord.toLowerCase() : processedWord;
 			} else {

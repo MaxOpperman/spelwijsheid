@@ -7,7 +7,7 @@ import {
 } from '../src/lib/words.server';
 
 // Load the Dutch word list for testing
-const allWords = getSolverWords();
+const allWords = getSolverWords({ locale: 'nl-NL' });
 
 describe('generateFilteredWords', () => {
 	it('example from how-to-play (b a n d) returns expected words', () => {
@@ -117,7 +117,7 @@ describe('normalizeAccentedCharacters', () => {
 
 describe('getSolverWords with accent normalization', () => {
 	it('should include normalized accented words by default', () => {
-		const words = getSolverWords();
+		const words = getSolverWords({ locale: 'nl-NL' });
 		// "reünie" should be normalized to "reunie" in the list
 		expect(words).toContain('reunie');
 	});
@@ -130,14 +130,14 @@ describe('getSolverWords with accent normalization', () => {
 	});
 
 	it('should not contain words with accents when normalization is enabled', () => {
-		const words = getSolverWords();
+		const words = getSolverWords({ locale: 'nl-NL' });
 		// Words should not contain accented characters like ü, é, ë, etc.
 		const hasAccentedWords = words.some((word) => /[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ]/i.test(word));
 		expect(hasAccentedWords).toBe(false);
 	});
 
 	it('should preserve accented characters when normalizeAccents is false', () => {
-		const words = getSolverWords({ normalizeAccents: false });
+		const words = getSolverWords({ normalizeAccents: false, locale: 'nl-NL' });
 		// Check if the list contains at least some accented words
 		const hasAccentedWords = words.some((word) => /[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ]/i.test(word));
 		expect(hasAccentedWords).toBe(true);
@@ -147,9 +147,13 @@ describe('getSolverWords with accent normalization', () => {
 
 	it('should return different word counts based on accent normalization', () => {
 		const input = ['c', 'r', 'e', 'n'];
-		const normalizedWords = generateFilteredWords(getSolverWords(), input, false);
+		const normalizedWords = generateFilteredWords(
+			getSolverWords({ locale: 'nl-NL' }),
+			input,
+			false
+		);
 		const accentedWords = generateFilteredWords(
-			getSolverWords({ normalizeAccents: false }),
+			getSolverWords({ normalizeAccents: false, locale: 'nl-NL' }),
 			input,
 			false
 		);
@@ -164,7 +168,7 @@ describe('getSolverWords with accent normalization', () => {
 describe('getWordleWords with accent normalization', () => {
 	it('should normalize accented words by default', () => {
 		// Get 6-letter Wordle words (reunie is 6 letters)
-		const words = getWordleWords({ exactLength: 6 });
+		const words = getWordleWords({ exactLength: 6, locale: 'nl-NL' });
 		// "reünie" should be normalized to "reunie"
 		expect(words).toContain('reunie');
 		expect(words).not.toContain('reünie');
@@ -176,7 +180,8 @@ describe('getWordleWords with accent normalization', () => {
 		const words = getWordleWords({
 			exactLength: 6,
 			normalizeAccents: false,
-			alphabeticOnly: false
+			alphabeticOnly: false,
+			locale: 'nl-NL'
 		});
 		// "reünie" should keep the accent
 		expect(words).toContain('reünie');

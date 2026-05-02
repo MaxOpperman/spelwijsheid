@@ -12,6 +12,17 @@ This app contains some games that I like to play and some that I was eager to pr
 
 Because I am not always the best at finding the correct answer I have created some solvers as well for these games.
 
+## Language Support
+
+The app now supports multiple languages with locale-specific word lists:
+
+- **Dutch (nl-NL)**: Uses the [OpenTaal wordlist](https://github.com/OpenTaal/opentaal-wordlist) with support for the Dutch 'ij' digraph
+- **English (US & GB)**: Uses distinct dictionaries from [wooorm/dictionaries](https://github.com/wooorm/dictionaries) with regional spelling variations
+  - **en-US**: American English spellings (e.g., "color")
+  - **en-GB**: British English spellings (e.g., "colour")
+
+Game state (progress, statistics, saved games) is maintained separately per locale, and the ij digraph handling is automatically disabled for English locales where it's not applicable.
+
 ## Svelte
 
 This app is programmed in Svelte to broaden my experience with frameworks. A small sidenote is that I took some shortcuts with Claude Sonnet 4 / 4.5 but who doesn't nowadays :D

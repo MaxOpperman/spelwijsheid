@@ -5,6 +5,9 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import StatsPanel from './StatsPanel.svelte';
 	import { t } from '$lib/i18n';
+	import { locale } from '$lib/stores/locale';
+	import { invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	interface FormData {
 		badGuess?: boolean;
@@ -18,6 +21,19 @@
 
 	/** Track loading state */
 	let isLoading = $state(false);
+
+	/** Reload page data whenever the locale changes so the correct word list and game state are used */
+	onMount(() => {
+		let initialised = false;
+		const unsubscribe = locale.subscribe(() => {
+			if (!initialised) {
+				initialised = true;
+				return;
+			}
+			invalidateAll();
+		});
+		return unsubscribe;
+	});
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
@@ -92,11 +108,10 @@
 			currentGuess.slice(-1) === 'i' &&
 			key === 'j'
 		) {
+			// Only applies to Dutch: merge trailing 'i'+'j' into the ĳ digraph.
+			// For English (answerUsesDigraph = false) the word is already full — no-op.
 			if (answerUsesDigraph) {
 				currentGuess = currentGuess.slice(0, -1) + 'ĳ';
-			} else {
-				// If digraph is not used, treat 'i'+'j' as two characters; append 'j'
-				currentGuess += 'j';
 			}
 		}
 	}
