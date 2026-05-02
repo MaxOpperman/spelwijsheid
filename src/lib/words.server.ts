@@ -27,7 +27,7 @@ export interface WordFilterConfig {
 
 /**
  * Map each supported locale to its dictionary filename in the static directory.
- * Unrecognised locales fall back to the Dutch wordlist.
+ * Unrecognised locales fall back to the English (US) wordlist.
  */
 const WORDLIST_FILE_BY_LOCALE: Record<string, string> = {
 	'en-US': 'wordlist-en-us.txt',
@@ -44,7 +44,7 @@ function getWordlistFile(locale?: string): string {
 		return WORDLIST_FILE_BY_LOCALE[locale];
 	}
 	if (locale) {
-		console.error(`Unrecognized locale "${locale}", defaulting to English US wordlist.`);
+		console.warn(`Unrecognized locale "${locale}", defaulting to English US wordlist.`);
 	}
 	return WORDLIST_FILE_BY_LOCALE['en-US'];
 }
@@ -122,9 +122,8 @@ export function getFilteredWords(config: WordFilterConfig = {}): string[] {
 		locale
 	} = config;
 
-	const language = isEnglishLocale(locale);
 	// English has no ij digraph: always treat i and j as individual characters.
-	const effectiveSplitIj = language ? true : splitIjDigraph;
+	const effectiveSplitIj = isEnglishLocale(locale) ? true : splitIjDigraph;
 
 	const rawWords = loadRawWords(locale);
 
