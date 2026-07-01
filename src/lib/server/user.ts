@@ -278,7 +278,7 @@ export async function coupleInstance(userId: string): Promise<void> {
 				ne(users.id, userId),
 				eq(users.consentAnalytics, true),
 				isNull(users.deletedAt),
-				gte(users.lastActiveAt, windowStart),
+				or(gte(users.lastActiveAt, windowStart), isNull(users.lastActiveAt)),
 				or(
 					hash ? eq(users.fingerprintHash, hash) : sql`false`,
 					me.ip ? eq(users.ip, me.ip) : sql`false`
