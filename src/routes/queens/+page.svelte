@@ -3,9 +3,12 @@
 	import { confetti } from '@neoconfetti/svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { onMount, onDestroy } from 'svelte';
+	import { base } from '$app/paths';
 	import StatsPanel from './StatsPanel.svelte';
-	import { getStats } from './stats';
+	import { getStats, type GameResult } from './stats';
 	import { t } from '$lib/i18n';
+
+	const API_URL = `${base}/api/games/queens`;
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
@@ -16,7 +19,12 @@
 	let elapsedTime = $state(0);
 	let isDragging = $state(false);
 	let pausedTime = $state(0); // Track accumulated time when paused
-	let stats = $state(getStats());
+	let leaderboard: GameResult[] = [];
+	let stats = $state(getStats([]));
+
+	function refreshStats() {
+		stats = getStats(leaderboard);
+	}
 
 	/** Update elapsed time every 100ms */
 	$effect(() => {
@@ -29,9 +37,24 @@
 		}
 	});
 
-	onMount(() => {
-		// Try to load saved game from localStorage
-		const saved = localStorage.getItem('queens-game');
+	onMount(async () => {
+		// Try to load saved game from the server
+		let data: {
+			game: string | null;
+			meta: { pausedTime: number; lastCompletionTime: number | null };
+			leaderboard: GameResult[];
+		} | null = null;
+		try {
+			const res = await fetch(API_URL);
+			if (res.ok) data = await res.json();
+		} catch {
+			/* offline */
+		}
+
+		leaderboard = data?.leaderboard ?? [];
+		refreshStats();
+
+		const saved = data?.game ?? null;
 		if (saved) {
 			try {
 				game = QueensGame.deserialize(saved);
@@ -41,14 +64,10 @@
 				if (game.isSolved()) {
 					won = true;
 					// Load the saved completion time
-					const savedCompletionTime = localStorage.getItem('queens-last-completion-time');
-					elapsedTime = savedCompletionTime ? parseFloat(savedCompletionTime) : 0;
-					// Load stats without adding a new win entry
-					stats = getStats();
+					elapsedTime = data?.meta.lastCompletionTime ?? 0;
 				} else {
 					// Load paused time and reset start time to now
-					const savedPausedTime = localStorage.getItem('queens-paused-time');
-					pausedTime = savedPausedTime ? parseFloat(savedPausedTime) : 0;
+					pausedTime = data?.meta.pausedTime ?? 0;
 					game.startTime = Date.now();
 					elapsedTime = pausedTime;
 				}
@@ -65,7 +84,12 @@
 		// Save accumulated time when leaving the page
 		if (game && !won) {
 			const totalTime = pausedTime + (Date.now() - game.startTime) / 1000;
-			localStorage.setItem('queens-paused-time', totalTime.toString());
+			fetch(API_URL, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ type: 'pause', pausedTime: totalTime }),
+				keepalive: true
+			}).catch(() => {});
 		}
 	});
 
@@ -76,15 +100,25 @@
 		won = false;
 		elapsedTime = 0;
 		pausedTime = 0;
-		localStorage.removeItem('queens-paused-time');
-		localStorage.removeItem('queens-last-completion-time');
-		saveGame();
+		postQueens({ type: 'new', game: game.serialize() });
+	}
+
+	let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function postQueens(body: Record<string, unknown>) {
+		fetch(API_URL, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(body)
+		}).catch(() => {});
 	}
 
 	function saveGame() {
-		if (game) {
-			localStorage.setItem('queens-game', game.serialize());
-		}
+		if (!game) return;
+		const serialized = game.serialize();
+		// Debounce frequent saves (drag/click) into one request.
+		if (saveTimer) clearTimeout(saveTimer);
+		saveTimer = setTimeout(() => postQueens({ type: 'save', game: serialized }), 500);
 	}
 
 	function handleCellClick(row: number, col: number) {
@@ -129,28 +163,21 @@
 		if (game && game.isSolved()) {
 			won = true;
 			elapsedTime = pausedTime + (Date.now() - game.startTime) / 1000;
-			localStorage.removeItem('queens-paused-time');
-			// Save the completion time
-			localStorage.setItem('queens-last-completion-time', elapsedTime.toString());
 
-			// Save to leaderboard (localStorage for now)
-			interface LeaderboardEntry {
-				size: number;
-				time: number;
-				date: string;
-			}
-			const leaderboard: LeaderboardEntry[] = JSON.parse(
-				localStorage.getItem('queens-leaderboard') || '[]'
-			);
-			leaderboard.push({
+			// Persist completion + leaderboard entry server-side.
+			leaderboard = [
+				...leaderboard,
+				{ size: game.puzzle.size, time: elapsedTime, date: new Date().toISOString() }
+			];
+			postQueens({
+				type: 'complete',
+				game: game.serialize(),
 				size: game.puzzle.size,
-				time: elapsedTime,
-				date: new Date().toISOString()
+				time: elapsedTime
 			});
-			localStorage.setItem('queens-leaderboard', JSON.stringify(leaderboard));
 
 			// Update stats
-			stats = getStats();
+			refreshStats();
 		}
 	}
 

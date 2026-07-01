@@ -1,29 +1,40 @@
 import { browser } from '$app/environment';
+import { base } from '$app/paths';
 import { writable } from 'svelte/store';
 
-// Check for saved theme preference or default to 'light'
-const defaultTheme = 'light';
-const initialTheme = browser ? (localStorage.getItem('theme') ?? defaultTheme) : defaultTheme;
+// The theme has already been applied to <html> before paint by the inline
+// script in app.html (reading the `theme` cookie). Initialise the store from
+// the actual applied class so client and server agree.
+const initialDark = browser ? document.documentElement.classList.contains('dark') : false;
 
-// Create the store
-export const darkMode = writable<boolean>(initialTheme === 'dark');
+export const darkMode = writable<boolean>(initialDark);
 
-// Subscribe to changes and update localStorage and document class
 if (browser) {
+	let first = true;
 	darkMode.subscribe((isDark) => {
-		localStorage.setItem('theme', isDark ? 'dark' : 'light');
-
 		if (isDark) {
 			document.documentElement.classList.add('dark');
 		} else {
 			document.documentElement.classList.remove('dark');
 		}
-	});
 
-	// Apply initial theme
-	if (initialTheme === 'dark') {
-		document.documentElement.classList.add('dark');
-	}
+		// Don't persist the initial value (it already reflects the server state).
+		if (first) {
+			first = false;
+			return;
+		}
+
+		// Persist the preference to the server (source of truth) and update the
+		// readable theme cookie for instant, flash-free subsequent loads.
+		document.cookie = `theme=${isDark ? 'dark' : 'light'};path=/;max-age=34560000;samesite=lax`;
+		fetch(`${base}/api/preferences`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ darkMode: isDark })
+		}).catch(() => {
+			/* best-effort; cookie keeps the UI consistent */
+		});
+	});
 }
 
 export function toggleDarkMode() {

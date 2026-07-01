@@ -13,10 +13,8 @@ export interface GameResult {
 	date: string;
 }
 
-export function getStats(): QueensStats {
-	const results: GameResult[] = JSON.parse(localStorage.getItem('queens-leaderboard') || '[]');
-
-	if (results.length === 0) {
+export function getStats(results: GameResult[]): QueensStats {
+	if (!results || results.length === 0) {
 		return {
 			gamesPlayed: 0,
 			gamesWon: 0,

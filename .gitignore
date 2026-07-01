@@ -26,3 +26,12 @@ vite.config.ts.timestamp-*
 static/wordlist-nl-nl.txt
 static/wordlist-en-us.txt
 static/wordlist-en-gb.txt
+
+# Playwright
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
+# GeoLite2 database (local dev)
+/geoip
