@@ -11,3 +11,31 @@ services:
       - 'host.docker.internal:host-gateway' # For accessing Ollama API on the host machine
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=postgres://${POSTGRES_USER:-spelwijsheid_user}:${POSTGRES_PASSWORD:-spelwijsheid_password}@db:5432/${POSTGRES_DB:-spelwijsheid}
+      - GEOIP_DB_PATH=/app/geoip/GeoLite2-City.mmdb
+      - MAXMIND_ACCOUNT_ID=${MAXMIND_ACCOUNT_ID:-}
+      - MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY:-}
+    volumes:
+      - geoip-data:/app/geoip
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-spelwijsheid_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-spelwijsheid_password}
+      - POSTGRES_DB=${POSTGRES_DB:-spelwijsheid}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-spelwijsheid_user}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:
+  geoip-data:

@@ -1,19 +1,11 @@
 import type { Actions, PageServerLoad } from './$types';
 import { env } from '$env/dynamic/private';
-import { createSession, getSession, updateSession, deleteSession } from './game-store.ts';
+import { setSession, getSession, updateSession, deleteSession } from './game-store.ts';
 import { isCorrectGuess } from '$lib/utils';
 import type { Cookies } from '@sveltejs/kit';
 import { Locale } from '$lib/stores/locale.ts';
 
 export const prerender = false;
-
-const COOKIE_NAME = 'pinpoint-session';
-const COOKIE_OPTS = {
-	path: '/pinpoint',
-	httpOnly: true,
-	sameSite: 'lax',
-	maxAge: 60 * 60 * 24 // 24 hours
-} as const;
 
 // Helper to get locale from cookies or fallback
 function getLocaleFromCookies(cookies: Cookies): Locale {
@@ -135,10 +127,10 @@ Output ONLY this JSON structure:
 	return { word: parsed.word.trim(), clues: parsed.clues.map((c) => c.trim()) };
 }
 
-async function startNewGame(cookies: Cookies): Promise<void> {
+async function startNewGame(cookies: Cookies, uid: string): Promise<void> {
 	const locale = getLocaleFromCookies(cookies);
 	const puzzle = await generatePuzzle(locale);
-	const newId = createSession({
+	setSession(uid, {
 		word: puzzle.word,
 		clues: puzzle.clues,
 		revealed: 1,
@@ -146,12 +138,10 @@ async function startNewGame(cookies: Cookies): Promise<void> {
 		failed: false,
 		previousGuesses: []
 	});
-	cookies.set(COOKIE_NAME, newId, COOKIE_OPTS);
 }
 
-export const load = (async ({ cookies }) => {
-	const sessionId = cookies.get(COOKIE_NAME);
-	const game = sessionId ? getSession(sessionId) : null;
+export const load = (async ({ locals }) => {
+	const game = getSession(locals.uid);
 
 	if (!game) {
 		return { started: false as const };
@@ -170,13 +160,12 @@ export const load = (async ({ cookies }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	startGame: async ({ cookies }) => {
-		await startNewGame(cookies);
+	startGame: async ({ cookies, locals }) => {
+		await startNewGame(cookies, locals.uid);
 	},
 
-	guess: async ({ request, cookies }) => {
-		const sessionId = cookies.get(COOKIE_NAME);
-		const game = sessionId ? getSession(sessionId) : null;
+	guess: async ({ request, locals }) => {
+		const game = getSession(locals.uid);
 		if (!game || game.solved || game.failed) return;
 
 		const formData = await request.formData();
@@ -186,26 +175,23 @@ export const actions = {
 		const correct = isCorrectGuess(guess, game.word);
 
 		if (correct) {
-			updateSession(sessionId!, { solved: true });
+			updateSession(locals.uid, { solved: true });
 		} else {
 			const previousGuesses = [...game.previousGuesses, guess];
 			if (game.revealed < 5) {
-				updateSession(sessionId!, { previousGuesses, revealed: game.revealed + 1 });
+				updateSession(locals.uid, { previousGuesses, revealed: game.revealed + 1 });
 			} else {
-				updateSession(sessionId!, { previousGuesses, failed: true });
+				updateSession(locals.uid, { previousGuesses, failed: true });
 			}
 		}
 	},
 
-	pausePlaying: async ({ cookies }) => {
-		const sessionId = cookies.get(COOKIE_NAME);
-		if (sessionId) deleteSession(sessionId);
-		cookies.delete(COOKIE_NAME, { path: '/pinpoint' });
+	pausePlaying: async ({ locals }) => {
+		deleteSession(locals.uid);
 	},
 
-	newGame: async ({ cookies }) => {
-		const sessionId = cookies.get(COOKIE_NAME);
-		if (sessionId) deleteSession(sessionId);
-		await startNewGame(cookies);
+	newGame: async ({ cookies, locals }) => {
+		deleteSession(locals.uid);
+		await startNewGame(cookies, locals.uid);
 	}
 } satisfies Actions;

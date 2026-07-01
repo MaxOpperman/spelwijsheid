@@ -168,7 +168,15 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'spelwijze.playAgain': 'Play again',
 
 		// GameState
-		'gameState.preparingGame': 'Preparing the game...'
+		'gameState.preparingGame': 'Preparing the game...',
+
+		// Cookie consent
+		'consent.title': 'Cookies - A quick note on your data',
+		'consent.message':
+			'With your consent we store some basic info about your device and location to improve our games, along with your progress and settings. Choose “Essential only” to skip the analytics parts.',
+		'consent.acceptAll': 'Accept all',
+		'consent.essentialOnly': 'Essential only',
+		'consent.analyticsLabel': 'Analytics'
 	},
 
 	'en-GB': {
@@ -506,6 +514,14 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'spelwijze.playAgain': 'Speel opnieuw',
 
 		// GameState
-		'gameState.preparingGame': 'Het spel aan het voorbereiden...'
+		'gameState.preparingGame': 'Het spel aan het voorbereiden...',
+
+		// Cookie consent
+		'consent.title': 'Cookies - Even over je gegevens',
+		'consent.message':
+			'Met jouw toestemming bewaren we wat basisinformatie over je apparaat en locatie om onze spellen te verbeteren, samen met je voortgang en instellingen. Kies “Alleen essentieel” om de statistieken over te slaan.',
+		'consent.acceptAll': 'Alles accepteren',
+		'consent.essentialOnly': 'Alleen essentieel',
+		'consent.analyticsLabel': 'Statistieken'
 	}
 };

@@ -38,6 +38,10 @@ RUN npm ci --omit=dev --ignore-scripts
 # Copy built files assets from builder
 COPY --from=builder /app/build ./build
 
+# Copy database migrations and the migration runner
+COPY drizzle ./drizzle
+COPY scripts/migrate.js ./scripts/migrate.js
+
 # Expose port
 EXPOSE 3000
 
@@ -45,5 +49,5 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Run the SvelteKit Node server
-CMD ["node", "build/index.js"]
+# Run database migrations, refresh the GeoLite2 database, then start the server
+CMD ["sh", "-c", "node scripts/migrate.js && node scripts/download-geoip.js && node build/index.js"]

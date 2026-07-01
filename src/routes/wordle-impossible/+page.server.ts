@@ -3,6 +3,7 @@ import { ImpossibleGame } from './game.ts';
 import type { PageServerLoad, Actions } from './$types';
 import { getWordleWords } from '$lib/words.server.ts';
 import { parseStats, serializeStats, updateStats } from './stats.ts';
+import { getGameState, setGameState, clearGameState, recordGameResult } from '$lib/server/user';
 
 const wordLists = {
 	4: getWordleWords({
@@ -31,19 +32,23 @@ const wordLists = {
 	})
 };
 
-export const load = (({ cookies }) => {
+export const load = (async ({ cookies, locals }) => {
 	const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
+	const lengthKey = String(wordLength);
 	const wordList = wordLists[wordLength];
-	const game = new ImpossibleGame(
-		cookies.get(`wordle-impossible-${wordLength}`),
-		wordList,
-		wordLength
+	const savedGame = await getGameState<string>(locals.uid, 'wordle-impossible', lengthKey);
+	const game = new ImpossibleGame(savedGame ?? undefined, wordList, wordLength);
+	let stats = parseStats(
+		(await getGameState<string>(locals.uid, 'wordle-impossible-stats', lengthKey)) ?? undefined
 	);
-	let stats = parseStats(cookies.get(`wordle-impossible-stats-${wordLength}`));
 
 	// If the game just ended, check if we need to update stats
 	if (game.endTime && game.guesses.length > 0) {
-		const lastRecordedGame = cookies.get(`wordle-impossible-last-recorded-${wordLength}`);
+		const lastRecordedGame = await getGameState<string>(
+			locals.uid,
+			'wordle-impossible-lastrec',
+			lengthKey
+		);
 		// Create a more robust game ID that includes:
 		// - startTime: when the game began
 		// - endTime: when the game finished
@@ -57,8 +62,16 @@ export const load = (({ cookies }) => {
 			const timeMs = game.getElapsedTime();
 			const guessCount = won ? game.guesses.length : undefined;
 			stats = updateStats(stats, won, timeMs, guessCount);
-			cookies.set(`wordle-impossible-stats-${wordLength}`, serializeStats(stats), { path: '/' });
-			cookies.set(`wordle-impossible-last-recorded-${wordLength}`, currentGameId, { path: '/' });
+			await setGameState(locals.uid, 'wordle-impossible-stats', serializeStats(stats), lengthKey);
+			await setGameState(locals.uid, 'wordle-impossible-lastrec', currentGameId, lengthKey);
+			// Record a timed result row for unified average-time analytics.
+			await recordGameResult({
+				userId: locals.uid,
+				game: 'wordle-impossible',
+				locale: lengthKey,
+				won,
+				durationMs: won ? timeMs : null
+			});
 		}
 	}
 
@@ -74,14 +87,12 @@ export const load = (({ cookies }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	enter: async ({ request, cookies }) => {
+	enter: async ({ request, cookies, locals }) => {
 		const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
+		const lengthKey = String(wordLength);
 		const wordList = wordLists[wordLength];
-		const game = new ImpossibleGame(
-			cookies.get(`wordle-impossible-${wordLength}`),
-			wordList,
-			wordLength
-		);
+		const savedGame = await getGameState<string>(locals.uid, 'wordle-impossible', lengthKey);
+		const game = new ImpossibleGame(savedGame ?? undefined, wordList, wordLength);
 
 		const data = await request.formData();
 		const guess = data.getAll('guess') as string[];
@@ -90,16 +101,17 @@ export const actions = {
 			return fail(400, { badGuess: true });
 		}
 
-		cookies.set(`wordle-impossible-${wordLength}`, game.toString(), { path: '/' });
+		await setGameState(locals.uid, 'wordle-impossible', game.toString(), lengthKey);
 	},
 
-	restart: async ({ cookies }) => {
+	restart: async ({ cookies, locals }) => {
 		const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
+		const lengthKey = String(wordLength);
 
-		// Delete the game cookie to start a new game
-		cookies.delete(`wordle-impossible-${wordLength}`, { path: '/' });
-		// Also delete the last recorded game ID so a new game can be tracked
-		cookies.delete(`wordle-impossible-last-recorded-${wordLength}`, { path: '/' });
+		// Clear the saved board to start a new game
+		await clearGameState(locals.uid, 'wordle-impossible', lengthKey);
+		// Also clear the last recorded game ID so a new game can be tracked
+		await clearGameState(locals.uid, 'wordle-impossible-lastrec', lengthKey);
 	},
 
 	changeLength: async ({ request, cookies }) => {

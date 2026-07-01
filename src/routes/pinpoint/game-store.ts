@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 export interface GameState {
 	word: string;
 	clues: string[];
@@ -10,7 +8,8 @@ export interface GameState {
 	createdAt: number;
 }
 
-// Server-side in-memory store — the answer never leaves the server
+// Server-side in-memory store — the answer never leaves the server.
+// Keyed by the visitor's persistent `uid` so no extra cookie is needed.
 const store = new Map<string, GameState>();
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -25,15 +24,19 @@ function pruneExpired() {
 	}
 }
 
-export function createSession(state: Omit<GameState, 'createdAt'>): string {
+/** Create or replace the session for the given id (the visitor's uid). */
+export function setSession(id: string, state: Omit<GameState, 'createdAt'>): void {
 	pruneExpired();
-	const id = randomUUID();
 	store.set(id, { ...state, createdAt: Date.now() });
-	return id;
 }
 
 export function getSession(id: string): GameState | null {
-	return store.get(id) ?? null;
+	const state = store.get(id) ?? null;
+	if (state && state.createdAt < Date.now() - SESSION_TTL_MS) {
+		store.delete(id);
+		return null;
+	}
+	return state;
 }
 
 export function updateSession(id: string, patch: Partial<GameState>): void {

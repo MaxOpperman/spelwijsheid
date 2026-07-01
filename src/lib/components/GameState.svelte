@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 	import generateFilteredWords, { generateRandomChars } from '$lib/solver';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import GameView from './GameView.svelte';
@@ -9,7 +10,7 @@
 	export let wordList: string[];
 	export let locale: string = 'en-US';
 
-	const COOKIE_NAME = `spelwijze_game_${locale}`;
+	const SAVE_URL = `${base}/api/games/spelwijze?locale=${encodeURIComponent(locale)}`;
 
 	const MAX_CHARS = 10; // 1 mandatory + up to 9 optional (6-10 total range)
 
@@ -32,13 +33,13 @@
 	let elapsedTime = 0;
 	let formattedTime: string;
 	let completionPercentage: number;
-	let hasSavedGame: boolean;
+	let hasSavedGame = false;
 	let isReady = false; // Track if component is ready
 
-	// Load game state from cookies on mount
-	onMount(() => {
+	// Load game state from the server on mount
+	onMount(async () => {
 		if (browser) {
-			loadGameFromCookie();
+			await loadGameFromServer();
 			// Only generate new game if no saved game was found
 			if (!gameId) {
 				generateNewGame();
@@ -61,11 +62,22 @@
 		pauseStartTime = null;
 		wordInput = '';
 		if (timer) clearInterval(timer);
-		saveGameToCookie();
+		hasSavedGame = true;
+		saveGameToServer();
 	}
 
-	function saveGameToCookie() {
-		if (!browser) return;
+	let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function saveGameToServer() {
+		if (!browser || !gameId) return;
+
+		// Debounce: the reactive auto-save fires every second, so coalesce writes.
+		if (saveTimer) clearTimeout(saveTimer);
+		saveTimer = setTimeout(flushGameToServer, 1000);
+	}
+
+	function flushGameToServer() {
+		if (!browser || !gameId) return;
 
 		const gameState = {
 			gameId,
@@ -81,44 +93,48 @@
 			elapsedTime: timeStarted ? Math.floor((currentTime - timeStarted - pausedTime) / 1000) : 0
 		};
 
-		document.cookie = `${COOKIE_NAME}=${JSON.stringify(gameState)}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
+		fetch(SAVE_URL, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(gameState)
+		}).catch(() => {
+			/* best-effort */
+		});
 	}
 
-	function loadGameFromCookie() {
+	async function loadGameFromServer() {
 		if (!browser) return;
 
-		const cookies = document.cookie.split(';');
-		const gameCookie = cookies.find((c) => c.trim().startsWith(`${COOKIE_NAME}=`));
+		try {
+			const res = await fetch(SAVE_URL);
+			if (!res.ok) return;
+			const { state: gameState } = await res.json();
+			if (!gameState) return;
 
-		if (gameCookie) {
-			try {
-				const gameStateJson = gameCookie.split('=')[1];
-				const gameState = JSON.parse(decodeURIComponent(gameStateJson));
+			gameId = gameState.gameId || '';
+			chars = gameState.chars || Array(MAX_CHARS).fill('');
+			foundWords = gameState.foundWords || [];
+			gameStarted = gameState.gameStarted || false;
+			gameComplete = gameState.gameComplete || false;
+			gamePaused = gameState.gamePaused || false;
+			score = gameState.score || 0;
+			pausedTime = gameState.pausedTime || 0;
+			pauseStartTime = gameState.pauseStartTime || null;
+			hasSavedGame = gameId !== '';
 
-				gameId = gameState.gameId || '';
-				chars = gameState.chars || Array(MAX_CHARS).fill('');
-				foundWords = gameState.foundWords || [];
-				gameStarted = gameState.gameStarted || false;
-				gameComplete = gameState.gameComplete || false;
-				gamePaused = gameState.gamePaused || false;
-				score = gameState.score || 0;
-				pausedTime = gameState.pausedTime || 0;
-				pauseStartTime = gameState.pauseStartTime || null;
-
-				// Restore time state
-				if (gameState.timeStarted && gameStarted && !gameComplete) {
-					if (gamePaused) {
-						// If game was paused when saved, restore the time state without starting timer
-						timeStarted = gameState.timeStarted;
-						currentTime = Date.now();
-					} else {
-						// If game was active when saved, adjust time for elapsed time
-						timeStarted = Date.now() - gameState.elapsedTime * 1000;
-					}
+			// Restore time state
+			if (gameState.timeStarted && gameStarted && !gameComplete) {
+				if (gamePaused) {
+					// If game was paused when saved, restore the time state without starting timer
+					timeStarted = gameState.timeStarted;
+					currentTime = Date.now();
+				} else {
+					// If game was active when saved, adjust time for elapsed time
+					timeStarted = Date.now() - gameState.elapsedTime * 1000;
 				}
-			} catch (e) {
-				console.error('Error loading game from cookie:', e);
 			}
+		} catch (e) {
+			console.error('Error loading game from server:', e);
 		}
 	}
 
@@ -137,7 +153,7 @@
 			gameStarted = true;
 			gamePaused = false; // Ensure we're not paused when starting
 			startTimer();
-			saveGameToCookie();
+			saveGameToServer();
 		}
 	}
 
@@ -150,7 +166,7 @@
 			clearInterval(timer);
 			timer = undefined;
 		}
-		saveGameToCookie();
+		saveGameToServer();
 	}
 
 	function resumeGame() {
@@ -165,7 +181,7 @@
 		timer = setInterval(() => {
 			currentTime = Date.now();
 		}, 1000);
-		saveGameToCookie();
+		saveGameToServer();
 	}
 
 	function submitWord() {
@@ -178,7 +194,7 @@
 		if (allPossible.includes(word)) {
 			if (!foundWords.includes(word)) {
 				foundWords = [...foundWords, word].sort((a, b) => a.length - b.length);
-				saveGameToCookie();
+				saveGameToServer();
 			}
 		}
 
@@ -232,13 +248,10 @@
 		calculateFinalScore();
 	}
 
-	// Save game state periodically and on changes
+	// Save game state periodically and on changes (debounced server write)
 	$: if (browser && gameId) {
-		saveGameToCookie();
+		saveGameToServer();
 	}
-
-	// Check if there's a saved game that can be continued
-	$: hasSavedGame = browser && document.cookie.includes(COOKIE_NAME) && gameId !== '';
 </script>
 
 {#if !isReady}
