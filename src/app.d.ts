@@ -10,6 +10,8 @@ declare global {
 			uid: string;
 			/** The current user's server-side record. */
 			user: User;
+			latitude: number | null;
+			longitude: number | null;
 		}
 		// interface PageData {}
 		// interface PageState {}

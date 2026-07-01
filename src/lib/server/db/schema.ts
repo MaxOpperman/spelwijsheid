@@ -76,6 +76,8 @@ export const users = pgTable('users', {
 	country: text('country'),
 	region: text('region'),
 	city: text('city'),
+	latitude: real('latitude'),
+	longitude: real('longitude'),
 	browser: text('browser'),
 	browserVersion: text('browser_version'),
 	os: text('os'),

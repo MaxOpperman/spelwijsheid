@@ -58,6 +58,8 @@ async function captureAnalytics(
 		country: geo.country,
 		region: geo.region,
 		city: geo.city,
+		latitude: geo.latitude,
+		longitude: geo.longitude,
 		browser: ua.browser,
 		browserVersion: ua.browserVersion,
 		os: ua.os,

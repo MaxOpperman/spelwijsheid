@@ -17,6 +17,8 @@ export interface GeoInfo {
 	country: string | null;
 	region: string | null;
 	city: string | null;
+	latitude: number | null;
+	longitude: number | null;
 }
 
 /** Bump to invalidate all stored fingerprints when the signal set changes. */
@@ -142,7 +144,13 @@ async function getGeoReader(): Promise<Reader<CityResponse> | null> {
  * database. Returns nulls if the database is unavailable or the IP is private.
  */
 export async function lookupGeo(ip: string | null): Promise<GeoInfo> {
-	const empty: GeoInfo = { country: null, region: null, city: null };
+	const empty: GeoInfo = {
+		country: null,
+		region: null,
+		city: null,
+		latitude: null,
+		longitude: null
+	};
 	if (!ip) return empty;
 	const reader = await getGeoReader();
 	if (!reader) return empty;
@@ -152,7 +160,9 @@ export async function lookupGeo(ip: string | null): Promise<GeoInfo> {
 		return {
 			country: result.country?.names?.en ?? null,
 			region: result.subdivisions?.[0]?.names?.en ?? null,
-			city: result.city?.names?.en ?? null
+			city: result.city?.names?.en ?? null,
+			latitude: result.location?.latitude ?? null,
+			longitude: result.location?.longitude ?? null
 		};
 	} catch {
 		return empty;
