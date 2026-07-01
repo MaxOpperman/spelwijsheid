@@ -88,6 +88,11 @@ describe('getOrCreateUser', () => {
 		expect(second.id).toBe(first.id);
 		expect(second.createdAt.getTime()).toBe(first.createdAt.getTime());
 	});
+
+	it('treats a malformed (non-UUID) id as missing and generates a fresh one', async () => {
+		const user = await store.getOrCreateUser("not-a-uuid'; DROP TABLE users; --");
+		expect(user.id).toMatch(/^[0-9a-f-]{36}$/);
+	});
 });
 
 describe('user preferences', () => {

@@ -56,12 +56,15 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		case 'complete': {
 			const size = Number(body.size);
 			const time = Number(body.time);
+			if (!Number.isFinite(size) || size <= 0 || !Number.isFinite(time) || time < 0) {
+				return json({ ok: false }, { status: 400 });
+			}
 			if (typeof body.game === 'string') {
 				await setGameState(locals.uid, 'queens', body.game);
 			}
 			await setGameState(locals.uid, 'queens-meta', {
 				pausedTime: 0,
-				lastCompletionTime: Number.isFinite(time) ? time : null
+				lastCompletionTime: time
 			});
 			const leaderboard =
 				(await getGameState<LeaderboardEntry[]>(locals.uid, 'queens-leaderboard')) ?? [];
@@ -73,7 +76,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				game: 'queens',
 				locale: String(size),
 				won: true,
-				durationMs: Number.isFinite(time) ? Math.round(time * 1000) : null
+				durationMs: Math.round(time * 1000)
 			});
 			break;
 		}

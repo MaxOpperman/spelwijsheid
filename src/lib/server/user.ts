@@ -5,20 +5,26 @@ import { users, gameStates, gameResults, identities, type User } from './db/sche
 import { CONSENT_VERSION, DATA_RETENTION_DAYS } from './session';
 import { computeFingerprint, type FingerprintSignals } from './analytics';
 
+/** Canonical UUID shape, so a tampered cookie never reaches Postgres as a `uuid`. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Fetch a user by id, or create a fresh one if it does not exist.
  * The id comes from the `uid` cookie.
  */
 export async function getOrCreateUser(id: string | undefined): Promise<User> {
-	if (id) {
-		const existing = await db.select().from(users).where(eq(users.id, id)).limit(1);
+	// Ignore missing or malformed cookie values: querying/inserting a non-UUID
+	// against the `uuid` column would make Postgres throw and 500 the request.
+	const validId = id && UUID_RE.test(id) ? id : undefined;
+	if (validId) {
+		const existing = await db.select().from(users).where(eq(users.id, validId)).limit(1);
 		if (existing.length > 0) {
 			return existing[0];
 		}
 	}
-	// Either no cookie or the id is unknown — create a new record. Generate the
-	// id in app code so both branches insert an explicit value.
-	const newId = id ?? randomUUID();
+	// Either no cookie or the id is unknown/invalid — create a new record.
+	// Generate the id in app code so both branches insert an explicit value.
+	const newId = validId ?? randomUUID();
 	const inserted = await db.insert(users).values({ id: newId }).onConflictDoNothing().returning();
 
 	if (inserted.length > 0) {

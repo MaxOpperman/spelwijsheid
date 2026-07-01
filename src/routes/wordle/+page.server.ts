@@ -65,6 +65,9 @@ export const actions = {
 
 		const data = await request.formData();
 		const keyPress = data.get('key');
+		if (typeof keyPress !== 'string' || !keyPress) {
+			return fail(400, { badGuess: true });
+		}
 
 		const i = game.answers.length;
 
