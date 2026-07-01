@@ -354,9 +354,7 @@
 					<p>{$t('about.nearbyDevicesDesc')}</p>
 					<ul>
 						{#each data.nearbyDevices as device, i (i)}
-							{@const days = Math.floor(
-								(Date.now() - new Date(device.lastSeen).getTime()) / 86_400_000
-							)}
+							{@const days = Math.floor((Date.now() - device.lastSeen.getTime()) / 86_400_000)}
 							<li>
 								{device.deviceType ?? 'Device'} &mdash;
 								{device.os ?? $t('about.unknown')}
