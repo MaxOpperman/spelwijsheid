@@ -7,10 +7,12 @@ import { users } from '$lib/server/db/schema';
 export const prerender = false;
 
 export interface NearbyDevice {
+	id: string;
 	os: string | null;
 	browser: string | null;
 	deviceType: string | null;
 	lastSeen: Date;
+	ipAddress: string | null;
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -20,13 +22,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw error(401, 'Unauthorized');
 	}
 
-	let matchedUserIds: string[] = [];
+	let matchedUsers: { id: string; matchConfidence: string | null }[] = [];
 	if (user.identityId) {
 		const siblings = await db
-			.select({ id: users.id })
+			.select({ id: users.id, matchConfidence: users.matchConfidence })
 			.from(users)
 			.where(eq(users.identityId, user.identityId));
-		matchedUserIds = siblings.map((r) => r.id).filter((id) => id !== user.id);
+		matchedUsers = siblings.filter((r) => r.id !== user.id);
 	}
 
 	// Other sessions on the same network — anonymised to device-level info only.
@@ -35,10 +37,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000);
 		const rows = await db
 			.select({
+				id: users.id,
 				os: users.os,
 				browser: users.browser,
 				deviceType: users.deviceType,
-				lastSeen: users.lastSeen
+				lastSeen: users.lastSeen,
+				ipAddress: users.ip
 			})
 			.from(users)
 			.where(
@@ -58,16 +62,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.limit(10);
 
 		nearbyDevices = rows.map((r) => ({
+			id: r.id,
 			os: r.os,
 			browser: r.browser,
 			deviceType: r.deviceType,
-			lastSeen: r.lastSeen
+			lastSeen: r.lastSeen,
+			ipAddress: r.ipAddress
 		}));
 	}
 
 	return {
 		user,
-		matchedUserIds,
+		matchedUsers,
 		nearbyDevices
 	};
 };

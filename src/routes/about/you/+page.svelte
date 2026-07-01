@@ -335,10 +335,17 @@
 					</li>
 					<li>
 						<b>{$t('about.matchedUserIds')}:</b>
-						{#if data.matchedUserIds.length > 0}
+						{#if data.matchedUsers.length > 0}
 							<ul>
-								{#each data.matchedUserIds as uid (uid)}
-									<li><code>{uid}</code></li>
+								{#each data.matchedUsers as match (match.id)}
+									<li>
+										<code>{match.id}</code>
+										{#if match.matchConfidence}
+											<span class="confidence confidence--{match.matchConfidence}"
+												>({match.matchConfidence})</span
+											>
+										{/if}
+									</li>
 								{/each}
 							</ul>
 						{:else}
@@ -356,9 +363,11 @@
 						{#each data.nearbyDevices as device, i (i)}
 							{@const days = Math.floor((Date.now() - device.lastSeen.getTime()) / 86_400_000)}
 							<li>
+								{#if device.id}<code>{device.id}</code>{:else}{$t('about.unknown')}{/if} &mdash;
 								{device.deviceType ?? 'Device'} &mdash;
 								{device.os ?? $t('about.unknown')}
 								/ {device.browser ?? $t('about.unknown')} &mdash;
+								{device.ipAddress ?? $t('about.unknown')} &mdash;
 								{days === 0
 									? $t('about.today')
 									: days === 1
@@ -475,6 +484,25 @@
 		padding: 0.1em 0.35em;
 		border-radius: 0.25rem;
 		word-break: break-all;
+	}
+
+	.confidence {
+		font-size: 0.8em;
+		font-weight: 600;
+		padding: 0.1em 0.4em;
+		border-radius: 0.25rem;
+		margin-left: 0.3em;
+		vertical-align: middle;
+	}
+
+	.confidence--strong {
+		background: color-mix(in oklab, green, white 75%);
+		color: color-mix(in oklab, green, black 30%);
+	}
+
+	.confidence--weak {
+		background: color-mix(in oklab, orange, white 70%);
+		color: color-mix(in oklab, orange, black 40%);
 	}
 
 	@media (max-width: 900px) {
