@@ -120,31 +120,119 @@
 					{data.user.browser ?? $t('about.unknown')}
 					{data.user.browserVersion ?? ''}
 				</li>
+				{#if data.user.browserFullVersion}
+					<li>
+						<b>{$t('about.browserFullVersion')}:</b> <code>{data.user.browserFullVersion}</code>
+					</li>
+				{/if}
 				<li>
 					<b>{$t('about.os')}:</b>
 					{data.user.os ?? $t('about.unknown')}
 					{data.user.osVersion ?? ''}
 				</li>
+				{#if data.user.osPlatformVersion}
+					<li><b>{$t('about.osPlatformVersion')}:</b> {data.user.osPlatformVersion}</li>
+				{/if}
 				<li>
 					<b>{$t('about.device')}:</b>
 					{data.user.deviceVendor ?? ''}
 					{data.user.deviceModel ?? ''} ({data.user.deviceType ?? $t('about.desktop')})
+				</li>
+				{#if data.user.cpuArch}
+					<li><b>{$t('about.cpuArch')}:</b> {data.user.cpuArch}</li>
+				{/if}
+				<li><b>{$t('about.cpuCores')}:</b> {data.user.cpuCores ?? $t('about.unknown')}</li>
+				<li>
+					<b>{$t('about.deviceMemory')}:</b>
+					{data.user.deviceMemory != null ? `${data.user.deviceMemory} GB` : $t('about.unknown')}
 				</li>
 				<li>
 					<b>{$t('about.screenSize')}:</b>
 					{data.user.screenW ? `${data.user.screenW}x${data.user.screenH}` : $t('about.unknown')}
 				</li>
 				<li><b>{$t('about.pixelRatio')}:</b> {data.user.dpr ?? $t('about.unknown')}</li>
+				<li>
+					<b>{$t('about.colorDepth')}:</b>
+					{data.user.colorDepth != null ? `${data.user.colorDepth}-bit` : $t('about.unknown')}
+				</li>
+				<li>
+					<b>{$t('about.pointerCoarse')}:</b>
+					{data.user.pointerCoarse == null
+						? $t('about.unknown')
+						: data.user.pointerCoarse
+							? $t('about.yes')
+							: $t('about.no')}
+				</li>
+				<li>
+					<b>{$t('about.hoverNone')}:</b>
+					{data.user.hoverNone == null
+						? $t('about.unknown')
+						: data.user.hoverNone
+							? $t('about.no')
+							: $t('about.yes')}
+				</li>
+				<li>
+					<b>{$t('about.connectionType')}:</b>
+					{data.user.connectionType ?? $t('about.unknown')}
+				</li>
+				<li>
+					<b>{$t('about.connectionEffectiveType')}:</b>
+					{data.user.connectionEffectiveType ?? $t('about.unknown')}
+				</li>
+				<li>
+					<b>{$t('about.connectionDownlink')}:</b>
+					{data.user.connectionDownlink != null
+						? `${data.user.connectionDownlink} Mbps`
+						: $t('about.unknown')}
+				</li>
 			</ul>
 		</section>
 
 		<section class="data-section">
 			<h2>{$t('about.location')}</h2>
 			<ul>
+				<li>
+					<b>{$t('about.continent')}:</b>
+					{data.user.continent ?? $t('about.unknown')}{data.user.continentCode
+						? ` (${data.user.continentCode})`
+						: ''}
+				</li>
 				<li><b>{$t('about.country')}:</b> {data.user.country ?? $t('about.unknown')}</li>
-				<li><b>{$t('about.region')}:</b> {data.user.region ?? $t('about.unknown')}</li>
+				{#if data.user.registeredCountry && data.user.registeredCountry !== data.user.country}
+					<li><b>{$t('about.registeredCountry')}:</b> {data.user.registeredCountry}</li>
+				{/if}
+				<li>
+					<b>{$t('about.euMember')}:</b>
+					{data.user.euMember == null
+						? $t('about.unknown')
+						: data.user.euMember
+							? $t('about.yes')
+							: $t('about.no')}
+				</li>
+				<li>
+					<b>{$t('about.region')}:</b>
+					{data.user.region ?? $t('about.unknown')}{data.user.regionCode
+						? ` (${data.user.regionCode})`
+						: ''}
+				</li>
+				{#if data.user.subregion}
+					<li><b>{$t('about.subregion')}:</b> {data.user.subregion}</li>
+				{/if}
 				<li><b>{$t('about.city')}:</b> {data.user.city ?? $t('about.unknown')}</li>
+				<li><b>{$t('about.postalCode')}:</b> {data.user.postalCode ?? $t('about.unknown')}</li>
 				<li><b>{$t('about.ipAddress')}:</b> {data.user.ip ?? $t('about.hidden')}</li>
+				<li><b>{$t('about.isp')}:</b> {data.user.isp ?? $t('about.unknown')}</li>
+				<li>
+					<b>{$t('about.asn')}:</b>
+					{data.user.asn != null ? `AS${data.user.asn}` : $t('about.unknown')}
+				</li>
+				<li>
+					<b>{$t('about.accuracyRadius')}:</b>
+					{data.user.accuracyRadius != null
+						? `±${data.user.accuracyRadius} km`
+						: $t('about.unknown')}
+				</li>
+				<li><b>{$t('about.geoTimezone')}:</b> {data.user.geoTimezone ?? $t('about.unknown')}</li>
 			</ul>
 		</section>
 	</div>
@@ -245,8 +333,44 @@
 						<b>{$t('about.matchConfidence')}:</b>
 						{data.user.matchConfidence ?? $t('about.unknown')}
 					</li>
+					<li>
+						<b>{$t('about.matchedUserIds')}:</b>
+						{#if data.matchedUserIds.length > 0}
+							<ul>
+								{#each data.matchedUserIds as uid (uid)}
+									<li><code>{uid}</code></li>
+								{/each}
+							</ul>
+						{:else}
+							{$t('about.unknown')}
+						{/if}
+					</li>
 				</ul>
 			</section>
+
+			{#if data.nearbyDevices.length > 0}
+				<section>
+					<h3>{$t('about.nearbyDevices')}</h3>
+					<p>{$t('about.nearbyDevicesDesc')}</p>
+					<ul>
+						{#each data.nearbyDevices as device, i (i)}
+							{@const days = Math.floor(
+								(Date.now() - new Date(device.lastSeen).getTime()) / 86_400_000
+							)}
+							<li>
+								{device.deviceType ?? 'Device'} &mdash;
+								{device.os ?? $t('about.unknown')}
+								/ {device.browser ?? $t('about.unknown')} &mdash;
+								{days === 0
+									? $t('about.today')
+									: days === 1
+										? $t('about.yesterday')
+										: `${days} ${$t('about.daysAgo')}`}
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
 		</div>
 	</details>
 </div>

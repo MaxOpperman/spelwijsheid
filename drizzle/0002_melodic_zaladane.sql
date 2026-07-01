@@ -1,0 +1,22 @@
+ALTER TABLE "users" ADD COLUMN "isp" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "asn" integer;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "continent" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "continent_code" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "eu_member" boolean;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "region_code" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "postal_code" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "accuracy_radius" integer;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "geo_timezone" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "registered_country" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "subregion" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "cpu_arch" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "os_platform_version" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "browser_full_version" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "color_depth" integer;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "pointer_coarse" boolean;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "hover_none" boolean;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "cpu_cores" integer;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "device_memory" real;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "connection_type" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "connection_effective_type" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "connection_downlink" real;
