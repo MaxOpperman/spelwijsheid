@@ -5,6 +5,7 @@ import { defineConfig } from 'drizzle-kit';
 try {
 	process.loadEnvFile('.env');
 } catch {
+	console.warn('No .env file found, relying on ambient environment variables');
 	// No .env file — rely on the ambient environment.
 }
 
