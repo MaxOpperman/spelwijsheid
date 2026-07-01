@@ -25,6 +25,7 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-spelwijsheid_user}:${POSTGRES_PASSWORD:-spelwijsheid_password}@db:5432/${POSTGRES_DB:-spelwijsheid}
       - POSTGRES_USER=${POSTGRES_USER:-spelwijsheid_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-spelwijsheid_password}
       - POSTGRES_DB=${POSTGRES_DB:-spelwijsheid}
