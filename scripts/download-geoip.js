@@ -75,6 +75,13 @@ export function extractMmdbFromTar(buffer) {
 	return null;
 }
 
+/**
+ * Download a MaxMind GeoLite2 edition, extract the .mmdb file, and write it to disk.
+ * @param {string} edition The name of the GeoLite2 edition (e.g., "GeoLite2-City").
+ * @param {string} url The URL to download the edition from.
+ * @param {string} targetPath The path to write the extracted .mmdb file to.
+ * @param {string} auth The base64-encoded authentication string for the download.
+ */
 async function downloadEdition(edition, url, targetPath, auth) {
 	if (await isFresh(targetPath)) {
 		console.log(`GeoLite2 ${edition} database is recent (${targetPath}); skipping download.`);
