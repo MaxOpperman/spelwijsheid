@@ -23,7 +23,7 @@
 		"db:push": "drizzle-kit push"
 	},
 	"dependencies": {
-		"drizzle-orm": "^0.44.6",
+		"drizzle-orm": "^0.45.2",
 		"maxmind": "^5.0.0",
 		"pg": "^8.13.1",
 		"ua-parser-js": "^2.0.6"
