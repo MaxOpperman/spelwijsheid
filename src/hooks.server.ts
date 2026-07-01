@@ -7,7 +7,13 @@ import {
 	recordVisit,
 	coupleInstance
 } from '$lib/server/user';
-import { getClientIp, lookupGeo, parseUserAgent } from '$lib/server/analytics';
+import {
+	getClientIp,
+	lookupGeo,
+	lookupIsp,
+	parseUserAgent,
+	parseClientHints
+} from '$lib/server/analytics';
 import type { User } from '$lib/server/db/schema';
 import {
 	UID_COOKIE,
@@ -43,7 +49,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 		void captureAnalytics(event, user.id).catch(() => {});
 	}
 
-	return resolve(event);
+	const response = await resolve(event);
+	// Ask the browser to send structured client-hint headers on subsequent navigations.
+	response.headers.append(
+		'Accept-CH',
+		'Sec-CH-UA-Arch, Sec-CH-UA-Platform-Version, Sec-CH-UA-Full-Version-List'
+	);
+	return response;
 };
 
 async function captureAnalytics(
@@ -52,14 +64,26 @@ async function captureAnalytics(
 ): Promise<void> {
 	const ip = getClientIp(event.request.headers, event.getClientAddress);
 	const ua = parseUserAgent(event.request.headers.get('user-agent'));
-	const geo = await lookupGeo(ip);
+	const hints = parseClientHints(event.request.headers);
+	const [geo, asnInfo] = await Promise.all([lookupGeo(ip), lookupIsp(ip)]);
 	const patch: Partial<User> = {
 		ip,
+		isp: asnInfo.isp,
+		asn: asnInfo.asn,
+		continent: geo.continent,
+		continentCode: geo.continentCode,
+		euMember: geo.euMember,
 		country: geo.country,
+		registeredCountry: geo.registeredCountry,
 		region: geo.region,
+		regionCode: geo.regionCode,
+		subregion: geo.subregion,
 		city: geo.city,
+		postalCode: geo.postalCode,
 		latitude: geo.latitude,
 		longitude: geo.longitude,
+		accuracyRadius: geo.accuracyRadius,
+		geoTimezone: geo.geoTimezone,
 		browser: ua.browser,
 		browserVersion: ua.browserVersion,
 		os: ua.os,
@@ -68,6 +92,9 @@ async function captureAnalytics(
 		deviceVendor: ua.deviceVendor,
 		deviceModel: ua.deviceModel
 	};
+	if (hints.cpuArch) patch.cpuArch = hints.cpuArch;
+	if (hints.osPlatformVersion) patch.osPlatformVersion = hints.osPlatformVersion;
+	if (hints.browserFullVersion) patch.browserFullVersion = hints.browserFullVersion;
 	// Only set these when present so we keep the first-touch referrer / language
 	// rather than nulling them on subsequent requests that omit the header.
 	const language = event.request.headers.get('accept-language');

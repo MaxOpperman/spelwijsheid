@@ -203,6 +203,54 @@ describe('POST /api/device', () => {
 		expect(saved.dpr).toBe(2);
 		expect(saved.colorScheme).toBe('dark');
 	});
+
+	it('stores hardware and connection signals', async () => {
+		const user = await store.getOrCreateUser(undefined);
+		await store.setConsent(user.id, { functional: true, analytics: true });
+		const consented = await store.getOrCreateUser(user.id);
+		const res = await device.POST(
+			makeEvent({
+				uid: user.id,
+				user: consented,
+				body: {
+					colorDepth: 24,
+					pointerCoarse: true,
+					hoverNone: false,
+					cpuCores: 8,
+					deviceMemory: 8,
+					connectionType: 'wifi',
+					connectionEffectiveType: '4g',
+					connectionDownlink: 10.5
+				}
+			})
+		);
+		expect(await res.json()).toEqual({ ok: true });
+		const saved = await store.getOrCreateUser(user.id);
+		expect(saved.colorDepth).toBe(24);
+		expect(saved.pointerCoarse).toBe(true);
+		expect(saved.hoverNone).toBe(false);
+		expect(saved.cpuCores).toBe(8);
+		expect(saved.deviceMemory).toBe(8);
+		expect(saved.connectionType).toBe('wifi');
+		expect(saved.connectionEffectiveType).toBe('4g');
+		expect(saved.connectionDownlink).toBe(10.5);
+	});
+
+	it('ignores non-boolean values for pointerCoarse and hoverNone', async () => {
+		const user = await store.getOrCreateUser(undefined);
+		await store.setConsent(user.id, { functional: true, analytics: true });
+		const consented = await store.getOrCreateUser(user.id);
+		await device.POST(
+			makeEvent({
+				uid: user.id,
+				user: consented,
+				body: { pointerCoarse: 'yes', hoverNone: 1 }
+			})
+		);
+		const saved = await store.getOrCreateUser(user.id);
+		expect(saved.pointerCoarse).toBeNull();
+		expect(saved.hoverNone).toBeNull();
+	});
 });
 
 describe('/api/games/spelwijze', () => {

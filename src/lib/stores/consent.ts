@@ -48,6 +48,10 @@ export async function saveConsent(analytics: boolean): Promise<void> {
 export function reportDevice(): void {
 	if (!browser) return;
 	const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+	const nav = navigator as typeof navigator & {
+		deviceMemory?: number;
+		connection?: { type?: string; effectiveType?: string; downlink?: number };
+	};
 	fetch(`${base}/api/device`, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
@@ -57,7 +61,15 @@ export function reportDevice(): void {
 			viewportW: window.innerWidth,
 			viewportH: window.innerHeight,
 			dpr: window.devicePixelRatio,
-			colorScheme: prefersDark ? 'dark' : 'light'
+			colorScheme: prefersDark ? 'dark' : 'light',
+			colorDepth: window.screen?.colorDepth,
+			pointerCoarse: window.matchMedia?.('(pointer: coarse)')?.matches,
+			hoverNone: window.matchMedia?.('(hover: none)')?.matches,
+			cpuCores: nav.hardwareConcurrency,
+			deviceMemory: nav.deviceMemory,
+			connectionType: nav.connection?.type,
+			connectionEffectiveType: nav.connection?.effectiveType,
+			connectionDownlink: nav.connection?.downlink
 		})
 	}).catch(() => {
 		/* best-effort */

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { FingerprintSignals } from '../src/lib/server/analytics';
 
 // analytics.ts imports `$env/dynamic/private`, which is a SvelteKit virtual
 // module that does not resolve under plain vitest. Stub it before importing.
@@ -6,7 +7,8 @@ vi.mock('$env/dynamic/private', () => ({ env: {} }));
 // Prevent maxmind from touching the real filesystem during the top-level import.
 vi.mock('maxmind', () => ({ default: { open: vi.fn() } }));
 
-const { parseUserAgent, getClientIp } = await import('../src/lib/server/analytics');
+const { parseUserAgent, getClientIp, parseClientHints, computeFingerprint } =
+	await import('../src/lib/server/analytics');
 
 describe('parseUserAgent', () => {
 	it('returns all nulls for a missing user agent', () => {
@@ -103,11 +105,20 @@ describe('lookupGeo', () => {
 	it('returns all nulls when ip is null (reader never opened)', async () => {
 		const lookupGeo = await freshLookupGeo();
 		expect(await lookupGeo(null)).toEqual({
+			continent: null,
+			continentCode: null,
+			euMember: null,
 			country: null,
+			registeredCountry: null,
 			region: null,
+			regionCode: null,
+			subregion: null,
 			city: null,
+			postalCode: null,
 			latitude: null,
-			longitude: null
+			longitude: null,
+			accuracyRadius: null,
+			geoTimezone: null
 		});
 		expect(mockOpen).not.toHaveBeenCalled();
 	});
@@ -116,11 +127,20 @@ describe('lookupGeo', () => {
 		mockOpen.mockRejectedValueOnce(new Error('file not found'));
 		const lookupGeo = await freshLookupGeo();
 		expect(await lookupGeo('1.2.3.4')).toEqual({
+			continent: null,
+			continentCode: null,
+			euMember: null,
 			country: null,
+			registeredCountry: null,
 			region: null,
+			regionCode: null,
+			subregion: null,
 			city: null,
+			postalCode: null,
 			latitude: null,
-			longitude: null
+			longitude: null,
+			accuracyRadius: null,
+			geoTimezone: null
 		});
 	});
 
@@ -135,7 +155,7 @@ describe('lookupGeo', () => {
 		};
 		mockOpen.mockResolvedValueOnce(mockReader);
 		const lookupGeo = await freshLookupGeo();
-		expect(await lookupGeo('94.214.0.1')).toEqual({
+		expect(await lookupGeo('94.214.0.1')).toMatchObject({
 			country: 'Netherlands',
 			region: 'North Holland',
 			city: 'Amsterdam',
@@ -149,28 +169,239 @@ describe('lookupGeo', () => {
 		mockOpen.mockResolvedValueOnce(mockReader);
 		const lookupGeo = await freshLookupGeo();
 		expect(await lookupGeo('127.0.0.1')).toEqual({
+			continent: null,
+			continentCode: null,
+			euMember: null,
 			country: null,
+			registeredCountry: null,
 			region: null,
+			regionCode: null,
+			subregion: null,
 			city: null,
+			postalCode: null,
 			latitude: null,
-			longitude: null
+			longitude: null,
+			accuracyRadius: null,
+			geoTimezone: null
 		});
 	});
 
-	it('returns null latitude/longitude when location has no coordinates', async () => {
+	it('maps all extended geo fields from a full reader result', async () => {
 		const mockReader = {
 			get: vi.fn().mockReturnValue({
-				country: { names: { en: 'Germany' } },
-				subdivisions: [],
-				city: { names: { en: 'Berlin' } }
-				// no `location` key
+				continent: { names: { en: 'Europe' }, code: 'EU' },
+				country: { names: { en: 'Netherlands' }, is_in_european_union: true },
+				registered_country: { names: { en: 'Netherlands' } },
+				subdivisions: [
+					{ names: { en: 'North Holland' }, iso_code: 'NH' },
+					{ names: { en: 'Amsterdam Area' } }
+				],
+				city: { names: { en: 'Amsterdam' } },
+				postal: { code: '1011' },
+				location: {
+					latitude: 52.3676,
+					longitude: 4.9041,
+					accuracy_radius: 20,
+					time_zone: 'Europe/Amsterdam'
+				}
 			})
 		};
 		mockOpen.mockResolvedValueOnce(mockReader);
 		const lookupGeo = await freshLookupGeo();
-		const result = await lookupGeo('80.0.0.1');
-		expect(result.latitude).toBeNull();
-		expect(result.longitude).toBeNull();
-		expect(result.country).toBe('Germany');
+		expect(await lookupGeo('94.214.0.1')).toEqual({
+			continent: 'Europe',
+			continentCode: 'EU',
+			euMember: true,
+			country: 'Netherlands',
+			registeredCountry: 'Netherlands',
+			region: 'North Holland',
+			regionCode: 'NH',
+			subregion: 'Amsterdam Area',
+			city: 'Amsterdam',
+			postalCode: '1011',
+			latitude: 52.3676,
+			longitude: 4.9041,
+			accuracyRadius: 20,
+			geoTimezone: 'Europe/Amsterdam'
+		});
+	});
+
+	it('returns null subregion when there is only one subdivision', async () => {
+		const mockReader = {
+			get: vi.fn().mockReturnValue({
+				subdivisions: [{ names: { en: 'North Holland' }, iso_code: 'NH' }]
+			})
+		};
+		mockOpen.mockResolvedValueOnce(mockReader);
+		const lookupGeo = await freshLookupGeo();
+		const result = await lookupGeo('94.214.0.1');
+		expect(result.region).toBe('North Holland');
+		expect(result.subregion).toBeNull();
+	});
+});
+
+describe('lookupIsp', () => {
+	let mockOpen: ReturnType<typeof vi.fn>;
+
+	beforeEach(() => {
+		vi.resetModules();
+		mockOpen = vi.fn();
+		vi.doMock('$env/dynamic/private', () => ({
+			env: { GEOIP_ASN_DB_PATH: '/fake/GeoLite2-ASN.mmdb' }
+		}));
+		vi.doMock('maxmind', () => ({ default: { open: mockOpen } }));
+	});
+
+	async function freshLookupIsp() {
+		const mod = await import('../src/lib/server/analytics');
+		return mod.lookupIsp;
+	}
+
+	it('returns { isp: null, asn: null } when ip is null (reader never opened)', async () => {
+		const lookupIsp = await freshLookupIsp();
+		expect(await lookupIsp(null)).toEqual({ isp: null, asn: null });
+		expect(mockOpen).not.toHaveBeenCalled();
+	});
+
+	it('returns nulls when maxmind.open throws (DB unavailable)', async () => {
+		mockOpen.mockRejectedValueOnce(new Error('file not found'));
+		const lookupIsp = await freshLookupIsp();
+		expect(await lookupIsp('1.2.3.4')).toEqual({ isp: null, asn: null });
+	});
+
+	it('returns nulls when reader.get returns null (private/unroutable IP)', async () => {
+		const mockReader = { get: vi.fn().mockReturnValue(null) };
+		mockOpen.mockResolvedValueOnce(mockReader);
+		const lookupIsp = await freshLookupIsp();
+		expect(await lookupIsp('127.0.0.1')).toEqual({ isp: null, asn: null });
+	});
+
+	it('returns isp name and asn number from reader result', async () => {
+		const mockReader = {
+			get: vi.fn().mockReturnValue({
+				autonomous_system_organization: 'SURF B.V.',
+				autonomous_system_number: 1103
+			})
+		};
+		mockOpen.mockResolvedValueOnce(mockReader);
+		const lookupIsp = await freshLookupIsp();
+		expect(await lookupIsp('145.0.0.1')).toEqual({ isp: 'SURF B.V.', asn: 1103 });
+	});
+
+	it('returns { isp: null, asn: null } when no DB path is configured', async () => {
+		vi.resetModules();
+		vi.doMock('$env/dynamic/private', () => ({ env: {} })); // no ASN path
+		vi.doMock('maxmind', () => ({ default: { open: mockOpen } }));
+		const mod = await import('../src/lib/server/analytics');
+		expect(await mod.lookupIsp('1.2.3.4')).toEqual({ isp: null, asn: null });
+		expect(mockOpen).not.toHaveBeenCalled();
+	});
+});
+
+describe('parseClientHints', () => {
+	it('returns all nulls when no hint headers are present', () => {
+		expect(parseClientHints(new Headers())).toEqual({
+			cpuArch: null,
+			osPlatformVersion: null,
+			browserFullVersion: null
+		});
+	});
+
+	it('reads sec-ch-ua-arch', () => {
+		const headers = new Headers({ 'sec-ch-ua-arch': 'x86' });
+		expect(parseClientHints(headers).cpuArch).toBe('x86');
+	});
+
+	it('reads sec-ch-ua-platform-version', () => {
+		const headers = new Headers({ 'sec-ch-ua-platform-version': '15.0.0' });
+		expect(parseClientHints(headers).osPlatformVersion).toBe('15.0.0');
+	});
+
+	it('reads sec-ch-ua-full-version-list', () => {
+		const value = '"Chromium";v="124.0.6367.82","Google Chrome";v="124.0.6367.82"';
+		const headers = new Headers({ 'sec-ch-ua-full-version-list': value });
+		expect(parseClientHints(headers).browserFullVersion).toBe(value);
+	});
+});
+
+describe('computeFingerprint', () => {
+	const BASE: FingerprintSignals = {
+		os: 'Windows',
+		osVersion: '10',
+		browser: 'Chrome',
+		browserVersion: '124.0.6367.82',
+		deviceType: null,
+		deviceVendor: null,
+		deviceModel: null,
+		cpuArch: 'x86',
+		cpuCores: 8,
+		deviceMemory: 16,
+		screenW: 1920,
+		screenH: 1080,
+		dpr: 1,
+		colorDepth: 24,
+		pointerCoarse: false,
+		hoverNone: false,
+		timezone: 'Europe/Amsterdam',
+		languageHeader: 'nl-NL,nl;q=0.9,en;q=0.8',
+		colorScheme: 'dark'
+	};
+
+	it('returns a 64-character hex string for a well-populated signal set', () => {
+		expect(computeFingerprint(BASE)).toMatch(/^[0-9a-f]{64}$/);
+	});
+
+	it('returns the same hash for identical signals', () => {
+		expect(computeFingerprint(BASE)).toBe(computeFingerprint({ ...BASE }));
+	});
+
+	it('returns null when fewer than 3 signals are non-empty', () => {
+		const sparse: FingerprintSignals = {
+			os: 'Windows',
+			osVersion: null,
+			browser: null,
+			browserVersion: null,
+			deviceType: null,
+			deviceVendor: null,
+			deviceModel: null,
+			cpuArch: null,
+			cpuCores: null,
+			deviceMemory: null,
+			screenW: null,
+			screenH: null,
+			dpr: null,
+			colorDepth: null,
+			pointerCoarse: null,
+			hoverNone: null,
+			timezone: null,
+			languageHeader: null,
+			colorScheme: null
+		};
+		expect(computeFingerprint(sparse)).toBeNull();
+	});
+
+	it('produces a different hash when any signal changes', () => {
+		const original = computeFingerprint(BASE);
+		expect(computeFingerprint({ ...BASE, os: 'macOS' })).not.toBe(original);
+		expect(computeFingerprint({ ...BASE, screenW: 1440 })).not.toBe(original);
+		expect(computeFingerprint({ ...BASE, colorScheme: 'light' })).not.toBe(original);
+	});
+
+	it('treats same major browser version as identical (ignores minor)', () => {
+		const v1 = computeFingerprint({ ...BASE, browserVersion: '124.0.0.1' });
+		const v2 = computeFingerprint({ ...BASE, browserVersion: '124.9.9.9' });
+		expect(v1).toBe(v2);
+	});
+
+	it('uses only the primary language tag from languageHeader', () => {
+		const h1 = computeFingerprint({ ...BASE, languageHeader: 'nl-NL,nl;q=0.9,en;q=0.8' });
+		const h2 = computeFingerprint({ ...BASE, languageHeader: 'nl-NL' });
+		expect(h1).toBe(h2);
+	});
+
+	it('treats different primary languages as different fingerprints', () => {
+		const nlHash = computeFingerprint({ ...BASE, languageHeader: 'nl-NL' });
+		const enHash = computeFingerprint({ ...BASE, languageHeader: 'en-US' });
+		expect(nlHash).not.toBe(enHash);
 	});
 });

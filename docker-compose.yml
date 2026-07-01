@@ -12,6 +12,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgres://${POSTGRES_USER:-spelwijsheid_user}:${POSTGRES_PASSWORD:-spelwijsheid_password}@db:5432/${POSTGRES_DB:-spelwijsheid}
       - GEOIP_DB_PATH=/app/geoip/GeoLite2-City.mmdb
+      - GEOIP_ASN_DB_PATH=/app/geoip/GeoLite2-ASN.mmdb
       - FINGERPRINT_SALT=${FINGERPRINT_SALT:-}
       - MAXMIND_ACCOUNT_ID=${MAXMIND_ACCOUNT_ID:-}
       - MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY:-}

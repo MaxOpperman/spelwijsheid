@@ -1,13 +1,15 @@
 // Standalone GeoLite2 database downloader.
 //
-// Fetches the MaxMind GeoLite2-City database using the free MaxMind account
-// credentials and extracts the .mmdb so the server can resolve approximate
-// locations offline. Runs at container startup (see Dockerfile CMD).
+// Fetches the MaxMind GeoLite2-City and GeoLite2-ASN databases using the free
+// MaxMind account credentials and extracts the .mmdb files so the server can
+// resolve approximate locations and ISPs offline. Runs at container startup
+// (see Dockerfile CMD).
 //
 // Credentials come from the environment:
 //   MAXMIND_ACCOUNT_ID   – your MaxMind account id
 //   MAXMIND_LICENSE_KEY  – a license key generated in your MaxMind account
-//   GEOIP_DB_PATH        – where to write the .mmdb (default: /app/geoip/GeoLite2-City.mmdb)
+//   GEOIP_DB_PATH        – where to write the City .mmdb (default: /app/geoip/GeoLite2-City.mmdb)
+//   GEOIP_ASN_DB_PATH    – where to write the ASN .mmdb  (default: /app/geoip/GeoLite2-ASN.mmdb)
 //
 // If the credentials are missing the script exits successfully without doing
 // anything — geolocation simply stays disabled and location fields are empty.
@@ -20,9 +22,12 @@ import { pipeline } from 'stream/promises';
 import { createGunzip } from 'zlib';
 import { Buffer } from 'buffer';
 
-const EDITION = 'GeoLite2-City';
-const DOWNLOAD_URL = `https://download.maxmind.com/geoip/databases/${EDITION}/download?suffix=tar.gz`;
+const EDITION_CITY = 'GeoLite2-City';
+const EDITION_ASN = 'GeoLite2-ASN';
+const DOWNLOAD_URL_CITY = `https://download.maxmind.com/geoip/databases/${EDITION_CITY}/download?suffix=tar.gz`;
+const DOWNLOAD_URL_ASN = `https://download.maxmind.com/geoip/databases/${EDITION_ASN}/download?suffix=tar.gz`;
 const DEFAULT_DB_PATH = '/app/geoip/GeoLite2-City.mmdb';
+const DEFAULT_ASN_DB_PATH = '/app/geoip/GeoLite2-ASN.mmdb';
 // Re-download when the existing database is older than this (MaxMind refreshes
 // GeoLite2 a couple of times per week).
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -30,6 +35,7 @@ const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const accountId = process.env.MAXMIND_ACCOUNT_ID;
 const licenseKey = process.env.MAXMIND_LICENSE_KEY;
 const dbPath = process.env.GEOIP_DB_PATH || DEFAULT_DB_PATH;
+const asnDbPath = process.env.GEOIP_ASN_DB_PATH || DEFAULT_ASN_DB_PATH;
 
 /** @param {string} path */
 async function isFresh(path) {
@@ -69,6 +75,49 @@ export function extractMmdbFromTar(buffer) {
 	return null;
 }
 
+/**
+ * Download a MaxMind GeoLite2 edition, extract the .mmdb file, and write it to disk.
+ * @param {string} edition The name of the GeoLite2 edition (e.g., "GeoLite2-City").
+ * @param {string} url The URL to download the edition from.
+ * @param {string} targetPath The path to write the extracted .mmdb file to.
+ * @param {string} auth The base64-encoded authentication string for the download.
+ */
+async function downloadEdition(edition, url, targetPath, auth) {
+	if (await isFresh(targetPath)) {
+		console.log(`GeoLite2 ${edition} database is recent (${targetPath}); skipping download.`);
+		return;
+	}
+
+	console.log(`Downloading MaxMind ${edition} database...`);
+	const response = await fetch(url, {
+		headers: { Authorization: `Basic ${auth}` }
+	});
+
+	if (!response.ok) {
+		throw new Error(
+			`Failed to download ${edition} database: ${response.status} ${response.statusText}`
+		);
+	}
+
+	const tmpTar = join(tmpdir(), `geolite2-${edition}-${Date.now()}.tar`);
+	try {
+		if (!response.body) {
+			throw new Error(`${edition} download returned an empty response body.`);
+		}
+		await pipeline(response.body, createGunzip(), createWriteStream(tmpTar));
+		const tarBuffer = await readFile(tmpTar);
+		const mmdb = extractMmdbFromTar(tarBuffer);
+		if (!mmdb) {
+			throw new Error(`No .mmdb entry found in the ${edition} archive.`);
+		}
+		await mkdir(dirname(targetPath), { recursive: true });
+		await writeFile(targetPath, mmdb);
+		console.log(`✓ ${edition} database written to ${targetPath} (${mmdb.length} bytes).`);
+	} finally {
+		await rm(tmpTar, { force: true });
+	}
+}
+
 async function downloadGeoip() {
 	if (!accountId) {
 		console.log('MaxMind account ID not set; skipping GeoLite2 download (geolocation disabled).');
@@ -80,41 +129,11 @@ async function downloadGeoip() {
 		return;
 	}
 
-	if (await isFresh(dbPath)) {
-		console.log(`GeoLite2 database is recent (${dbPath}); skipping download.`);
-		return;
-	}
-
-	console.log('Downloading MaxMind GeoLite2-City database...');
 	const auth = Buffer.from(`${accountId}:${licenseKey}`).toString('base64');
-	const response = await fetch(DOWNLOAD_URL, {
-		headers: { Authorization: `Basic ${auth}` }
-	});
-
-	if (!response.ok) {
-		throw new Error(
-			`Failed to download GeoLite2 database: ${response.status} ${response.statusText}`
-		);
-	}
-
-	// Stream the gzip body to a temp tarball, then read + extract it.
-	const tmpTar = join(tmpdir(), `geolite2-${Date.now()}.tar`);
-	try {
-		if (!response.body) {
-			throw new Error('GeoLite2 download returned an empty response body.');
-		}
-		await pipeline(response.body, createGunzip(), createWriteStream(tmpTar));
-		const tarBuffer = await readFile(tmpTar);
-		const mmdb = extractMmdbFromTar(tarBuffer);
-		if (!mmdb) {
-			throw new Error('No .mmdb entry found in the downloaded archive.');
-		}
-		await mkdir(dirname(dbPath), { recursive: true });
-		await writeFile(dbPath, mmdb);
-		console.log(`✓ GeoLite2 database written to ${dbPath} (${mmdb.length} bytes).`);
-	} finally {
-		await rm(tmpTar, { force: true });
-	}
+	await Promise.all([
+		downloadEdition('GeoLite2-City', DOWNLOAD_URL_CITY, dbPath, auth),
+		downloadEdition('GeoLite2-ASN', DOWNLOAD_URL_ASN, asnDbPath, auth)
+	]);
 }
 
 // Only run the download when executed directly (e.g. `node scripts/download-geoip.js`),
