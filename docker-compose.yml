@@ -1,6 +1,4 @@
 # Docker Compose file for local testing and production
-version: '3.8'
-
 services:
   spelwijsheid:
     image: ${SPELWIJSHEID_IMAGE:-ghcr.io/maxopperman/spelwijsheid:latest}
