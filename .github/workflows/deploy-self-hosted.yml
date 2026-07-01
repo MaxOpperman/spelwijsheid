@@ -49,35 +49,27 @@ jobs:
     runs-on: self-hosted
     needs: build
     steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
       - name: Login to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Pull the latest image
-        run: sudo docker pull ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
-
-      - name: Stop and remove old container
+      - name: Pull and deploy with Docker Compose
+        env:
+          SPELWIJSHEID_IMAGE: ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
+          HOST_PORT: ${{ secrets.HOST_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          FINGERPRINT_SALT: ${{ secrets.FINGERPRINT_SALT }}
+          MAXMIND_ACCOUNT_ID: ${{ secrets.MAXMIND_ACCOUNT_ID }}
+          MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
+          OLLAMA_API_URL: ${{ secrets.OLLAMA_API_URL }}
+          OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL }}
         run: |
-          sudo docker stop spelwijsheid || true
-          sudo docker rm spelwijsheid || true
-
-      - name: Run the new container
-        run: |
-          sudo docker run -d \
-            --name spelwijsheid \
-            --restart unless-stopped \
-            --add-host=host.docker.internal:host-gateway \
-            -p ${{ secrets.HOST_PORT }}:3000 \
-            -e DATABASE_URL="postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}" \
-            -e POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
-            -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
-            -e POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
-            -e GEOIP_DB_PATH=/app/geoip/GeoLite2-City.mmdb \
-            -e FINGERPRINT_SALT=${{ secrets.FINGERPRINT_SALT }} \
-            -e MAXMIND_ACCOUNT_ID=${{ secrets.MAXMIND_ACCOUNT_ID }} \
-            -e MAXMIND_LICENSE_KEY=${{ secrets.MAXMIND_LICENSE_KEY }} \
-            -e OLLAMA_API_URL=${{ secrets.OLLAMA_API_URL }} \
-            -e OLLAMA_MODEL=${{ secrets.OLLAMA_MODEL }} \
-            ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
+          sudo -E docker compose pull spelwijsheid
+          sudo -E docker compose up -d --no-build
 
       - name: Clean up old images
         run: sudo docker image prune -af --filter "until=24h"

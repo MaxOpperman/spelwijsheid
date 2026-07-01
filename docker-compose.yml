@@ -3,9 +3,10 @@ version: '3.8'
 
 services:
   spelwijsheid:
+    image: ${SPELWIJSHEID_IMAGE:-ghcr.io/maxopperman/spelwijsheid:latest}
     build: .
     ports:
-      - '3000:3000'
+      - '${HOST_PORT:-3000}:3000'
     restart: unless-stopped
     extra_hosts:
       - 'host.docker.internal:host-gateway' # For accessing Ollama API on the host machine
@@ -13,8 +14,11 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgres://${POSTGRES_USER:-spelwijsheid_user}:${POSTGRES_PASSWORD:-spelwijsheid_password}@db:5432/${POSTGRES_DB:-spelwijsheid}
       - GEOIP_DB_PATH=/app/geoip/GeoLite2-City.mmdb
+      - FINGERPRINT_SALT=${FINGERPRINT_SALT:-}
       - MAXMIND_ACCOUNT_ID=${MAXMIND_ACCOUNT_ID:-}
       - MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY:-}
+      - OLLAMA_API_URL=${OLLAMA_API_URL:-}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-}
     volumes:
       - geoip-data:/app/geoip
     depends_on:
