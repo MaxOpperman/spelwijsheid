@@ -67,6 +67,14 @@ jobs:
             --restart unless-stopped \
             --add-host=host.docker.internal:host-gateway \
             -p ${{ secrets.HOST_PORT }}:3000 \
+            -e DATABASE_URL="postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}" \
+            -e POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+            -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+            -e POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
+            -e GEOIP_DB_PATH=/app/geoip/GeoLite2-City.mmdb \
+            -e FINGERPRINT_SALT=${{ secrets.FINGERPRINT_SALT }} \
+            -e MAXMIND_ACCOUNT_ID=${{ secrets.MAXMIND_ACCOUNT_ID }} \
+            -e MAXMIND_LICENSE_KEY=${{ secrets.MAXMIND_LICENSE_KEY }} \
             -e OLLAMA_API_URL=${{ secrets.OLLAMA_API_URL }} \
             -e OLLAMA_MODEL=${{ secrets.OLLAMA_MODEL }} \
             ghcr.io/${{ needs.build.outputs.image-tag }}/spelwijsheid:latest
