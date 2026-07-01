@@ -7,8 +7,19 @@
 	export let data: PageData;
 	let mapElement: HTMLElement;
 
+	// Explicit locale + timeZone makes output identical on SSR and client, preventing hydration mismatches.
+	const tz = data.user.timezone ?? 'UTC';
+	const loc = data.user.locale ?? 'en-US';
+	const fmtDate = (d: Date | string) => new Date(d).toLocaleDateString(loc, { timeZone: tz });
+	const fmtDateTime = (d: Date | string) =>
+		new Date(d).toLocaleString(loc, { timeZone: tz, dateStyle: 'medium', timeStyle: 'short' });
+
 	onMount(async () => {
-		if (data.user?.latitude && data.user?.longitude && typeof window !== 'undefined') {
+		if (
+			data.user.latitude != null &&
+			data.user.longitude != null &&
+			typeof window !== 'undefined'
+		) {
 			const L = await import('leaflet');
 			const map = L.map(mapElement).setView([data.user.latitude, data.user.longitude], 10);
 
@@ -25,11 +36,20 @@
 			});
 
 			// Only add a marker, rely on CSS filters or icons if we want dark mode specific markers
+			// Escape user-supplied strings before injecting into popup HTML to prevent XSS.
+			const escHtml = (s: string) =>
+				s
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+					.replace(/"/g, '&quot;')
+					.replace(/'/g, '&#x27;');
+			const city = escHtml(data.user.city ?? 'Unknown');
+			const region = escHtml(data.user.region ?? '');
+			const country = escHtml(data.user.country ?? '');
 			L.marker([data.user.latitude, data.user.longitude])
 				.addTo(map)
-				.bindPopup(
-					`<b>${data.user.city ?? 'Unknown'}</b><br>${data.user.region ?? ''}, ${data.user.country ?? ''}`
-				)
+				.bindPopup(`<b>${city}</b><br>${region}, ${country}`)
 				.openPopup();
 		}
 	});
@@ -80,7 +100,7 @@
 			<ul>
 				<li>
 					<b>{$t('about.firstVisit')}:</b>
-					{new Date(data.user.createdAt).toLocaleDateString()}
+					{fmtDate(data.user.createdAt)}
 				</li>
 				<li><b>{$t('about.totalVisits')}:</b> {data.user.visitCount}</li>
 				<li><b>{$t('about.currentStreak')}:</b> {data.user.currentStreak} {$t('about.days')}</li>
@@ -129,12 +149,106 @@
 		</section>
 	</div>
 
-	{#if data.user.latitude && data.user.longitude}
+	{#if data.user.latitude != null && data.user.longitude != null}
 		<div class="map-container">
 			<h2>{$t('about.map')}</h2>
 			<div bind:this={mapElement} class="map"></div>
 		</div>
 	{/if}
+
+	<details class="advanced">
+		<summary>{$t('about.advanced')}</summary>
+		<p class="advanced-desc">{$t('about.advancedDesc')}</p>
+		<div class="sections">
+			<section class="data-section">
+				<h2>{$t('about.account')}</h2>
+				<ul>
+					<li><b>{$t('about.userId')}:</b> <code>{data.user.id}</code></li>
+					<li><b>{$t('about.lastSeen')}:</b> {fmtDateTime(data.user.lastSeen)}</li>
+					<li>
+						<b>{$t('about.lastActiveAt')}:</b>
+						{data.user.lastActiveAt ? fmtDateTime(data.user.lastActiveAt) : $t('about.never')}
+					</li>
+					<li>
+						<b>{$t('about.lastStreakDate')}:</b>
+						{data.user.lastStreakDate ?? $t('about.never')}
+					</li>
+					<li><b>{$t('about.referrer')}:</b> {data.user.referrer ?? $t('about.unknown')}</li>
+				</ul>
+			</section>
+
+			<section class="data-section">
+				<h2>{$t('about.consent')}</h2>
+				<ul>
+					<li>
+						<b>{$t('about.consentFunctional')}:</b>
+						{data.user.consentFunctional ? $t('about.yes') : $t('about.no')}
+					</li>
+					<li>
+						<b>{$t('about.consentUpdatedAt')}:</b>
+						{data.user.consentUpdatedAt
+							? fmtDateTime(data.user.consentUpdatedAt)
+							: $t('about.never')}
+					</li>
+					<li>
+						<b>{$t('about.consentVersion')}:</b>
+						{data.user.consentVersion ?? $t('about.unknown')}
+					</li>
+				</ul>
+			</section>
+
+			<section class="data-section">
+				<h2>{$t('about.dataLifecycle')}</h2>
+				<ul>
+					<li>
+						<b>{$t('about.deletedAt')}:</b>
+						{data.user.deletedAt ? fmtDateTime(data.user.deletedAt) : $t('about.never')}
+					</li>
+					<li>
+						<b>{$t('about.dataRetentionExpiresAt')}:</b>
+						{data.user.dataRetentionExpiresAt
+							? fmtDateTime(data.user.dataRetentionExpiresAt)
+							: $t('about.never')}
+					</li>
+				</ul>
+			</section>
+
+			<section class="data-section">
+				<h2>{$t('about.networkEnvironment')}</h2>
+				<ul>
+					<li>
+						<b>{$t('about.languageHeader')}:</b>
+						{data.user.languageHeader ?? $t('about.unknown')}
+					</li>
+					<li><b>{$t('about.colorScheme')}:</b> {data.user.colorScheme ?? $t('about.unknown')}</li>
+					<li>
+						<b>{$t('about.viewportSize')}:</b>
+						{data.user.viewportW
+							? `${data.user.viewportW}x${data.user.viewportH}`
+							: $t('about.unknown')}
+					</li>
+				</ul>
+			</section>
+
+			<section class="data-section">
+				<h2>{$t('about.identityMatching')}</h2>
+				<ul>
+					<li>
+						<b>{$t('about.identityId')}:</b>
+						{data.user.identityId ? data.user.identityId : $t('about.unknown')}
+					</li>
+					<li>
+						<b>{$t('about.fingerprintHash')}:</b>
+						<code>{data.user.fingerprintHash ?? $t('about.unknown')}</code>
+					</li>
+					<li>
+						<b>{$t('about.matchConfidence')}:</b>
+						{data.user.matchConfidence ?? $t('about.unknown')}
+					</li>
+				</ul>
+			</section>
+		</div>
+	</details>
 </div>
 
 <style>
@@ -196,6 +310,49 @@
 		border-radius: 0.5rem;
 		border: 1px solid color-mix(in oklab, var(--color-primary), white 82%);
 		z-index: 1; /* Keep leaflet under other overlays like headers */
+	}
+
+	.advanced {
+		margin-top: 2rem;
+		border-top: 1px solid color-mix(in oklab, var(--color-primary), white 82%);
+		padding-top: 1.25rem;
+	}
+
+	.advanced summary {
+		cursor: pointer;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--color-text-light);
+		list-style: none;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		user-select: none;
+	}
+
+	.advanced summary::before {
+		content: '▶';
+		font-size: 0.7em;
+		transition: transform 200ms ease;
+	}
+
+	.advanced[open] summary::before {
+		transform: rotate(90deg);
+	}
+
+	.advanced-desc {
+		margin: 0.6rem 0 1rem;
+		color: var(--color-text-light);
+		font-size: 0.9rem;
+	}
+
+	code {
+		font-family: var(--font-mono);
+		font-size: 0.8em;
+		background: color-mix(in oklab, var(--color-primary), white 90%);
+		padding: 0.1em 0.35em;
+		border-radius: 0.25rem;
+		word-break: break-all;
 	}
 
 	@media (max-width: 900px) {

@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // analytics.ts imports `$env/dynamic/private`, which is a SvelteKit virtual
 // module that does not resolve under plain vitest. Stub it before importing.
 vi.mock('$env/dynamic/private', () => ({ env: {} }));
+// Prevent maxmind from touching the real filesystem during the top-level import.
+vi.mock('maxmind', () => ({ default: { open: vi.fn() } }));
 
 const { parseUserAgent, getClientIp } = await import('../src/lib/server/analytics');
 
@@ -73,5 +75,102 @@ describe('getClientIp', () => {
 				throw new Error('no address');
 			})
 		).toBeNull();
+	});
+});
+
+// lookupGeo has a module-level singleton (geoLoadAttempted / geoReader). Each
+// test must start with a fresh module instance to avoid state leaking between
+// tests. We achieve this with vi.resetModules() + vi.doMock() in beforeEach,
+// then import the module freshly inside each test.
+describe('lookupGeo', () => {
+	let mockOpen: ReturnType<typeof vi.fn>;
+
+	beforeEach(() => {
+		vi.resetModules();
+		mockOpen = vi.fn();
+		// Provide a non-empty DB path so getGeoReader() actually calls open().
+		vi.doMock('$env/dynamic/private', () => ({
+			env: { GEOIP_DB_PATH: '/fake/GeoLite2-City.mmdb' }
+		}));
+		vi.doMock('maxmind', () => ({ default: { open: mockOpen } }));
+	});
+
+	async function freshLookupGeo() {
+		const mod = await import('../src/lib/server/analytics');
+		return mod.lookupGeo;
+	}
+
+	it('returns all nulls when ip is null (reader never opened)', async () => {
+		const lookupGeo = await freshLookupGeo();
+		expect(await lookupGeo(null)).toEqual({
+			country: null,
+			region: null,
+			city: null,
+			latitude: null,
+			longitude: null
+		});
+		expect(mockOpen).not.toHaveBeenCalled();
+	});
+
+	it('returns all nulls when maxmind.open throws (DB unavailable)', async () => {
+		mockOpen.mockRejectedValueOnce(new Error('file not found'));
+		const lookupGeo = await freshLookupGeo();
+		expect(await lookupGeo('1.2.3.4')).toEqual({
+			country: null,
+			region: null,
+			city: null,
+			latitude: null,
+			longitude: null
+		});
+	});
+
+	it('maps country, region, city, latitude and longitude from a reader result', async () => {
+		const mockReader = {
+			get: vi.fn().mockReturnValue({
+				country: { names: { en: 'Netherlands' } },
+				subdivisions: [{ names: { en: 'North Holland' } }],
+				city: { names: { en: 'Amsterdam' } },
+				location: { latitude: 52.3676, longitude: 4.9041 }
+			})
+		};
+		mockOpen.mockResolvedValueOnce(mockReader);
+		const lookupGeo = await freshLookupGeo();
+		expect(await lookupGeo('94.214.0.1')).toEqual({
+			country: 'Netherlands',
+			region: 'North Holland',
+			city: 'Amsterdam',
+			latitude: 52.3676,
+			longitude: 4.9041
+		});
+	});
+
+	it('returns all nulls when reader.get returns null (private/unroutable IP)', async () => {
+		const mockReader = { get: vi.fn().mockReturnValue(null) };
+		mockOpen.mockResolvedValueOnce(mockReader);
+		const lookupGeo = await freshLookupGeo();
+		expect(await lookupGeo('127.0.0.1')).toEqual({
+			country: null,
+			region: null,
+			city: null,
+			latitude: null,
+			longitude: null
+		});
+	});
+
+	it('returns null latitude/longitude when location has no coordinates', async () => {
+		const mockReader = {
+			get: vi.fn().mockReturnValue({
+				country: { names: { en: 'Germany' } },
+				subdivisions: [],
+				city: { names: { en: 'Berlin' } }
+				// no `location` key
+			})
+		};
+		mockOpen.mockResolvedValueOnce(mockReader);
+		const lookupGeo = await freshLookupGeo();
+		const result = await lookupGeo('80.0.0.1');
+		expect(result.latitude).toBeNull();
+		expect(result.longitude).toBeNull();
+		expect(result.country).toBe('Germany');
 	});
 });
