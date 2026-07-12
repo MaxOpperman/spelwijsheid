@@ -29,7 +29,7 @@
 		"ua-parser-js": "^2.0.6"
 	},
 	"devDependencies": {
-		"@electric-sql/pglite": "^0.5.3",
+		"@electric-sql/pglite": "^0.5.4",
 		"@electric-sql/pglite-socket": "^0.2.6",
 		"@eslint/compat": "^2.1.0",
 		"@eslint/js": "^10.0.1",
