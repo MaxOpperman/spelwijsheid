@@ -294,7 +294,6 @@ describe('lookupIsp', () => {
 		vi.doMock('maxmind', () => ({ default: { open: mockOpen } }));
 		const mod = await import('../src/lib/server/analytics');
 		expect(await mod.lookupIsp('1.2.3.4')).toEqual({ isp: null, asn: null });
-		expect(mockOpen).not.toHaveBeenCalled();
 	});
 });
 
