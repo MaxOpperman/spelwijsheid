@@ -78,3 +78,11 @@ export function isCorrectGuess(guess: string, answer: string): boolean {
 	const a = answer.toLowerCase().trim();
 	return editDistance(g, a) <= allowedDistance(a);
 }
+
+export function isPangram(word: string, inputChars: string[]): boolean {
+	const uniqueChars = new Set(word.trim().toLowerCase());
+	const wordChars = new Set(inputChars.filter((c) => c)); // filter out empty strings
+	return (
+		uniqueChars.difference(wordChars).size === 0 && wordChars.difference(uniqueChars).size === 0
+	);
+}
