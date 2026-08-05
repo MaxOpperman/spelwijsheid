@@ -4,6 +4,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { t } from '$lib/i18n';
 	import { locale } from '$lib/stores/locale';
+	import { isPangram } from '$lib/utils';
 
 	const base = '';
 
@@ -181,7 +182,9 @@
 								checked={checkedWords.has(word)}
 								onchange={() => toggleWordCheck(word)}
 							/>
-							<span>{word}</span>
+							<span class:pangram={isPangram(word, inputChars)}>
+								{word}
+							</span>
 						</label>
 					</li>
 				{/each}
@@ -424,6 +427,11 @@
 		color: var(--color-text);
 		text-decoration: none;
 		display: inline-block;
+	}
+
+	.pangram {
+		font-weight: 700;
+		color: var(--color-accent);
 	}
 
 	.help-link a::before {

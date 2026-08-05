@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n';
+	import { isPangram } from '$lib/utils';
 	export let chars: string[];
 	export let foundWords: string[];
 	export let gameComplete: boolean;
@@ -75,7 +76,7 @@
 		{#if foundWords.length > 0}
 			<div class="words-grid">
 				{#each foundWords as word (word)}
-					<span class="found-word" class:new={word === foundWords[foundWords.length - 1]}>
+					<span class="found-word" class:pangram={isPangram(word, chars)}>
 						{word}
 					</span>
 				{/each}
@@ -258,7 +259,7 @@
 		color: var(--color-text);
 	}
 
-	.found-word.new {
+	.found-word.pangram {
 		background-color: var(--color-accent);
 		color: var(--color-surface);
 		border-color: var(--color-accent);
