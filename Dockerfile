@@ -11,14 +11,17 @@ ENV BASE_PATH=${BASE_PATH}
 COPY package*.json ./
 COPY scripts ./scripts
 
-# Install dependencies (this will run the preinstall script)
-RUN npm ci
+# Install pnpm (from package.json) and install dependencies (this will run the preinstall script)
+RUN corepack enable \
+	&& PNPM_VER=$(node ./scripts/get-pnpm-version.js) \
+	&& corepack prepare pnpm@$PNPM_VER --activate \
+	&& HUSKY=0 pnpm install --frozen-lockfile
 
 # Copy rest of source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
 FROM node:24-alpine
@@ -33,7 +36,10 @@ COPY scripts ./scripts
 RUN node scripts/download-wordlist.js
 
 # Install only production dependencies (skip prepare script which needs husky)
-RUN npm ci --omit=dev --ignore-scripts
+RUN corepack enable \
+	&& PNPM_VER=$(node ./scripts/get-pnpm-version.js) \
+	&& corepack prepare pnpm@$PNPM_VER --activate \
+	&& pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built files assets from builder
 COPY --from=builder /app/build ./build

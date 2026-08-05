@@ -24,7 +24,7 @@ export default defineConfig({
 			env: { E2E_DB_PORT: String(DB_PORT) }
 		},
 		{
-			command: `npm run dev -- --port ${APP_PORT} --strictPort`,
+			command: `pnpm run dev -- --port ${APP_PORT} --strictPort`,
 			url: `http://localhost:${APP_PORT}`,
 			reuseExistingServer: !process.env.CI,
 			timeout: 120_000,
