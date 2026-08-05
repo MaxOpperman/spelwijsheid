@@ -45,8 +45,10 @@ This app is programmed in Svelte to broaden my experience with frameworks. A sma
 
 ### 1. Install dependencies
 
+Assuming you have [pnpm](https://pnpm.io/installation) installed:
+
 ```bash
-npm install
+pnpm install
 ```
 
 > The `preinstall` hook runs `scripts/download-wordlist.js` to fetch the locale word lists into `static/`.
@@ -123,20 +125,20 @@ DATABASE_URL=postgres://spelwijsheid_user:spelwijsheid_password@localhost:5432/s
 ### 4. Apply database migrations
 
 ```bash
-npm run db:migrate
+pnpm run db:migrate
 ```
 
 Related Drizzle commands:
 
-- `npm run db:generate` — generate a new migration after editing `schema.ts`
-- `npm run db:push` — push the schema directly to the database (handy for quick local iteration)
+- `pnpm run db:generate` — generate a new migration after editing `schema.ts`
+- `pnpm run db:push` — push the schema directly to the database (handy for quick local iteration)
 
 ### 5. (Optional) Download the GeoLite2 database
 
 With MaxMind credentials set in `.env`:
 
 ```bash
-npm run download:geoip
+pnpm run download:geoip
 ```
 
 The script skips gracefully when credentials are missing or the local database is fresh (< 7 days old).
@@ -144,7 +146,7 @@ The script skips gracefully when credentials are missing or the local database i
 ### 6. Run the dev server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 The app is served at `http://localhost:5173` by default.
@@ -155,10 +157,10 @@ The project ships with a full test pyramid.
 
 ```bash
 # Unit + integration tests (Vitest)
-npm test
+pnpm test
 
 # End-to-end tests (Playwright)
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 - **Unit tests** cover pure helpers such as user-agent parsing, client-IP resolution and the GeoLite2 tar extractor.
@@ -168,8 +170,8 @@ npm run test:e2e
 Additional quality checks:
 
 ```bash
-npm run check        # svelte-check type checking
-npm run check:style  # prettier + eslint
+pnpm run check        # svelte-check type checking
+pnpm run check:style  # prettier + eslint
 ```
 
 ## Deployment
