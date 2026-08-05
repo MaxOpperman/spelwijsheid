@@ -10,6 +10,7 @@ ENV BASE_PATH=${BASE_PATH}
 # Copy package files and scripts
 COPY package.json ./
 COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
 COPY scripts ./scripts
 
 # Install pnpm (from package.json) and install dependencies (this will run the preinstall script)
