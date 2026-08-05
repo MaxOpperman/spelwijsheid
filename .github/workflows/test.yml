@@ -23,11 +23,10 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Enable Corepack and prepare pnpm
-        run: |
-          corepack enable
-          PNPM_VER=$(node ./scripts/get-pnpm-version.js)
-          corepack prepare pnpm@$PNPM_VER --activate
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        with:
+          cache: true
 
       - name: Install dependencies
         env:
