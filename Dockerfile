@@ -14,9 +14,8 @@ COPY scripts ./scripts
 
 # Install pnpm (from package.json) and install dependencies (this will run the preinstall script)
 RUN corepack enable \
-	&& PNPM_VER=$(node ./scripts/get-pnpm-version.js) \
-	&& corepack prepare pnpm@$PNPM_VER --activate \
-	&& HUSKY=0 pnpm install --frozen-lockfile
+	&& corepack prepare --activate \
+	&& pnpm install --frozen-lockfile
 
 # Copy rest of source code
 COPY . .
@@ -39,8 +38,7 @@ RUN node scripts/download-wordlist.js
 
 # Install only production dependencies (skip prepare script which needs husky)
 RUN corepack enable \
-	&& PNPM_VER=$(node ./scripts/get-pnpm-version.js) \
-	&& corepack prepare pnpm@$PNPM_VER --activate \
+	&& corepack prepare --activate \
 	&& pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built files assets from builder
