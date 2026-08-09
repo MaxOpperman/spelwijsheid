@@ -42,7 +42,7 @@
 		"@sveltejs/kit": "2.70.1",
 		"@sveltejs/vite-plugin-svelte": "7.2.0",
 		"@types/leaflet": "1.9.21",
-		"@types/node": "26.1.1",
+		"@types/node": "26.1.2",
 		"@types/pg": "8.20.0",
 		"drizzle-kit": "0.31.5",
 		"eslint": "10.7.0",
