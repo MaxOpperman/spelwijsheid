@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
-import { base } from '$app/paths';
 import { writable } from 'svelte/store';
+import { postJsonBestEffort, setCookie } from '$lib/utils/client-sync';
 
 // The theme has already been applied to <html> before paint by the inline
 // script in app.html (reading the `theme` cookie). Initialise the store from
@@ -26,14 +26,8 @@ if (browser) {
 
 		// Persist the preference to the server (source of truth) and update the
 		// readable theme cookie for instant, flash-free subsequent loads.
-		document.cookie = `theme=${isDark ? 'dark' : 'light'};path=/;max-age=34560000;samesite=lax`;
-		fetch(`${base}/api/preferences`, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ darkMode: isDark })
-		}).catch(() => {
-			/* best-effort; cookie keeps the UI consistent */
-		});
+		setCookie('theme', isDark ? 'dark' : 'light', 34_560_000);
+		postJsonBestEffort('/api/preferences', { darkMode: isDark });
 	});
 }
 

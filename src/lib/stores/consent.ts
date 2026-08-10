@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
-import { base } from '$app/paths';
 import { writable } from 'svelte/store';
+import { postJsonBestEffort } from '$lib/utils/client-sync';
 
 export interface ConsentState {
 	/** Whether the user has made an explicit choice yet. */
@@ -31,13 +31,7 @@ export async function saveConsent(analytics: boolean): Promise<void> {
 	const next: ConsentState = { decided: true, functional: true, analytics };
 	consent.set(next);
 	if (!browser) return;
-	await fetch(`${base}/api/consent`, {
-		method: 'POST',
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ functional: true, analytics })
-	}).catch(() => {
-		/* best-effort */
-	});
+	postJsonBestEffort('/api/consent', { functional: true, analytics });
 
 	if (analytics) {
 		reportDevice();
@@ -52,26 +46,20 @@ export function reportDevice(): void {
 		deviceMemory?: number;
 		connection?: { type?: string; effectiveType?: string; downlink?: number };
 	};
-	fetch(`${base}/api/device`, {
-		method: 'POST',
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({
-			screenW: window.screen?.width,
-			screenH: window.screen?.height,
-			viewportW: window.innerWidth,
-			viewportH: window.innerHeight,
-			dpr: window.devicePixelRatio,
-			colorScheme: prefersDark ? 'dark' : 'light',
-			colorDepth: window.screen?.colorDepth,
-			pointerCoarse: window.matchMedia?.('(pointer: coarse)')?.matches,
-			hoverNone: window.matchMedia?.('(hover: none)')?.matches,
-			cpuCores: nav.hardwareConcurrency,
-			deviceMemory: nav.deviceMemory,
-			connectionType: nav.connection?.type,
-			connectionEffectiveType: nav.connection?.effectiveType,
-			connectionDownlink: nav.connection?.downlink
-		})
-	}).catch(() => {
-		/* best-effort */
+	postJsonBestEffort('/api/device', {
+		screenW: window.screen?.width,
+		screenH: window.screen?.height,
+		viewportW: window.innerWidth,
+		viewportH: window.innerHeight,
+		dpr: window.devicePixelRatio,
+		colorScheme: prefersDark ? 'dark' : 'light',
+		colorDepth: window.screen?.colorDepth,
+		pointerCoarse: window.matchMedia?.('(pointer: coarse)').matches,
+		hoverNone: window.matchMedia?.('(hover: none)').matches,
+		cpuCores: nav.hardwareConcurrency,
+		deviceMemory: nav.deviceMemory,
+		connectionType: nav.connection?.type,
+		connectionEffectiveType: nav.connection?.effectiveType,
+		connectionDownlink: nav.connection?.downlink
 	});
 }

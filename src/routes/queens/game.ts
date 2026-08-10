@@ -331,6 +331,57 @@ export function getRegionColor(region: number, totalRegions: number): string {
 	return generateColor(region, totalRegions);
 }
 
+export function isQueenInvalid(board: Cell[][], row: number, col: number, size: number): boolean {
+	if (!board || board.length === 0) return false;
+	if (!board[row] || !board[row][col]) return false;
+	if (board[row][col].state !== 'queen') return false;
+
+	const currentRegion = board[row][col].region;
+
+	for (let r = 0; r < size; r++) {
+		for (let c = 0; c < size; c++) {
+			if (
+				(r !== row || c !== col) &&
+				board[r][c].state === 'queen' &&
+				board[r][c].region === currentRegion
+			) {
+				return true;
+			}
+		}
+	}
+
+	for (let c = 0; c < size; c++) {
+		if (c !== col && board[row][c].state === 'queen') {
+			return true;
+		}
+	}
+
+	for (let r = 0; r < size; r++) {
+		if (r !== row && board[r][col].state === 'queen') {
+			return true;
+		}
+	}
+
+	const diagonalOffsets = [
+		[-1, -1],
+		[-1, 1],
+		[1, -1],
+		[1, 1]
+	];
+
+	for (const [dr, dc] of diagonalOffsets) {
+		const newRow = row + dr;
+		const newCol = col + dc;
+		if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
+			if (board[newRow][newCol].state === 'queen') {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 /**
  * Game class to manage game state
  */
