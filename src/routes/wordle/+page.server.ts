@@ -5,8 +5,7 @@ import { getWordleWords } from '$lib/words.server.ts';
 import { parseStats, serializeStats, updateStats } from './stats.ts';
 import { LOCALES } from '$lib/stores/locale';
 import { getGameState, setGameState, clearGameState, recordGameResult } from '$lib/server/user';
-
-type WordLength = 4 | 5 | 6 | 7;
+import { getLocale, getWordGameKey, getWordLength, type WordLength } from '$lib/server/word-games';
 
 const WORD_LENGTHS: WordLength[] = [4, 5, 6, 7];
 
@@ -25,22 +24,14 @@ function getWordList(locale: string, wordLength: WordLength): string[] {
 	return lists[wordLength];
 }
 
-/** Server-side storage key suffix combining locale and word length. */
-function key(locale: string, wordLength: WordLength): string {
-	return `${locale}-${wordLength}`;
-}
-
 export const load = (async ({ cookies, locals }) => {
-	const locale = locals.user?.locale ?? cookies.get('locale') ?? 'en-US';
-	const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
+	const locale = locals.user?.locale ?? getLocale(cookies);
+	const wordLength = getWordLength(cookies, 'wordle-length');
 	const wordList = getWordList(locale, wordLength);
 
-	const savedGame = await getGameState<string>(locals.uid, 'wordle', key(locale, wordLength));
-	const savedStats = await getGameState<string>(
-		locals.uid,
-		'wordle-stats',
-		key(locale, wordLength)
-	);
+	const gameKey = getWordGameKey(locale, wordLength);
+	const savedGame = await getGameState<string>(locals.uid, 'wordle', gameKey);
+	const savedStats = await getGameState<string>(locals.uid, 'wordle-stats', gameKey);
 
 	const game = new Game(savedGame ?? undefined, wordList, wordLength);
 	const stats = parseStats(savedStats ?? undefined);
@@ -57,10 +48,11 @@ export const load = (async ({ cookies, locals }) => {
 
 export const actions = {
 	update: async ({ request, cookies, locals }) => {
-		const locale = locals.user?.locale ?? cookies.get('locale') ?? 'en-US';
-		const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
+		const locale = locals.user?.locale ?? getLocale(cookies);
+		const wordLength = getWordLength(cookies, 'wordle-length');
 		const wordList = getWordList(locale, wordLength);
-		const savedGame = await getGameState<string>(locals.uid, 'wordle', key(locale, wordLength));
+		const gameKey = getWordGameKey(locale, wordLength);
+		const savedGame = await getGameState<string>(locals.uid, 'wordle', gameKey);
 		const game = new Game(savedGame ?? undefined, wordList, wordLength);
 
 		const data = await request.formData();
@@ -77,14 +69,15 @@ export const actions = {
 			game.guesses[i] += keyPress;
 		}
 
-		await setGameState(locals.uid, 'wordle', game.toString(), key(locale, wordLength));
+		await setGameState(locals.uid, 'wordle', game.toString(), gameKey);
 	},
 
 	enter: async ({ request, cookies, locals }) => {
-		const locale = locals.user?.locale ?? cookies.get('locale') ?? 'en-US';
-		const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
+		const locale = locals.user?.locale ?? getLocale(cookies);
+		const wordLength = getWordLength(cookies, 'wordle-length');
 		const wordList = getWordList(locale, wordLength);
-		const savedGame = await getGameState<string>(locals.uid, 'wordle', key(locale, wordLength));
+		const gameKey = getWordGameKey(locale, wordLength);
+		const savedGame = await getGameState<string>(locals.uid, 'wordle', gameKey);
 		const game = new Game(savedGame ?? undefined, wordList, wordLength);
 
 		const data = await request.formData();
@@ -94,19 +87,16 @@ export const actions = {
 			return fail(400, { badGuess: true });
 		}
 
-		await setGameState(locals.uid, 'wordle', game.toString(), key(locale, wordLength));
+		await setGameState(locals.uid, 'wordle', game.toString(), gameKey);
 	},
 
 	restart: async ({ cookies, locals }) => {
-		const locale = locals.user?.locale ?? cookies.get('locale') ?? 'en-US';
-		const wordLength = parseInt(cookies.get('wordle-length') || '5') as WordLength;
+		const locale = locals.user?.locale ?? getLocale(cookies);
+		const wordLength = getWordLength(cookies, 'wordle-length');
 		const wordList = getWordList(locale, wordLength);
-		const savedGame = await getGameState<string>(locals.uid, 'wordle', key(locale, wordLength));
-		const savedStats = await getGameState<string>(
-			locals.uid,
-			'wordle-stats',
-			key(locale, wordLength)
-		);
+		const gameKey = getWordGameKey(locale, wordLength);
+		const savedGame = await getGameState<string>(locals.uid, 'wordle', gameKey);
+		const savedStats = await getGameState<string>(locals.uid, 'wordle-stats', gameKey);
 		const game = new Game(savedGame ?? undefined, wordList, wordLength);
 		const stats = parseStats(savedStats ?? undefined);
 
@@ -117,23 +107,18 @@ export const actions = {
 
 		// Update stats and persist them server-side
 		const newStats = updateStats(stats, won, guessCount);
-		await setGameState(
-			locals.uid,
-			'wordle-stats',
-			serializeStats(newStats),
-			key(locale, wordLength)
-		);
+		await setGameState(locals.uid, 'wordle-stats', serializeStats(newStats), gameKey);
 
 		// Record a result row for unified analytics (Wordle is untimed).
 		await recordGameResult({
 			userId: locals.uid,
 			game: 'wordle',
-			locale: key(locale, wordLength),
+			locale: gameKey,
 			won
 		});
 
 		// Clear the saved board to start a new game
-		await clearGameState(locals.uid, 'wordle', key(locale, wordLength));
+		await clearGameState(locals.uid, 'wordle', gameKey);
 	},
 
 	changeLength: async ({ request, cookies }) => {

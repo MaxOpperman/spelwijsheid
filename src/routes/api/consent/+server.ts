@@ -1,5 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { setConsent, unlinkInstance } from '$lib/server/user';
+import { setConsentAndUnlinkInstance } from '$lib/server/user';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = await request.json().catch(() => ({}));
@@ -7,12 +7,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const functional = body.functional !== false; // functional is essential
 	const analytics = body.analytics === true;
 
-	await setConsent(locals.uid, { functional, analytics });
-
-	// Withdrawing analytics consent also breaks any cross-device coupling.
-	if (!analytics) {
-		await unlinkInstance(locals.uid);
-	}
+	await setConsentAndUnlinkInstance(locals.uid, { functional, analytics });
 
 	return json({ ok: true, functional, analytics });
 };

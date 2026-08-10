@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
-import { base } from '$app/paths';
+import { PERSISTENT_COOKIE_MAX_AGE, postJsonBestEffort, setCookie } from '$lib/utils/client-sync';
 
 export enum Locale {
 	EN_US = 'en-US',
@@ -24,7 +24,7 @@ if (browser) {
 	locale.subscribe((value) => {
 		localStorage.setItem('locale', value);
 		// Set a cookie for the server to read during SSR / load functions.
-		document.cookie = `locale=${value};path=/;max-age=31536000;samesite=lax`;
+		setCookie('locale', value, PERSISTENT_COOKIE_MAX_AGE);
 
 		if (first) {
 			first = false;
@@ -32,12 +32,6 @@ if (browser) {
 		}
 
 		// Persist to the server-side user record.
-		fetch(`${base}/api/preferences`, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ locale: value })
-		}).catch(() => {
-			/* best-effort */
-		});
+		postJsonBestEffort('/api/preferences', { locale: value });
 	});
 }
