@@ -4,27 +4,13 @@ import { fileURLToPath } from 'url';
 import { join } from 'path';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
+import { createDbProxy } from './helpers/db-mock';
 
 // A stable proxy is installed in place of the real `./db` module. It forwards
 // every property access to the PGlite-backed Drizzle instance created in
 // beforeAll. Using a proxy keeps the imported `db` binding identity constant
 // while letting us wire up the real client asynchronously.
-const { dbProxy, setReal } = vi.hoisted(() => {
-	let real: Record<string | symbol, unknown> | null = null;
-	const proxy = new Proxy(
-		{},
-		{
-			get(_t, prop) {
-				const value = real?.[prop];
-				return typeof value === 'function' ? value.bind(real) : value;
-			}
-		}
-	);
-	return {
-		dbProxy: proxy,
-		setReal: (d: unknown) => (real = d as Record<string | symbol, unknown>)
-	};
-});
+const { dbProxy, setReal } = createDbProxy();
 
 vi.mock('$lib/server/db', () => ({ db: dbProxy }));
 vi.mock('../src/lib/server/db', () => ({ db: dbProxy }));

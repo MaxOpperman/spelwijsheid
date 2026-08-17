@@ -4,6 +4,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { getWordleWords } from '$lib/words.server.ts';
 import { parseStats, serializeStats, updateStats } from './stats.ts';
 import { getGameState, setGameState, clearGameState, recordGameResult } from '$lib/server/user';
+import { getWordLength } from '$lib/server/word-games';
 
 const wordLists = {
 	4: getWordleWords({
@@ -33,7 +34,7 @@ const wordLists = {
 };
 
 export const load = (async ({ cookies, locals }) => {
-	const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
+	const wordLength = getWordLength(cookies, 'wordle-impossible-length');
 	const lengthKey = String(wordLength);
 	const wordList = wordLists[wordLength];
 	const savedGame = await getGameState<string>(locals.uid, 'wordle-impossible', lengthKey);
@@ -88,7 +89,7 @@ export const load = (async ({ cookies, locals }) => {
 
 export const actions = {
 	enter: async ({ request, cookies, locals }) => {
-		const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
+		const wordLength = getWordLength(cookies, 'wordle-impossible-length');
 		const lengthKey = String(wordLength);
 		const wordList = wordLists[wordLength];
 		const savedGame = await getGameState<string>(locals.uid, 'wordle-impossible', lengthKey);
@@ -105,7 +106,7 @@ export const actions = {
 	},
 
 	restart: async ({ cookies, locals }) => {
-		const wordLength = parseInt(cookies.get('wordle-impossible-length') || '5') as 4 | 5 | 6 | 7;
+		const wordLength = getWordLength(cookies, 'wordle-impossible-length');
 		const lengthKey = String(wordLength);
 
 		// Clear the saved board to start a new game
