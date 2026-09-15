@@ -1,266 +1,42 @@
 <script lang="ts">
-	import { generatePuzzle, QueensGame, getRegionColor, type Cell } from './game';
+	import { getRegionColor } from './game';
 	import { confetti } from '@neoconfetti/svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { onMount, onDestroy } from 'svelte';
-	import { base } from '$app/paths';
 	import StatsPanel from './StatsPanel.svelte';
-	import { getStats, type GameResult } from './stats';
+	import { formatTime } from './stats';
+	import { createQueensController } from './controller';
 	import { t } from '$lib/i18n';
 
-	const API_URL = `${base}/api/games/queens`;
+	const controller = createQueensController();
+	const {
+		game,
+		board,
+		won,
+		elapsedTime,
+		stats,
+		load,
+		startNewGame,
+		handleCellClick,
+		handleCellMouseDown,
+		handleCellMouseEnter,
+		handleMouseUp,
+		handleUndo,
+		handleClear,
+		isQueenInvalid,
+		dispose
+	} = controller;
 
 	/** Whether the user prefers reduced motion */
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
-	let game = $state<QueensGame | null>(null);
-	let board = $state<Cell[][]>([]);
-	let won = $state(false);
-	let elapsedTime = $state(0);
-	let isDragging = $state(false);
-	let pausedTime = $state(0); // Track accumulated time when paused
-	let leaderboard: GameResult[] = [];
-	let stats = $state(getStats([]));
-
-	function refreshStats() {
-		stats = getStats(leaderboard);
-	}
-
-	/** Update elapsed time every 100ms */
-	$effect(() => {
-		if (!won && game) {
-			const interval = setInterval(() => {
-				elapsedTime = pausedTime + (Date.now() - game!.startTime) / 1000;
-			}, 100);
-
-			return () => clearInterval(interval);
-		}
-	});
-
 	onMount(async () => {
-		// Try to load saved game from the server
-		let data: {
-			game: string | null;
-			meta: { pausedTime: number; lastCompletionTime: number | null };
-			leaderboard: GameResult[];
-		} | null = null;
-		try {
-			const res = await fetch(API_URL);
-			if (res.ok) data = await res.json();
-		} catch {
-			/* offline */
-		}
-
-		leaderboard = data?.leaderboard ?? [];
-		refreshStats();
-
-		const saved = data?.game ?? null;
-		if (saved) {
-			try {
-				game = QueensGame.deserialize(saved);
-				board = game.puzzle.board;
-
-				// Check if the loaded game is already in a solved state
-				if (game.isSolved()) {
-					won = true;
-					// Load the saved completion time
-					elapsedTime = data?.meta.lastCompletionTime ?? 0;
-				} else {
-					// Load paused time and reset start time to now
-					pausedTime = data?.meta.pausedTime ?? 0;
-					game.startTime = Date.now();
-					elapsedTime = pausedTime;
-				}
-			} catch (e) {
-				console.error('Failed to load saved game', e);
-				startNewGame();
-			}
-		} else {
-			startNewGame();
-		}
+		await load();
 	});
 
 	onDestroy(() => {
-		// Save accumulated time when leaving the page
-		if (game && !won) {
-			const totalTime = pausedTime + (Date.now() - game.startTime) / 1000;
-			fetch(API_URL, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ type: 'pause', pausedTime: totalTime }),
-				keepalive: true
-			}).catch(() => {});
-		}
+		dispose();
 	});
-
-	function startNewGame(size: number = Math.floor(Math.random() * 7) + 6) {
-		const puzzle = generatePuzzle(size);
-		game = new QueensGame(puzzle);
-		board = game.puzzle.board;
-		won = false;
-		elapsedTime = 0;
-		pausedTime = 0;
-		postQueens({ type: 'new', game: game.serialize() });
-	}
-
-	let saveTimer: ReturnType<typeof setTimeout> | undefined;
-
-	function postQueens(body: Record<string, unknown>) {
-		fetch(API_URL, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify(body)
-		}).catch(() => {});
-	}
-
-	function saveGame() {
-		if (!game) return;
-		const serialized = game.serialize();
-		// Debounce frequent saves (drag/click) into one request.
-		if (saveTimer) clearTimeout(saveTimer);
-		saveTimer = setTimeout(() => postQueens({ type: 'save', game: serialized }), 500);
-	}
-
-	function handleCellClick(row: number, col: number) {
-		if (!game || won) return;
-
-		game.toggleCell(row, col);
-		board = game.puzzle.board;
-		checkWin();
-		saveGame();
-	}
-
-	function handleCellMouseDown(row: number, col: number, event: MouseEvent) {
-		if (!game || won) return;
-
-		event.preventDefault();
-		isDragging = true;
-
-		const cell = game.puzzle.board[row][col];
-		if (cell.state === 'empty') {
-			game.setCross(row, col);
-			board = game.puzzle.board;
-			saveGame();
-		}
-	}
-
-	function handleCellMouseEnter(row: number, col: number) {
-		if (!game || won || !isDragging) return;
-
-		const cell = game.puzzle.board[row][col];
-		if (cell.state === 'empty') {
-			game.setCross(row, col);
-			board = game.puzzle.board;
-			saveGame();
-		}
-	}
-
-	function handleMouseUp() {
-		isDragging = false;
-	}
-
-	function checkWin() {
-		if (game && game.isSolved()) {
-			won = true;
-			elapsedTime = pausedTime + (Date.now() - game.startTime) / 1000;
-
-			// Persist completion + leaderboard entry server-side.
-			leaderboard = [
-				...leaderboard,
-				{ size: game.puzzle.size, time: elapsedTime, date: new Date().toISOString() }
-			];
-			postQueens({
-				type: 'complete',
-				game: game.serialize(),
-				size: game.puzzle.size,
-				time: elapsedTime
-			});
-
-			// Update stats
-			refreshStats();
-		}
-	}
-
-	function handleUndo() {
-		if (game && !won) {
-			game.undo();
-			board = game.puzzle.board;
-			saveGame();
-		}
-	}
-
-	function handleClear() {
-		if (game && !won) {
-			game.clear();
-			board = game.puzzle.board;
-			saveGame();
-		}
-	}
-
-	function formatTime(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = (seconds % 60).toFixed(1);
-		if (mins > 0) {
-			return `${mins}m ${secs}s`;
-		}
-		return secs + 's';
-	}
-
-	function isQueenInvalid(row: number, col: number): boolean {
-		if (!game || !board || board.length === 0) return false;
-		if (!board[row] || !board[row][col]) return false;
-		if (board[row][col].state !== 'queen') return false;
-
-		const size = game.puzzle.size;
-		const currentRegion = board[row][col].region;
-
-		// Check if another queen is in the same region
-		for (let r = 0; r < size; r++) {
-			for (let c = 0; c < size; c++) {
-				if (
-					(r !== row || c !== col) &&
-					board[r][c].state === 'queen' &&
-					board[r][c].region === currentRegion
-				) {
-					return true;
-				}
-			}
-		}
-
-		// Check row for conflicts
-		for (let c = 0; c < size; c++) {
-			if (c !== col && board[row][c].state === 'queen') {
-				return true;
-			}
-		}
-
-		// Check column for conflicts
-		for (let r = 0; r < size; r++) {
-			if (r !== row && board[r][col].state === 'queen') {
-				return true;
-			}
-		}
-
-		// Check diagonally adjacent cells
-		const diagonalOffsets = [
-			[-1, -1],
-			[-1, 1],
-			[1, -1],
-			[1, 1]
-		];
-
-		for (const [dr, dc] of diagonalOffsets) {
-			const newRow = row + dr;
-			const newCol = col + dc;
-			if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
-				if (board[newRow][newCol].state === 'queen') {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
 </script>
 
 <svelte:window onmouseup={handleMouseUp} />
@@ -274,22 +50,22 @@
 	<a class="how-to-play" href="/queens/how-to-play">{$t('queens.howToPlay')}</a>
 
 	<div class="header-controls">
-		<div class="timer">⏱ {formatTime(elapsedTime)}</div>
+		<div class="timer">⏱ {formatTime($elapsedTime)}</div>
 		<div class="controls-right">
 			<button class="control-button" onclick={handleClear}>{$t('queens.clearBoard')}</button>
 		</div>
 	</div>
 
-	{#if game}
+	{#if $game}
 		<div
 			class="board"
-			style="--board-size: {game.puzzle.size}"
+			style="--board-size: {$game.puzzle.size}"
 			role="grid"
 			aria-label="N-Queens puzzle board"
 		>
-			{#each board as row, rowIndex (rowIndex)}
+			{#each $board as row, rowIndex (rowIndex)}
 				{#each row as cell, colIndex (`${rowIndex}-${colIndex}`)}
-					{@const color = getRegionColor(cell.region, game.puzzle.size)}
+					{@const color = getRegionColor(cell.region, $game.puzzle.size)}
 					{@const invalid = isQueenInvalid(rowIndex, colIndex)}
 					<button
 						class="cell"
@@ -317,14 +93,14 @@
 			{/each}
 		</div>
 
-		{#if !won}
+		{#if !$won}
 			<div class="bottom-controls">
 				<button class="action-button" onclick={handleUndo}>{$t('common.undo')}</button>
 			</div>
 		{/if}
 
-		{#if won}
-			<StatsPanel {stats} currentTime={elapsedTime} />
+		{#if $won}
+			<StatsPanel stats={$stats} currentTime={$elapsedTime} />
 			<button class="new-game-button" onclick={() => startNewGame()}>
 				{$t('queens.newGame')}
 			</button>
@@ -334,7 +110,7 @@
 	{/if}
 </div>
 
-{#if won}
+{#if $won}
 	<div
 		style="position: fixed; left: 50%; top: 50%; pointer-events: none;"
 		use:confetti={{

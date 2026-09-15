@@ -1,25 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import type { PGlite } from '@electric-sql/pglite';
 import { createMigratedDb } from './helpers/db';
+import { createDbProxy } from './helpers/db-mock';
 
 // Forwarding proxy installed in place of the real `./db` module (see
 // user-store.integration.spec.ts for the rationale).
-const { dbProxy, setReal } = vi.hoisted(() => {
-	let real: Record<string | symbol, unknown> | null = null;
-	const proxy = new Proxy(
-		{},
-		{
-			get(_t, prop) {
-				const value = real?.[prop];
-				return typeof value === 'function' ? value.bind(real) : value;
-			}
-		}
-	);
-	return {
-		dbProxy: proxy,
-		setReal: (d: unknown) => (real = d as Record<string | symbol, unknown>)
-	};
-});
+const { dbProxy, setReal } = createDbProxy();
 
 vi.mock('$lib/server/db', () => ({ db: dbProxy }));
 vi.mock('../src/lib/server/db', () => ({ db: dbProxy }));
