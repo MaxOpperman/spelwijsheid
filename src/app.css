@@ -13,6 +13,25 @@
 	--color-secondary: #64748b; /* Neutral slate */
 	--color-accent: #059669; /* Green accent for success */
 	--color-warning: #d97706; /* Orange for warnings */
+	--color-error: #dc2626;
+	--color-success: var(--color-accent);
+	--color-on-primary: #ffffff;
+	--color-border: #cbd5e1;
+	--color-border-strong: #94a3b8;
+	--color-overlay: rgba(15, 23, 42, 0.72);
+	--space-panel: 1.5rem;
+	--radius-control: 8px;
+	--radius-panel: 8px;
+	--radius-overlay: 12px;
+	--radius-round: 999px;
+	--shadow-panel: 0 2px 8px rgba(15, 23, 42, 0.1);
+	--shadow-modal: 0 12px 32px rgba(15, 23, 42, 0.22);
+	--control-height: 2.5rem;
+	--control-progress-height: 0.375rem;
+	--layer-navigation: 100;
+	--layer-backdrop: 900;
+	--layer-modal: 1000;
+	--layer-consent: 1100;
 
 	/* Background colors - light mode */
 	--color-bg-0: #f1f5f9; /* Light slate */
@@ -24,6 +43,12 @@
 	--color-text: #334155; /* Dark slate text */
 	--color-text-light: #64748b; /* Light slate text */
 	--color-text-muted: #94a3b8; /* Muted text */
+	--color-border: #475569;
+	--color-border-strong: #64748b;
+	--color-overlay: rgba(2, 6, 23, 0.82);
+	--color-on-primary: #0f172a;
+	--shadow-panel: 0 2px 8px rgba(0, 0, 0, 0.25);
+	--shadow-modal: 0 12px 32px rgba(0, 0, 0, 0.45);
 
 	/* Legacy mappings for compatibility */
 	--color-theme-1: var(--color-primary);
@@ -144,6 +169,21 @@ button {
 
 button:focus:not(:focus-visible) {
 	outline: none;
+}
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+	outline: 3px solid var(--color-warning);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+	}
 }
 
 @media (min-width: 720px) {
