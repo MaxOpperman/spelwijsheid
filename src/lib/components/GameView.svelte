@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { t } from '$lib/i18n';
 	import { isPangram } from '$lib/utils';
+	import Modal from './Modal.svelte';
+	import ProgressBar from './ProgressBar.svelte';
 	export let chars: string[];
 	export let foundWords: string[];
 	export let gameComplete: boolean;
@@ -67,9 +69,7 @@
 		</div>
 	</div>
 
-	<div class="progress-bar">
-		<div class="progress" style="width: {completionPercentage}%"></div>
-	</div>
+	<ProgressBar value={completionPercentage} label={$t('spelwijze.progressLabel')} />
 
 	<div class="found-words">
 		<h3>{$t('spelwijze.foundWords', { n: foundWords.length })}</h3>
@@ -92,17 +92,14 @@
 </div>
 
 {#if gameComplete}
-	<div class="completion-modal">
-		<div class="modal-content">
-			<h2>{$t('spelwijze.congratulations')}</h2>
-			<p>{$t('spelwijze.allWordsFound', { n: totalPossibleWords })}</p>
-			<div class="final-stats">
-				<div>{$t('spelwijze.timeLabel')} {formattedTime}</div>
-				<div>{$t('spelwijze.score', { n: score })}</div>
-			</div>
-			<button onclick={onResetGame}>{$t('spelwijze.playAgain')}</button>
+	<Modal title={$t('spelwijze.congratulations')} onclose={onResetGame}>
+		<div class="final-stats">
+			<div>{$t('spelwijze.allWordsFound', { n: totalPossibleWords })}</div>
+			<div>{$t('spelwijze.timeLabel')} {formattedTime}</div>
+			<div>{$t('spelwijze.score', { n: score })}</div>
 		</div>
-	</div>
+		<button onclick={onResetGame}>{$t('spelwijze.playAgain')}</button>
+	</Modal>
 {/if}
 
 <style>
@@ -222,21 +219,6 @@
 		cursor: not-allowed;
 	}
 
-	.progress-bar {
-		width: 100%;
-		height: 6px;
-		background-color: var(--color-primary-light);
-		border-radius: 3px;
-		overflow: hidden;
-		margin-bottom: 2rem;
-	}
-
-	.progress {
-		height: 100%;
-		background: var(--color-accent);
-		transition: width 0.3s ease;
-	}
-
 	.found-words {
 		margin-bottom: 2rem;
 	}
@@ -331,36 +313,6 @@
 		filter: brightness(1.1);
 	}
 
-	/* Completion modal */
-	.completion-modal {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.8);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-	}
-
-	.modal-content {
-		background-color: var(--color-surface);
-		border: 2px solid var(--color-primary-light);
-		padding: 2rem;
-		border-radius: 8px;
-		text-align: center;
-		max-width: 400px;
-		margin: 1rem;
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-	}
-
-	.modal-content h2 {
-		color: var(--color-primary);
-		margin-bottom: 1rem;
-	}
-
 	.final-stats {
 		margin: 1.5rem 0;
 		padding: 1rem;
@@ -372,22 +324,6 @@
 	.final-stats div {
 		margin: 0.5rem 0;
 		font-weight: 600;
-	}
-
-	.modal-content button {
-		background-color: var(--color-primary);
-		color: var(--color-surface);
-		border: none;
-		padding: 1rem 2rem;
-		border-radius: 8px;
-		font-weight: 600;
-		cursor: pointer;
-		margin-top: 1rem;
-		transition: background-color 0.2s ease;
-	}
-
-	.modal-content button:hover {
-		background-color: var(--color-primary-hover);
 	}
 
 	@keyframes highlight {
