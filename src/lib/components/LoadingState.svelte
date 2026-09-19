@@ -2,12 +2,13 @@
 	interface Props {
 		label: string;
 		detail?: string;
+		compact?: boolean;
 	}
 
-	let { label, detail }: Props = $props();
+	let { label, detail, compact = false }: Props = $props();
 </script>
 
-<div class="loading-state" role="status" aria-live="polite">
+<div class:compact class="loading-state" role="status" aria-live="polite">
 	<div class="spinner" aria-hidden="true"></div>
 	<strong>{label}</strong>
 	{#if detail}<p>{detail}</p>{/if}
@@ -34,6 +35,19 @@
 	.loading-state p {
 		margin: 0;
 		color: var(--color-text-muted);
+	}
+
+	.loading-state.compact {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: 0;
+		text-align: left;
+	}
+
+	.loading-state.compact .spinner {
+		width: 1.25rem;
+		height: 1.25rem;
 	}
 
 	@keyframes spin {

@@ -3,6 +3,7 @@
 	import { isPangram } from '$lib/utils';
 	import Modal from './Modal.svelte';
 	import ProgressBar from './ProgressBar.svelte';
+	import Input from './Input.svelte';
 	export let chars: string[];
 	export let foundWords: string[];
 	export let gameComplete: boolean;
@@ -54,8 +55,8 @@
 
 	<div class="word-input-section">
 		<div class="word-input">
-			<input
-				type="text"
+			<Input
+				ariaLabel={$t('spelwijze.typePlaceholder')}
 				bind:value={wordInput}
 				placeholder={gamePaused
 					? $t('spelwijze.pausedPlaceholder')
@@ -182,21 +183,9 @@
 		justify-content: center;
 	}
 
-	.word-input input {
+	.word-input :global(.input-field) {
 		flex: 1;
 		max-width: 300px;
-		padding: 0.75rem;
-		border: 2px solid var(--color-primary-light);
-		border-radius: 8px;
-		font-size: 1rem;
-		background-color: var(--color-surface);
-		color: var(--color-text);
-		transition: border-color 0.2s ease;
-	}
-
-	.word-input input:focus {
-		outline: none;
-		border-color: var(--color-primary);
 	}
 
 	.word-input button {
@@ -354,7 +343,7 @@
 			flex-direction: column;
 		}
 
-		.word-input input {
+		.word-input :global(.input-field) {
 			max-width: 100%;
 		}
 	}

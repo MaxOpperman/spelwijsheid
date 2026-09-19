@@ -7,6 +7,7 @@
 	import { formatTime } from './stats';
 	import { createQueensController } from './controller';
 	import { t } from '$lib/i18n';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 
 	const controller = createQueensController();
 	const {
@@ -106,7 +107,7 @@
 			</button>
 		{/if}
 	{:else}
-		<div class="loading">{$t('common.loading')}</div>
+		<LoadingState label={$t('common.loading')} />
 	{/if}
 </div>
 
@@ -133,29 +134,6 @@
 		width: 100%;
 		max-width: 800px;
 		margin: 0 auto;
-	}
-
-	.how-to-play {
-		color: var(--color-text);
-		text-decoration: none;
-		margin-bottom: 0.5rem;
-	}
-
-	.how-to-play::before {
-		content: 'i';
-		display: inline-block;
-		font-size: 0.8em;
-		font-weight: 900;
-		width: 1em;
-		height: 1em;
-		padding: 0.2em;
-		line-height: 1;
-		border: 1.5px solid var(--color-text);
-		border-radius: 50%;
-		text-align: center;
-		margin: 0 0.5em 0 0;
-		position: relative;
-		top: -0.05em;
 	}
 
 	.header-controls {
@@ -347,11 +325,6 @@
 
 	.new-game-button:active {
 		transform: translateY(0);
-	}
-
-	.loading {
-		font-size: 1.5rem;
-		color: var(--color-text);
 	}
 
 	@media (max-width: 768px) {

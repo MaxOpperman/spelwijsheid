@@ -160,10 +160,6 @@
 		padding: 1.5rem;
 		margin: 2rem 0;
 		text-align: center;
-	}
-
-	.highlight-box p {
-		margin: 0;
 		font-weight: 500;
 		color: var(--color-text);
 	}

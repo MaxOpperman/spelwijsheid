@@ -30,6 +30,7 @@ test.describe('Global styles', () => {
 
 	test('updates global colors when dark mode is enabled', async ({ page }) => {
 		await page.goto('/');
+		await expect(page.getByRole('dialog')).toBeVisible();
 
 		const initialColor = await page.evaluate(() =>
 			getComputedStyle(document.documentElement).getPropertyValue('--color-bg-0').trim()

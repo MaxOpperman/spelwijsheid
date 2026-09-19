@@ -4,6 +4,7 @@
 	import { locale } from '$lib/stores/locale';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import SegmentedControl from '$lib/components/SegmentedControl.svelte';
 
 	interface Props {
 		data: PageData;
@@ -255,18 +256,15 @@
 
 	<!-- Word length selector -->
 	<div class="word-length-selector">
-		<button class:active={wordLength === 4} onclick={() => changeWordLength(4)}
-			>{$t('wordleSolver.nLetters', { n: 4 })}</button
-		>
-		<button class:active={wordLength === 5} onclick={() => changeWordLength(5)}
-			>{$t('wordleSolver.nLetters', { n: 5 })}</button
-		>
-		<button class:active={wordLength === 6} onclick={() => changeWordLength(6)}
-			>{$t('wordleSolver.nLetters', { n: 6 })}</button
-		>
-		<button class:active={wordLength === 7} onclick={() => changeWordLength(7)}
-			>{$t('wordleSolver.nLetters', { n: 7 })}</button
-		>
+		<SegmentedControl
+			label={$t('common.wordLength')}
+			value={wordLength}
+			options={[4, 5, 6, 7].map((length) => ({
+				value: length,
+				label: $t('wordleSolver.nLetters', { n: length })
+			}))}
+			onchange={(value) => changeWordLength(Number(value))}
+		/>
 	</div>
 
 	<div class="solver-grid">
@@ -394,26 +392,6 @@
 		gap: 0.5rem;
 		margin: 0 auto 2rem;
 		justify-content: center;
-	}
-
-	.word-length-selector button {
-		padding: 0.5rem 1rem;
-		border: 2px solid var(--color-primary);
-		background: var(--color-surface);
-		color: var(--color-text);
-		border-radius: 4px;
-		cursor: pointer;
-		font-weight: 500;
-		transition: all 0.2s;
-	}
-
-	.word-length-selector button:hover {
-		background: var(--color-primary-light);
-	}
-
-	.word-length-selector button.active {
-		background: var(--color-primary);
-		color: white;
 	}
 
 	.solver-grid {

@@ -9,6 +9,11 @@ test.describe('Dark mode', () => {
 
 		const html = page.locator('html');
 		const startedDark = await html.evaluate((el) => el.classList.contains('dark'));
+		// Arm the waiter before the click because the best-effort preference sync
+		// can complete before the DOM assertion below finishes.
+		const preferenceResponse = page.waitForResponse(
+			(r) => r.url().includes('/api/preferences') && r.request().method() === 'POST'
+		);
 
 		await page.evaluate(() => {
 			document
@@ -29,9 +34,7 @@ test.describe('Dark mode', () => {
 		// Wait until the preference is persisted server-side before reloading,
 		// otherwise hooks.server.ts would re-emit the theme cookie from the
 		// stale (pre-toggle) database value.
-		await page.waitForResponse(
-			(r) => r.url().includes('/api/preferences') && r.request().method() === 'POST'
-		);
+		await preferenceResponse;
 
 		// The theme cookie is written client-side; reload should preserve it
 		// (applied pre-paint by the inline script in app.html).

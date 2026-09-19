@@ -1,6 +1,7 @@
 <script lang="ts">
 	const base = '';
 	import { t } from '$lib/i18n';
+	import LoadingState from './LoadingState.svelte';
 
 	export let inputChars: string[];
 	export let totalPossibleWords: number;
@@ -14,7 +15,7 @@
 <h1>Spelwijze</h1>
 
 <div class="help-link">
-	<a href="{base}/spelwijze/how-to-play">{$t('spelwijze.howItWorks')}</a>
+	<a class="how-to-play" href="{base}/spelwijze/how-to-play">{$t('spelwijze.howItWorks')}</a>
 </div>
 
 <div class="welcome-screen">
@@ -98,10 +99,7 @@
 				</ul>
 			</div>
 		{:else}
-			<div class="loading-state">
-				<div class="loading-spinner"></div>
-				<p class="loading-text">{$t('spelwijze.generating')}</p>
-			</div>
+			<LoadingState label={$t('spelwijze.generating')} />
 		{/if}
 	</div>
 </div>
@@ -115,29 +113,6 @@
 	.help-link {
 		text-align: center;
 		margin: 1rem 0 2rem 0;
-	}
-
-	.help-link a {
-		color: var(--color-text);
-		text-decoration: none;
-		display: inline-block;
-	}
-
-	.help-link a::before {
-		content: 'i';
-		display: inline-block;
-		font-size: 0.8em;
-		font-weight: 900;
-		width: 1em;
-		height: 1em;
-		padding: 0.2em;
-		line-height: 1;
-		border: 1.5px solid var(--color-text);
-		border-radius: 50%;
-		text-align: center;
-		margin: 0 0.5em 0 0;
-		position: relative;
-		top: -0.05em;
 	}
 
 	/* Welcome Screen Styles */
@@ -238,40 +213,6 @@
 		color: var(--color-text);
 	}
 
-	.legend-color {
-		width: 16px;
-		height: 16px;
-		border-radius: 4px;
-	}
-
-	.mandatory-color {
-		background: var(--color-accent);
-	}
-
-	.optional-color {
-		background: var(--color-primary);
-	}
-
-	.game-stats-preview {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-		gap: 1rem;
-		margin: 2rem 0;
-	}
-
-	.stat-card {
-		background-color: var(--color-surface);
-		border: 1px solid var(--color-primary-light);
-		padding: 1.5rem 1rem;
-		border-radius: 8px;
-		text-align: center;
-		transition: transform 0.2s ease;
-	}
-
-	.stat-card:hover {
-		transform: translateY(-2px);
-	}
-
 	.stat-number {
 		font-size: 2rem;
 		font-weight: 700;
@@ -369,37 +310,6 @@
 	.game-tips li {
 		margin: 0.5rem 0;
 		line-height: 1.5;
-	}
-
-	.loading-state {
-		text-align: center;
-		padding: 3rem 2rem;
-	}
-
-	.loading-spinner {
-		width: 50px;
-		height: 50px;
-		border: 4px solid var(--color-primary-light);
-		border-top: 4px solid var(--color-primary);
-		border-radius: 50%;
-		animation: spin 1s linear infinite;
-		margin: 0 auto 1rem;
-	}
-
-	.loading-text {
-		color: var(--color-text-light);
-		font-style: italic;
-		font-size: 1.1rem;
-		margin: 0;
-	}
-
-	@keyframes spin {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(360deg);
-		}
 	}
 
 	/* Responsive design */
