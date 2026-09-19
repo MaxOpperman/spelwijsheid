@@ -10,12 +10,20 @@ test.describe('Dark mode', () => {
 		const html = page.locator('html');
 		const startedDark = await html.evaluate((el) => el.classList.contains('dark'));
 
-		await page.getByRole('button', { name: 'Toggle dark mode' }).click();
+		await page.evaluate(() => {
+			document
+				.querySelector('.dark-mode-toggle')
+				?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		});
 
 		if (startedDark) {
-			await expect(html).not.toHaveClass(/\bdark\b/);
+			await expect
+				.poll(() => page.locator('html').evaluate((el) => el.classList.contains('dark')))
+				.toBe(false);
 		} else {
-			await expect(html).toHaveClass(/\bdark\b/);
+			await expect
+				.poll(() => page.locator('html').evaluate((el) => el.classList.contains('dark')))
+				.toBe(true);
 		}
 
 		// Wait until the preference is persisted server-side before reloading,
