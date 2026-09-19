@@ -22,6 +22,7 @@
 				class:selected={selectedIds.includes(result.id)}
 				role={selectable ? 'button' : undefined}
 				tabindex={selectable ? 0 : undefined}
+				aria-pressed={selectable ? selectedIds.includes(result.id) : undefined}
 				onclick={() => selectable && onselect?.(result)}
 				onkeydown={(event) => {
 					if (selectable && (event.key === 'Enter' || event.key === ' ')) {

@@ -99,7 +99,7 @@
 			<div>{$t('spelwijze.timeLabel')} {formattedTime}</div>
 			<div>{$t('spelwijze.score', { n: score })}</div>
 		</div>
-		<button onclick={onResetGame}>{$t('spelwijze.playAgain')}</button>
+		<button class="play-again-button" onclick={onResetGame}>{$t('spelwijze.playAgain')}</button>
 	</Modal>
 {/if}
 
@@ -313,6 +313,21 @@
 	.final-stats div {
 		margin: 0.5rem 0;
 		font-weight: 600;
+	}
+
+	.play-again-button {
+		padding: 0.75rem 1.5rem;
+		background: var(--color-primary);
+		color: var(--color-surface);
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 600;
+		transition: all 0.2s ease;
+	}
+
+	.play-again-button:hover {
+		background: var(--color-primary-hover);
 	}
 
 	@keyframes highlight {

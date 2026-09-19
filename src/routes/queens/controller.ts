@@ -224,14 +224,21 @@ export function createQueensController() {
 	}
 
 	function dispose(): void {
-		clearSaveTimer();
-		stopTimer();
-
 		const currentGame = get(game);
 		if (currentGame && !get(won)) {
+			if (saveTimer) {
+				clearSaveTimer();
+				postQueens({ type: 'save', game: currentGame.serialize() }, true);
+			}
+
+			stopTimer();
 			const totalTime = get(pausedTime) + (Date.now() - currentGame.startTime) / 1000;
 			postQueens({ type: 'pause', pausedTime: totalTime }, true);
+			return;
 		}
+
+		clearSaveTimer();
+		stopTimer();
 	}
 
 	return {

@@ -5,13 +5,64 @@
 		label: string;
 		children?: Snippet;
 		open?: boolean;
+		onToggle?: (open: boolean) => void;
+		closeOnOutsideClick?: boolean;
 	}
 
-	let { label, children, open = false }: Props = $props();
+	let {
+		label,
+		children,
+		open = $bindable(false),
+		onToggle,
+		closeOnOutsideClick = true
+	}: Props = $props();
+	let details: HTMLDetailsElement | undefined;
+	let summary: HTMLElement | undefined;
+	let opener: HTMLElement | null = null;
+
+	function restoreFocus(): void {
+		if (opener?.isConnected) {
+			opener.focus();
+		} else {
+			summary?.focus();
+		}
+		opener = null;
+	}
+
+	function setOpen(next: boolean): void {
+		if (open === next) return;
+		open = next;
+		onToggle?.(next);
+		if (next) {
+			opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		} else {
+			restoreFocus();
+		}
+	}
+
+	function handleToggle(): void {
+		setOpen(details?.open ?? false);
+	}
+
+	function handleWindowClick(event: MouseEvent): void {
+		if (!open || !closeOnOutsideClick) return;
+		if (details && event.target instanceof Node && !details.contains(event.target)) {
+			setOpen(false);
+		}
+	}
+
+	function handleWindowKeydown(event: KeyboardEvent): void {
+		if (event.key === 'Escape' && open) {
+			event.preventDefault();
+			setOpen(false);
+		}
+	}
 </script>
 
-<details {open} class="disclosure-menu">
-	<summary>{label}</summary>
+<svelte:window onclick={handleWindowClick} onkeydown={handleWindowKeydown} />
+
+<details bind:this={details} {open} class="disclosure-menu" ontoggle={handleToggle}>
+	<summary bind:this={summary} aria-expanded={open}>{label}</summary>
 	<div class="disclosure-content">
 		{#if children}{@render children()}{/if}
 	</div>
