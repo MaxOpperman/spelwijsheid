@@ -1,8 +1,14 @@
 <script lang="ts">
-	import { toggleDarkMode } from '$lib/stores/darkMode';
+	import { darkMode, toggleDarkMode } from '$lib/stores/darkMode';
 </script>
 
-<button class="dark-mode-toggle" on:click={toggleDarkMode} title="Toggle dark mode">
+<button
+	class="dark-mode-toggle"
+	onclick={toggleDarkMode}
+	aria-label="Toggle dark mode"
+	aria-pressed={$darkMode}
+	title="Toggle dark mode"
+>
 	<div class="toggle-background">
 		<div class="sun">
 			<div class="sun-rays"></div>

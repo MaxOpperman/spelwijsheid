@@ -5,6 +5,7 @@
 	import generateFilteredWords, { generateRandomChars } from '$lib/solver';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import GameView from './GameView.svelte';
+	import LoadingState from './LoadingState.svelte';
 	import { t } from '$lib/i18n';
 
 	export let wordList: string[];
@@ -255,10 +256,7 @@
 </script>
 
 {#if !isReady}
-	<div class="loading">
-		<h2>{$t('common.loading')}</h2>
-		<p>{$t('gameState.preparingGame')}</p>
-	</div>
+	<LoadingState label={$t('common.loading')} detail={$t('gameState.preparingGame')} />
 {:else if !gameStarted}
 	<WelcomeScreen
 		{inputChars}
@@ -287,15 +285,3 @@
 		onKeydown={handleWordInputKeydown}
 	/>
 {/if}
-
-<style>
-	.loading {
-		text-align: center;
-		padding: 2rem;
-		color: var(--color-text);
-	}
-
-	.loading h2 {
-		margin-bottom: 1rem;
-	}
-</style>

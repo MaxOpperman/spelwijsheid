@@ -133,6 +133,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'common.undo': 'Undo',
 		'common.time': 'Time',
 		'common.selectLanguage': 'Select language',
+		'common.wordLength': 'Word length',
 
 		// Pinpoint
 		'pinpoint.subtitle': 'Guess the word. A new clue reveals after every wrong answer.',
@@ -405,6 +406,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'common.undo': 'Undo',
 		'common.time': 'Time',
 		'common.selectLanguage': 'Select language',
+		'common.wordLength': 'Word length',
 
 		// Pinpoint
 		'pinpoint.subtitle': 'Guess the word. A new clue reveals after every wrong answer.',
@@ -670,6 +672,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		'common.undo': 'Ongedaan maken',
 		'common.time': 'Tijd',
 		'common.selectLanguage': 'Selecteer taal',
+		'common.wordLength': 'Woordlengte',
 
 		// Pinpoint
 		'pinpoint.subtitle': 'Raad het woord. Een nieuwe aanwijzing verschijnt na elk fout antwoord.',

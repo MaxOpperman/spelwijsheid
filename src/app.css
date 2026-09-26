@@ -4,30 +4,72 @@
 	--font-body:
 		Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
 		'Open Sans', 'Helvetica Neue', sans-serif;
+	--font-heading: var(--font-body);
+	--font-label: var(--font-body);
+	--font-display: var(--font-body);
 	--font-mono: 'Fira Mono', monospace;
 
-	/* Light mode colors */
-	--color-primary: #2563eb; /* Primary blue */
-	--color-primary-hover: #1d4ed8; /* Darker blue for hover */
-	--color-primary-light: #dbeafe; /* Light blue for backgrounds */
-	--color-secondary: #64748b; /* Neutral slate */
-	--color-accent: #059669; /* Green accent for success */
-	--color-warning: #d97706; /* Orange for warnings */
+	/* Core color roles */
+	--color-primary: #2563eb;
+	--color-primary-hover: #1d4ed8;
+	--color-primary-light: #dbeafe;
+	--color-primary-soft: rgba(37, 99, 235, 0.12);
+	--color-secondary: #64748b;
+	--color-accent: #059669;
+	--color-success: var(--color-accent);
+	--color-warning: #d97706;
+	--color-error: #dc2626;
+	--color-focus: #f59e0b;
+	--color-on-primary: #ffffff;
 
-	/* Background colors - light mode */
-	--color-bg-0: #f1f5f9; /* Light slate */
-	--color-bg-1: #f8fafc; /* Nearly white */
-	--color-bg-2: #ffffff; /* Pure white */
-	--color-surface: #ffffff; /* Card/surface backgrounds */
+	/* Surface / text tokens */
+	--color-bg-0: #f1f5f9;
+	--color-bg-1: #f8fafc;
+	--color-bg-2: #ffffff;
+	--color-surface: #ffffff;
+	--color-surface-alt: #f8fafc;
+	--color-text: #334155;
+	--color-text-light: #64748b;
+	--color-text-muted: #94a3b8;
+	--color-border: #cbd5e1;
+	--color-border-strong: #94a3b8;
+	--color-overlay: rgba(15, 23, 42, 0.72);
 
-	/* Text colors - light mode */
-	--color-text: #334155; /* Dark slate text */
-	--color-text-light: #64748b; /* Light slate text */
-	--color-text-muted: #94a3b8; /* Muted text */
+	/* Spacing / radius / shadow / motion */
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-6: 1.5rem;
+	--space-8: 2rem;
+	--space-panel: 1.5rem;
+	--space-section: 2rem;
+	--space-grid: 1rem;
+	--radius-sm: 6px;
+	--radius-control: 8px;
+	--radius-panel: 8px;
+	--radius-overlay: 12px;
+	--radius-round: 999px;
+	--shadow-panel: 0 2px 8px rgba(15, 23, 42, 0.1);
+	--shadow-modal: 0 12px 32px rgba(15, 23, 42, 0.22);
+	--shadow-menu: 0 8px 20px rgba(15, 23, 42, 0.18);
+	--control-height: 2.5rem;
+	--control-min-height: 2.75rem;
+	--icon-size: 1.25rem;
+	--control-progress-height: 0.375rem;
 
-	/* Legacy mappings for compatibility */
+	/* Layering */
+	--layer-navigation: 100;
+	--layer-backdrop: 900;
+	--layer-modal: 1000;
+	--layer-consent: 1100;
+
+	/* Compatibility mapping */
 	--color-theme-1: var(--color-primary);
 	--color-theme-2: var(--color-primary);
+	--color-success-bg: var(--color-primary-soft);
+	--color-warning-bg: rgba(217, 119, 6, 0.12);
+	--color-error-bg: rgba(220, 38, 38, 0.12);
 
 	--column-width: 42rem;
 	--column-margin-top: 4rem;
@@ -35,25 +77,35 @@
 	color: var(--color-text);
 }
 
-/* Dark mode colors */
 :root.dark {
-	--color-primary: #60a5fa; /* Lighter blue for dark mode */
-	--color-primary-hover: #93c5fd; /* Even lighter for hover */
-	--color-primary-light: #1e3a8a; /* Dark blue for backgrounds */
-	--color-secondary: #94a3b8; /* Lighter slate */
-	--color-accent: #10b981; /* Brighter green */
-	--color-warning: #f59e0b; /* Brighter orange */
-
-	/* Background colors - dark mode */
-	--color-bg-0: #0f172a; /* Very dark slate */
-	--color-bg-1: #1e293b; /* Dark slate */
-	--color-bg-2: #334155; /* Medium slate */
-	--color-surface: #1e293b; /* Dark surface */
-
-	/* Text colors - dark mode */
-	--color-text: #e2e8f0; /* Light slate text */
-	--color-text-light: #cbd5e1; /* Lighter text */
-	--color-text-muted: #94a3b8; /* Muted text */
+	--color-primary: #60a5fa;
+	--color-primary-hover: #93c5fd;
+	--color-primary-light: #1e3a8a;
+	--color-primary-soft: rgba(96, 165, 250, 0.18);
+	--color-secondary: #94a3b8;
+	--color-accent: #10b981;
+	--color-success: var(--color-accent);
+	--color-warning: #f59e0b;
+	--color-error: #f87171;
+	--color-focus: #fbbf24;
+	--color-on-primary: #0f172a;
+	--color-bg-0: #0f172a;
+	--color-bg-1: #1e293b;
+	--color-bg-2: #334155;
+	--color-surface: #1e293b;
+	--color-surface-alt: #0f172a;
+	--color-text: #e2e8f0;
+	--color-text-light: #cbd5e1;
+	--color-text-muted: #94a3b8;
+	--color-border: #475569;
+	--color-border-strong: #64748b;
+	--color-overlay: rgba(2, 6, 23, 0.82);
+	--shadow-panel: 0 2px 8px rgba(15, 23, 42, 0.32);
+	--shadow-modal: 0 12px 32px rgba(2, 6, 23, 0.55);
+	--shadow-menu: 0 12px 28px rgba(2, 6, 23, 0.5);
+	--color-success-bg: rgba(16, 185, 129, 0.12);
+	--color-warning-bg: rgba(245, 158, 11, 0.12);
+	--color-error-bg: rgba(248, 113, 113, 0.12);
 }
 
 body {
@@ -95,8 +147,38 @@ a:hover {
 	text-decoration: underline;
 }
 
+.how-to-play {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: var(--control-min-height);
+	color: var(--color-text-light);
+	font-size: 0.9rem;
+	line-height: 1.2;
+	text-decoration: none;
+}
+
+.how-to-play::before {
+	content: 'i';
+	display: inline-grid;
+	place-items: center;
+	width: 1.1rem;
+	height: 1.1rem;
+	border: 1px solid currentColor;
+	border-radius: var(--radius-round);
+	font-size: 0.75rem;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.how-to-play:hover {
+	color: var(--color-primary);
+	text-decoration: underline;
+}
+
 h1 {
 	font-size: 2rem;
+	line-height: 1.2;
 	text-align: center;
 }
 
@@ -131,24 +213,28 @@ button {
 	font-family: inherit;
 }
 
-/* Smooth transitions for dark mode */
-*,
-*::before,
-*::after {
-	transition:
-		background-color 0.3s ease,
-		border-color 0.3s ease,
-		color 0.3s ease,
-		box-shadow 0.3s ease;
-}
-
 button:focus:not(:focus-visible) {
 	outline: none;
 }
 
-@media (min-width: 720px) {
-	h1 {
-		font-size: 2.4rem;
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+	outline: 3px solid var(--color-focus);
+	outline-offset: 2px;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
 	}
 }
 

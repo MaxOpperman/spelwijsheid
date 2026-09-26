@@ -4,10 +4,12 @@
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
 	import StatsPanel from './StatsPanel.svelte';
+	import SegmentedControl from '$lib/components/SegmentedControl.svelte';
 	import { t } from '$lib/i18n';
 	import { locale } from '$lib/stores/locale';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 
 	interface FormData {
 		badGuess?: boolean;
@@ -156,24 +158,22 @@
 	<a class="how-to-play" href="/wordle/how-to-play">Hoe te spelen</a>
 
 	<div class="header-controls">
-		<div class="word-length-selector">
-			{#each [4, 5, 6, 7] as length (length)}
-				<button
-					type="submit"
-					formaction="?/changeLength"
-					name="length"
-					value={length}
-					class:selected={data.wordLength === length}
-					disabled={data.wordLength === length}
-				>
-					{length}
-				</button>
-			{/each}
-		</div>
+		<SegmentedControl
+			label={$t('common.wordLength')}
+			name="length"
+			buttonType="submit"
+			value={data.wordLength}
+			options={[4, 5, 6, 7].map((length) => ({
+				value: length,
+				label: String(length),
+				disabled: data.wordLength === length,
+				formAction: '?/changeLength'
+			}))}
+		/>
 
 		{#if isLoading}
 			<div class="loading-indicator">
-				<div class="spinner"></div>
+				<LoadingState label={$t('common.loading')} compact />
 			</div>
 		{/if}
 	</div>
@@ -294,29 +294,6 @@
 		overflow-y: auto;
 	}
 
-	.how-to-play {
-		color: var(--color-text);
-		text-decoration: none;
-		margin-bottom: 0.5rem;
-	}
-
-	.how-to-play::before {
-		content: 'i';
-		display: inline-block;
-		font-size: 0.8em;
-		font-weight: 900;
-		width: 1em;
-		height: 1em;
-		padding: 0.2em;
-		line-height: 1;
-		border: 1.5px solid var(--color-text);
-		border-radius: 50%;
-		text-align: center;
-		margin: 0 0.5em 0 0;
-		position: relative;
-		top: -0.05em;
-	}
-
 	.header-controls {
 		display: flex;
 		justify-content: center;
@@ -325,11 +302,6 @@
 		max-width: min(100vw, calc(var(--word-length, 5) * 8vh), calc(var(--word-length, 5) * 76px));
 		gap: 1rem;
 		position: relative;
-	}
-
-	.word-length-selector {
-		display: flex;
-		gap: 0.5rem;
 	}
 
 	/* keep the loading indicator visually right-aligned while the selector is centered */
@@ -341,27 +313,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-	}
-
-	.word-length-selector button {
-		padding: 0.5rem 1rem;
-		border: 1px solid var(--color-text);
-		border-radius: 4px;
-		background: transparent;
-		color: var(--color-text);
-		cursor: pointer;
-		font-size: 1rem;
-	}
-
-	.word-length-selector button.selected {
-		background: var(--color-theme-1);
-		color: white;
-		border-color: var(--color-theme-1);
-	}
-
-	.word-length-selector button:disabled {
-		cursor: not-allowed;
-		opacity: 0.6;
 	}
 
 	.grid {

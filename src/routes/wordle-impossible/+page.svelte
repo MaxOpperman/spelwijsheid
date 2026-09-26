@@ -4,6 +4,8 @@
 	import type { PageData } from './$types';
 	import { MediaQuery } from 'svelte/reactivity';
 	import StatsPanel from './StatsPanel.svelte';
+	import SegmentedControl from '$lib/components/SegmentedControl.svelte';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 	import { t } from '$lib/i18n';
 
 	interface FormData {
@@ -189,25 +191,22 @@
 	</div>
 
 	<div class="header-controls">
-		<div class="word-length-selector">
-			{#each [4, 5, 6, 7] as length (length)}
-				<button
-					type="submit"
-					formaction="?/changeLength"
-					name="length"
-					value={length}
-					class:selected={data.wordLength === length}
-					disabled={data.wordLength === length}
-				>
-					{length}
-				</button>
-			{/each}
-		</div>
+		<SegmentedControl
+			label={$t('common.wordLength')}
+			name="length"
+			buttonType="submit"
+			value={data.wordLength}
+			options={[4, 5, 6, 7].map((length) => ({
+				value: length,
+				label: String(length),
+				disabled: data.wordLength === length,
+				formAction: '?/changeLength'
+			}))}
+		/>
 
 		{#if isLoading}
-			<div class="loading-indicator" role="status" aria-live="polite">
-				<div class="spinner"></div>
-				<span class="visually-hidden">{$t('wordleImpossible.loading')}</span>
+			<div class="loading-indicator">
+				<LoadingState label={$t('wordleImpossible.loading')} compact />
 			</div>
 		{/if}
 	</div>
@@ -318,29 +317,6 @@
 		overflow-y: auto;
 	}
 
-	.how-to-play {
-		color: var(--color-text);
-		text-decoration: none;
-		margin-bottom: 0.5rem;
-	}
-
-	.how-to-play::before {
-		content: 'i';
-		display: inline-block;
-		font-size: 0.8em;
-		font-weight: 900;
-		width: 1em;
-		height: 1em;
-		padding: 0.2em;
-		line-height: 1;
-		border: 1.5px solid var(--color-text);
-		border-radius: 50%;
-		text-align: center;
-		margin: 0 0.5em 0 0;
-		position: relative;
-		top: -0.05em;
-	}
-
 	.header-info {
 		display: flex;
 		flex-direction: column;
@@ -387,11 +363,6 @@
 		position: relative;
 	}
 
-	.word-length-selector {
-		display: flex;
-		gap: 0.5rem;
-	}
-
 	.loading-indicator {
 		position: absolute;
 		right: 0;
@@ -400,27 +371,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-	}
-
-	.word-length-selector button {
-		padding: 0.5rem 1rem;
-		border: 1px solid var(--color-text);
-		border-radius: 4px;
-		background: transparent;
-		color: var(--color-text);
-		cursor: pointer;
-		font-size: 1rem;
-	}
-
-	.word-length-selector button.selected {
-		background: var(--color-theme-1);
-		color: white;
-		border-color: var(--color-theme-1);
-	}
-
-	.word-length-selector button:disabled {
-		cursor: not-allowed;
-		opacity: 0.6;
 	}
 
 	.grid {

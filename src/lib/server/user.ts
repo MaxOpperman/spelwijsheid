@@ -51,14 +51,49 @@ export async function updateUser(id: string, patch: Partial<User>): Promise<void
 	await db.update(users).set(patch).where(eq(users.id, id));
 }
 
+type PreferencePatch = {
+	darkMode?: boolean;
+	locale?: string;
+	timezone?: string;
+	reducedMotion?: boolean;
+	highContrast?: boolean;
+	soundEnabled?: boolean;
+	onboardingCompleted?: boolean;
+};
+
+async function updatePreferencePatch(id: string, patch: PreferencePatch): Promise<void> {
+	const userPatch: Partial<User> = {};
+	if (typeof patch.darkMode === 'boolean') userPatch.darkMode = patch.darkMode;
+	if (typeof patch.locale === 'string') userPatch.locale = patch.locale;
+	if (typeof patch.timezone === 'string') userPatch.timezone = patch.timezone;
+	if (typeof patch.reducedMotion === 'boolean') userPatch.reducedMotion = patch.reducedMotion;
+	if (typeof patch.highContrast === 'boolean') userPatch.highContrast = patch.highContrast;
+	if (typeof patch.soundEnabled === 'boolean') userPatch.soundEnabled = patch.soundEnabled;
+	if (typeof patch.onboardingCompleted === 'boolean')
+		userPatch.onboardingCompleted = patch.onboardingCompleted;
+	if (Object.keys(userPatch).length === 0) return;
+
+	await db.update(users).set(userPatch).where(eq(users.id, id));
+
+	const canonical: CanonicalPreferences = {};
+	if ('darkMode' in userPatch) canonical.darkMode = userPatch.darkMode;
+	if ('locale' in userPatch) canonical.locale = userPatch.locale;
+	if ('reducedMotion' in userPatch) canonical.reducedMotion = userPatch.reducedMotion;
+	if ('highContrast' in userPatch) canonical.highContrast = userPatch.highContrast;
+	if ('soundEnabled' in userPatch) canonical.soundEnabled = userPatch.soundEnabled;
+	await propagatePrefToIdentity(id, canonical);
+}
+
+export async function updatePreferences(id: string, patch: PreferencePatch): Promise<void> {
+	await updatePreferencePatch(id, patch);
+}
+
 export async function setDarkMode(id: string, darkMode: boolean): Promise<void> {
-	await db.update(users).set({ darkMode }).where(eq(users.id, id));
-	await propagatePrefToIdentity(id, { darkMode });
+	await updatePreferencePatch(id, { darkMode });
 }
 
 export async function setLocale(id: string, locale: string): Promise<void> {
-	await db.update(users).set({ locale }).where(eq(users.id, id));
-	await propagatePrefToIdentity(id, { locale });
+	await updatePreferencePatch(id, { locale });
 }
 
 /** Functional preferences that are stored without analytics consent. */
@@ -74,22 +109,7 @@ export async function setFunctionalPreferences(
 	id: string,
 	prefs: Partial<FunctionalPreferences>
 ): Promise<void> {
-	const patch: Partial<User> = {};
-	if (typeof prefs.timezone === 'string') patch.timezone = prefs.timezone;
-	if (typeof prefs.reducedMotion === 'boolean') patch.reducedMotion = prefs.reducedMotion;
-	if (typeof prefs.highContrast === 'boolean') patch.highContrast = prefs.highContrast;
-	if (typeof prefs.soundEnabled === 'boolean') patch.soundEnabled = prefs.soundEnabled;
-	if (typeof prefs.onboardingCompleted === 'boolean')
-		patch.onboardingCompleted = prefs.onboardingCompleted;
-	if (Object.keys(patch).length === 0) return;
-	await db.update(users).set(patch).where(eq(users.id, id));
-
-	// Propagate the shared subset (not timezone/onboarding) to the identity.
-	const canonical: CanonicalPreferences = {};
-	if ('reducedMotion' in patch) canonical.reducedMotion = patch.reducedMotion;
-	if ('highContrast' in patch) canonical.highContrast = patch.highContrast;
-	if ('soundEnabled' in patch) canonical.soundEnabled = patch.soundEnabled;
-	await propagatePrefToIdentity(id, canonical);
+	await updatePreferencePatch(id, prefs);
 }
 
 export async function setConsent(
@@ -110,6 +130,55 @@ export async function setConsent(
 			dataRetentionExpiresAt: retention
 		})
 		.where(eq(users.id, id));
+}
+
+export async function setConsentAndUnlinkInstance(
+	id: string,
+	consent: { functional: boolean; analytics: boolean }
+): Promise<void> {
+	await setConsent(id, consent);
+	if (!consent.analytics) {
+		await unlinkInstance(id);
+	}
+}
+
+function toInt(value: unknown): number | undefined {
+	const n = Number(value);
+	return Number.isFinite(n) && n > 0 ? Math.round(n) : undefined;
+}
+
+function toFloat(value: unknown): number | undefined {
+	const n = Number(value);
+	return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
+function toBool(value: unknown): boolean | undefined {
+	return typeof value === 'boolean' ? value : undefined;
+}
+
+export async function updateDeviceSignals(id: string, body: unknown): Promise<void> {
+	const source = (body ?? {}) as Record<string, unknown>;
+
+	await updateUser(id, {
+		screenW: toInt(source.screenW) ?? null,
+		screenH: toInt(source.screenH) ?? null,
+		viewportW: toInt(source.viewportW) ?? null,
+		viewportH: toInt(source.viewportH) ?? null,
+		dpr: toFloat(source.dpr) ?? null,
+		colorScheme: typeof source.colorScheme === 'string' ? source.colorScheme : null,
+		colorDepth: toInt(source.colorDepth) ?? null,
+		pointerCoarse: toBool(source.pointerCoarse) ?? null,
+		hoverNone: toBool(source.hoverNone) ?? null,
+		cpuCores: toInt(source.cpuCores) ?? null,
+		deviceMemory: toFloat(source.deviceMemory) ?? null,
+		connectionType: typeof source.connectionType === 'string' ? source.connectionType : null,
+		connectionEffectiveType:
+			typeof source.connectionEffectiveType === 'string' ? source.connectionEffectiveType : null,
+		connectionDownlink: toFloat(source.connectionDownlink) ?? null
+	});
+
+	// Screen/DPR/color-scheme sharpen the fingerprint, so re-couple.
+	await coupleInstance(id);
 }
 
 // ---- Cross-instance coupling (heuristic, analytics-gated) -----------------

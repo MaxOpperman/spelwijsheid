@@ -122,7 +122,9 @@
 <h1>{$t('spelwijzeSolver.title')}</h1>
 
 <div class="help-link">
-	<a href="{base}/spelwijze-solver/how-to-play">{$t('spelwijzeSolver.howItWorks')}</a>
+	<a class="how-to-play" href="{base}/spelwijze-solver/how-to-play"
+		>{$t('spelwijzeSolver.howItWorks')}</a
+	>
 </div>
 
 <fieldset>
@@ -423,31 +425,8 @@
 		margin: 1rem 0 2rem 0;
 	}
 
-	.help-link a {
-		color: var(--color-text);
-		text-decoration: none;
-		display: inline-block;
-	}
-
 	.pangram {
 		font-weight: 700;
 		color: var(--color-accent);
-	}
-
-	.help-link a::before {
-		content: 'i';
-		display: inline-block;
-		font-size: 0.8em;
-		font-weight: 900;
-		width: 1em;
-		height: 1em;
-		padding: 0.2em;
-		line-height: 1;
-		border: 1.5px solid var(--color-text);
-		border-radius: 50%;
-		text-align: center;
-		margin: 0 0.5em 0 0;
-		position: relative;
-		top: -0.05em;
 	}
 </style>

@@ -24,8 +24,8 @@ export default defineConfig({
 			env: { E2E_DB_PORT: String(DB_PORT) }
 		},
 		{
-			command: `pnpm run dev -- --port ${APP_PORT} --strictPort`,
-			url: `http://localhost:${APP_PORT}`,
+			command: `pnpm exec vite dev --host 127.0.0.1 --port ${APP_PORT} --strictPort`,
+			url: `http://127.0.0.1:${APP_PORT}`,
 			reuseExistingServer: !process.env.CI,
 			timeout: 120_000,
 			env: { DATABASE_URL, DATABASE_POOL_MAX: '1', NODE_ENV: 'development' }

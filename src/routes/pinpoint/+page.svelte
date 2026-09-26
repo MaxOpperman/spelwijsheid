@@ -4,6 +4,7 @@
 	import { capitalizeFirstChar } from '$lib/utils';
 	import type { PageData } from './$types';
 	import { t } from '$lib/i18n';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 
 	interface Props {
 		data: PageData;
@@ -47,10 +48,7 @@
 	<p class="subtitle">{$t('pinpoint.subtitle')}</p>
 
 	{#if isGenerating}
-		<div class="generating">
-			<span class="spinner"></span>
-			{$t('pinpoint.generating')}
-		</div>
+		<LoadingState label={$t('pinpoint.generating')} />
 	{:else if !data.started}
 		<div class="welcome">
 			<p class="welcome-desc">
@@ -177,32 +175,9 @@
 		font-family: inherit;
 	}
 
-	.how-to-play {
-		display: inline-block;
-		color: var(--color-primary);
-		text-decoration: none;
-		margin-bottom: 0.5rem;
-		font-size: 0.9rem;
-	}
-
 	.how-to-play-wrap {
 		text-align: center;
 		margin-bottom: 0.75rem;
-	}
-
-	.how-to-play::before {
-		content: 'i';
-		display: inline-block;
-		font-size: 0.8em;
-		font-weight: 900;
-		width: 1em;
-		height: 1em;
-		padding: 0.2em;
-		line-height: 1;
-		border: 1.5px solid var(--color-primary);
-		border-radius: 50%;
-		text-align: center;
-		margin: 0 0.5em 0 0;
 	}
 
 	h1 {
@@ -392,31 +367,5 @@
 
 	.start-btn:hover {
 		opacity: 0.88;
-	}
-
-	/* Generating spinner */
-	.generating {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		color: var(--color-text-light);
-		font-size: 1rem;
-		padding: 2rem 0;
-	}
-
-	.spinner {
-		width: 20px;
-		height: 20px;
-		border: 3px solid var(--color-bg-2);
-		border-top-color: var(--color-primary);
-		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
-		flex-shrink: 0;
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
 	}
 </style>
