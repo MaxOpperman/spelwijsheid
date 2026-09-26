@@ -205,7 +205,7 @@
 		/>
 
 		{#if isLoading}
-			<div class="loading-indicator" role="status" aria-live="polite">
+			<div class="loading-indicator">
 				<LoadingState label={$t('wordleImpossible.loading')} compact />
 			</div>
 		{/if}

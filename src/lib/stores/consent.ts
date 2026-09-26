@@ -31,7 +31,7 @@ export async function saveConsent(analytics: boolean): Promise<void> {
 	const next: ConsentState = { decided: true, functional: true, analytics };
 	consent.set(next);
 	if (!browser) return;
-	postJsonBestEffort('/api/consent', { functional: true, analytics });
+	await postJsonBestEffort('/api/consent', { functional: true, analytics });
 
 	if (analytics) {
 		reportDevice();

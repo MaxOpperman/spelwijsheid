@@ -11,12 +11,14 @@ export function setCookie(name: string, value: string, maxAgeSeconds: number): v
 	document.cookie = `${name}=${value};path=/;max-age=${maxAgeSeconds};samesite=lax`;
 }
 
-export function postJsonBestEffort(path: string, body: unknown): void {
-	fetch(`${base}${path}`, {
+export function postJsonBestEffort(path: string, body: unknown): Promise<void> {
+	return fetch(`${base}${path}`, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify(body)
-	}).catch(() => {
-		/* best-effort */
-	});
+	})
+		.then(() => undefined)
+		.catch(() => {
+			/* best-effort */
+		});
 }

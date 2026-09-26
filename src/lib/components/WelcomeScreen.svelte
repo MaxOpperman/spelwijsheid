@@ -213,6 +213,47 @@
 		color: var(--color-text);
 	}
 
+	.letter-legend {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		margin-top: 1rem;
+	}
+
+	.legend-color {
+		width: 16px;
+		height: 16px;
+		border-radius: 4px;
+	}
+
+	.mandatory-color {
+		background: var(--color-accent);
+	}
+
+	.optional-color {
+		background: var(--color-primary);
+	}
+
+	.game-stats-preview {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 1rem;
+		margin: 2rem 0;
+	}
+
+	.stat-card {
+		background-color: var(--color-surface);
+		border: 1px solid var(--color-primary-light);
+		padding: 1.5rem 1rem;
+		border-radius: 8px;
+		text-align: center;
+		transition: transform 0.2s ease;
+	}
+
+	.stat-card:hover {
+		transform: translateY(-2px);
+	}
+
 	.stat-number {
 		font-size: 2rem;
 		font-weight: 700;
