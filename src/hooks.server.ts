@@ -21,11 +21,21 @@ import {
 	uidCookieOptions,
 	themeCookieOptions
 } from '$lib/server/session';
+import { isScannerPath } from '$lib/server/request-filter';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// During prerendering (build time) there is no real request and no database.
 	if (building) {
 		return resolve(event);
+	}
+
+	// Reject common secret and CMS scanner probes before they create a user or
+	// trigger any database, analytics, or application work.
+	if (isScannerPath(event.url.pathname)) {
+		return new Response('Not Found', {
+			status: 404,
+			headers: { 'cache-control': 'no-store' }
+		});
 	}
 
 	const existingUid = event.cookies.get(UID_COOKIE);

@@ -15,6 +15,7 @@
 	let guessValue = $state('');
 	let isGuessing = $state(false);
 	let isGenerating = $state(false);
+	let generationError = $state(false);
 	let guessInput = $state<HTMLInputElement | undefined>(undefined);
 
 	function focusInput(node: HTMLInputElement) {
@@ -46,6 +47,9 @@
 	</div>
 	<h1>Pinpoint</h1>
 	<p class="subtitle">{$t('pinpoint.subtitle')}</p>
+	{#if generationError}
+		<p class="generation-error" role="alert">{$t('pinpoint.generationError')}</p>
+	{/if}
 
 	{#if isGenerating}
 		<LoadingState label={$t('pinpoint.generating')} />
@@ -59,9 +63,11 @@
 				action="?/startGame"
 				use:enhance={() => {
 					isGenerating = true;
-					return async ({ update }) => {
+					generationError = false;
+					return async ({ result, update }) => {
 						await update();
 						isGenerating = false;
+						generationError = result.type !== 'success';
 					};
 				}}
 			>
@@ -149,9 +155,11 @@
 				class="guess-form"
 				use:enhance={() => {
 					isGenerating = true;
-					return async ({ update }) => {
+					generationError = false;
+					return async ({ result, update }) => {
 						await update();
 						isGenerating = false;
+						generationError = result.type !== 'success';
 					};
 				}}
 			>
@@ -191,6 +199,15 @@
 		color: var(--color-text-light);
 		margin-bottom: 1.5rem;
 		font-size: 0.95rem;
+	}
+
+	.generation-error {
+		margin: 0 0 1rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid #dc2626;
+		border-radius: 8px;
+		background: #fef2f2;
+		color: #991b1b;
 	}
 
 	/* Board */

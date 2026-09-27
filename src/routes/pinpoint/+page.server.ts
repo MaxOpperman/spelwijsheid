@@ -1,3 +1,4 @@
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { applyGuess, endGame, getLoadState, startNewGame } from './logic.ts';
 import { getSession } from './game-store.ts';
@@ -10,7 +11,11 @@ export const load = (async ({ locals }) => {
 
 export const actions = {
 	startGame: async ({ cookies, locals }) => {
-		await startNewGame(cookies, locals.uid);
+		try {
+			await startNewGame(cookies, locals.uid);
+		} catch {
+			return fail(503, { generationFailed: true });
+		}
 	},
 
 	guess: async ({ request, locals }) => {
@@ -23,7 +28,10 @@ export const actions = {
 	},
 
 	newGame: async ({ cookies, locals }) => {
-		endGame(locals.uid);
-		await startNewGame(cookies, locals.uid);
+		try {
+			await startNewGame(cookies, locals.uid);
+		} catch {
+			return fail(503, { generationFailed: true });
+		}
 	}
 } satisfies Actions;

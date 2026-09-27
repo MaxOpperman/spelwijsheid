@@ -21,6 +21,18 @@ function buildLanguageInstruction(locale: Locale): string {
 	return '\nAll clues and the answer must be in English.';
 }
 
+function describeError(error: unknown): string {
+	if (!(error instanceof Error)) return String(error);
+
+	const details = [error.message];
+	const errorCode = (error as Error & { code?: unknown }).code;
+	if (errorCode) details.push(`code=${String(errorCode)}`);
+	if (error.cause && error.cause !== error) {
+		details.push(`cause=${describeError(error.cause)}`);
+	}
+	return details.join(', ');
+}
+
 function parsePuzzleResponse(content: string): { word: string; clues: string[] } {
 	const jsonMatch = content.match(/\{[\s\S]*\}/);
 	if (!jsonMatch) {
@@ -50,6 +62,9 @@ export async function generatePuzzle(locale: Locale): Promise<{ word: string; cl
 	}
 
 	const apiUrl = env.OLLAMA_API_URL || 'http://localhost:11434';
+	const endpoint = apiUrl + '/api/chat';
+	const model = env.OLLAMA_MODEL || 'gpt-oss';
+	const startedAt = Date.now();
 	const systemPrompt = `You are a puzzle creator for a guessing game. When asked, you output ONLY valid JSON and nothing else. ${buildLanguageInstruction(locale)}`;
 	const userPrompt = `Create a guessing puzzle similar to LinkedIn Crossclimb.
 
@@ -88,12 +103,13 @@ Output ONLY this JSON structure:
 {"word": "your answer here", "clues": ["hardest", "clue 2", "clue 3", "clue 4", "easiest"]}`;
 
 	let res: Response;
+	console.info(`[pinpoint] AI request started [url=${endpoint}, model=${model}, locale=${locale}]`);
 	try {
-		res = await fetch(apiUrl + '/api/chat', {
+		res = await fetch(endpoint, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				model: env.OLLAMA_MODEL || 'gpt-oss',
+				model,
 				messages: [
 					{ role: 'system', content: systemPrompt },
 					{ role: 'user', content: userPrompt }
@@ -106,17 +122,33 @@ Output ONLY this JSON structure:
 			})
 		});
 	} catch (err) {
-		const cause = err instanceof Error ? (err.cause ?? err) : err;
-		const causeMsg = cause instanceof Error ? cause.message : String(cause);
-		throw new Error(`AI API fetch failed [url=${apiUrl}/api/chat]: ${causeMsg}`, { cause: err });
+		console.error(
+			`[pinpoint] AI request failed [url=${endpoint}, model=${model}, locale=${locale}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
+		);
+		throw new Error(`AI API fetch failed [url=${endpoint}]: ${describeError(err)}`, { cause: err });
 	}
 
+	console.info(
+		`[pinpoint] AI response received [status=${res.status}, ok=${res.ok}, durationMs=${Date.now() - startedAt}]`
+	);
 	if (!res.ok) {
-		throw new Error(`AI API returned ${res.status}`);
+		throw new Error(`AI API returned ${res.status} ${res.statusText}`.trim());
 	}
 
-	const data = await res.json();
-	return parsePuzzleResponse(String(data?.message?.content ?? ''));
+	try {
+		const data = await res.json();
+		const content = String(data?.message?.content ?? '');
+		const puzzle = parsePuzzleResponse(content);
+		console.info(
+			`[pinpoint] AI response parsed [durationMs=${Date.now() - startedAt}, contentLength=${content.length}]`
+		);
+		return puzzle;
+	} catch (err) {
+		console.error(
+			`[pinpoint] AI response processing failed [status=${res.status}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
+		);
+		throw err;
+	}
 }
 
 export function createInitialSession(word: string, clues: string[]) {

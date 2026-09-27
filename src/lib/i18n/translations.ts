@@ -138,6 +138,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Pinpoint
 		'pinpoint.subtitle': 'Guess the word. A new clue reveals after every wrong answer.',
 		'pinpoint.generating': 'Generating a new puzzle…',
+		'pinpoint.generationError': 'The puzzle could not be generated. Please try again.',
 		'pinpoint.welcomeDesc':
 			'Each round, the AI generates a secret word. You get up to 5 clues — one revealed per wrong guess. Can you guess it from the first clue?',
 		'pinpoint.startGame': 'Start Game',
@@ -411,6 +412,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Pinpoint
 		'pinpoint.subtitle': 'Guess the word. A new clue reveals after every wrong answer.',
 		'pinpoint.generating': 'Generating a new puzzle…',
+		'pinpoint.generationError': 'The puzzle could not be generated. Please try again.',
 		'pinpoint.welcomeDesc':
 			'Each round, the AI generates a secret word. You get up to 5 clues — one revealed per wrong guess. Can you guess it from the first clue?',
 		'pinpoint.startGame': 'Start Game',
@@ -677,6 +679,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 		// Pinpoint
 		'pinpoint.subtitle': 'Raad het woord. Een nieuwe aanwijzing verschijnt na elk fout antwoord.',
 		'pinpoint.generating': 'Nieuw puzzel genereren…',
+		'pinpoint.generationError': 'De puzzel kon niet worden gegenereerd. Probeer het opnieuw.',
 		'pinpoint.welcomeDesc':
 			'Elke ronde genereert de AI een geheim woord. Je krijgt maximaal 5 aanwijzingen — één per fout antwoord. Kun je het raden van de eerste aanwijzing?',
 		'pinpoint.startGame': 'Start Spel',
