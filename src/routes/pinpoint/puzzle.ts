@@ -74,7 +74,7 @@ export async function generatePuzzle(locale: Locale): Promise<{ word: string; cl
 	const apiUrl = env.OLLAMA_API_URL || 'http://localhost:11434';
 	const endpoint = apiUrl + '/api/chat';
 	const model = env.OLLAMA_MODEL || 'gpt-oss';
-	const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS) || 900_000;
+	const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS) || 240_000;
 	const startedAt = Date.now();
 	const systemPrompt = `You are a puzzle creator for a guessing game. When asked, you output ONLY valid JSON and nothing else. ${buildLanguageInstruction(locale)}`;
 	const userPrompt = `Create a guessing puzzle similar to LinkedIn Crossclimb.
@@ -124,6 +124,8 @@ Output ONLY this JSON structure:
 			signal: AbortSignal.timeout(timeoutMs),
 			body: JSON.stringify({
 				model,
+				format: 'json',
+				think: false,
 				messages: [
 					{ role: 'system', content: systemPrompt },
 					{ role: 'user', content: userPrompt }
