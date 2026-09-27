@@ -1,3 +1,8 @@
+export function normalizeIjDigraph(word: string, inputChars: string[]): string {
+	const hasIjDigraph = inputChars.some((char) => char.toLowerCase() === 'ĳ');
+	return hasIjDigraph ? word.replace(/ij/g, 'ĳ') : word;
+}
+
 /**
  * Generate a list of filtered words based on the input characters and mode.
  * @param inputChars - The characters to filter words by.

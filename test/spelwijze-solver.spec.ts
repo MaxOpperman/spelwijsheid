@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import generateFilteredWords from '../src/lib/solver';
+import generateFilteredWords, { normalizeIjDigraph } from '../src/lib/solver';
 import {
 	getSolverWords,
 	getWordleWords,
@@ -10,6 +10,14 @@ import {
 const allWords = getSolverWords({ locale: 'nl-NL' });
 
 describe('generateFilteredWords', () => {
+	it('normalizes typed ij when the puzzle contains the ij digraph', () => {
+		expect(normalizeIjDigraph('abdij', ['a', 'b', 'd', 'ĳ'])).toBe('abdĳ');
+	});
+
+	it('keeps typed ij split when the puzzle has separate i and j', () => {
+		expect(normalizeIjDigraph('abdij', ['a', 'b', 'd', 'i', 'j'])).toBe('abdij');
+	});
+
 	it('example from how-to-play (b a n d) returns expected words', () => {
 		const inputs = ['b', 'a', 'n', 'd'];
 		const results = generateFilteredWords(allWords, inputs, false);

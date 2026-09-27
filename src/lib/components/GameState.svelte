@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
-	import generateFilteredWords, { generateRandomChars } from '$lib/solver';
+	import generateFilteredWords, { generateRandomChars, normalizeIjDigraph } from '$lib/solver';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import GameView from './GameView.svelte';
 	import LoadingState from './LoadingState.svelte';
@@ -186,7 +186,7 @@
 	}
 
 	function submitWord() {
-		const word = wordInput.toLowerCase().trim().replace(/ij/g, 'ij');
+		const word = normalizeIjDigraph(wordInput.toLowerCase().trim(), inputChars);
 		if (!word) return;
 
 		// Check if word uses only available characters
