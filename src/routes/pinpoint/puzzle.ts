@@ -16,9 +16,9 @@ export function getLocaleFromCookies(cookies: Cookies): Locale {
 
 function buildLanguageInstruction(locale: Locale): string {
 	if (locale === Locale.NL_NL) {
-		return '\nAll clues AND the answer must be in Dutch.';
+		return '\nThe answer and all clues must be in Dutch.';
 	}
-	return '\nAll clues and the answer must be in English.';
+	return '\nThe answer and all clues must be in English.';
 }
 
 function describeError(error: unknown): string {
@@ -49,7 +49,13 @@ function parsePuzzleResponse(content: string): { word: string; clues: string[] }
 		);
 	}
 
-	if (!parsed.word || !Array.isArray(parsed.clues) || parsed.clues.length !== 5) {
+	if (
+		typeof parsed.word !== 'string' ||
+		!parsed.word.trim() ||
+		!Array.isArray(parsed.clues) ||
+		parsed.clues.length !== 5 ||
+		parsed.clues.some((clue) => typeof clue !== 'string' || !clue.trim())
+	) {
 		throw new Error('AI returned unexpected puzzle format');
 	}
 
@@ -76,42 +82,41 @@ export async function generatePuzzle(locale: Locale): Promise<{ word: string; cl
 	const model = env.OLLAMA_MODEL || 'gpt-oss';
 	const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS) || 240_000;
 	const startedAt = Date.now();
-	const systemPrompt = `You are a puzzle creator for a guessing game. When asked, you output ONLY valid JSON and nothing else. ${buildLanguageInstruction(locale)}`;
-	const userPrompt = `Create a guessing puzzle similar to LinkedIn Crossclimb.
+	const systemPrompt = `You create puzzles for a guessing game. Output only valid JSON. Do not output any other text. ${buildLanguageInstruction(locale)}`;
+	const userPrompt = `Create one guessing puzzle.
 
-Step 1 — Choose a category or phrase pattern.
+Choose one category. Choose one answer word for the category.
+Examples of categories: dresses, senses, statues, mushrooms.
+You can also choose a word used in phrases, such as lion in "sea lion".
 
-Step 2 — The answer must be a single word whenever possible.
+Follow these rules:
+1. Use the required language for the answer and all clues.
+2. Use one common word for the answer.
+3. Write exactly 5 clues.
+4. Write 1 to 5 words in each clue.
+5. Each clue must be an example, member, or phrase in the category.
+6. Do not define or explain the answer.
+7. Do not put the answer word in any clue.
+8. Use nouns or short noun phrases. Do not use questions or sentences.
+9. Use the least common example for clue 1.
+10. Use a moderately common example for clue 3.
+11. Use the most common example for clue 5.
+12. Add a short hint in parentheses at the end of clue 5.
+13. The hint must give information about clue 5. The hint must not give information about the answer.
 
-Examples:
-- dresses
-- senses
-- statues
-- mushrooms
-- lion (for phrases like "sea lion", "mountain lion")
+Use this valid example as a model:
+{"word":"mushrooms","clues":["Enoki","Oyster","Shiitake","White Button","Portobello (large edible fungus)"]}
 
-Step 3 — Generate exactly 5 clues.
+Before you output, check these items:
+- word is a string;
+- clues is an array;
+- clues has exactly 5 items;
+- every clue is a string; and
+- no clue contains the answer.
 
-STRICT CLUE RULES:
-- Clues must be examples, members, or phrases that belong to the category.
-- Clues MUST NOT define or describe the answer.
-- Clues MUST NOT contain the answer word itself.
-- Clues must be 1-5 words.
-- Clues must be concrete nouns or short phrases (not explanations).
-
-Difficulty:
-- Clue 1 = most obscure example
-- Clue 3 = moderately recognizable
-- Clue 5 = very recognizable
-
-Clue 5 rule:
-- Must include a short explanatory hint in parentheses.
-
-Example structure:
-{"word": "mushrooms", "clues": ["Enoki", "Oyster", "Shiitake", "White Button", "Portobello (large edible fungus)"]}
-
-Output ONLY this JSON structure:
-{"word": "your answer here", "clues": ["hardest", "clue 2", "clue 3", "clue 4", "easiest"]}`;
+Output only one JSON object. Do not output Markdown, comments, or any other text.
+Use exactly this format:
+{"word":"answer","clues":["clue 1","clue 2","clue 3","clue 4","clue 5 (hint)"]}`;
 
 	let res: Response;
 	console.info(
@@ -131,7 +136,7 @@ Output ONLY this JSON structure:
 					{ role: 'user', content: userPrompt }
 				],
 				options: {
-					temperature: 1.5,
+					temperature: 0.7,
 					top_p: 0.9
 				},
 				stream: true
