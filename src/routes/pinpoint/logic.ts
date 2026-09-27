@@ -1,15 +1,32 @@
 import type { Cookies } from '@sveltejs/kit';
 import { isCorrectGuess } from '$lib/utils';
 import { createInitialSession, generatePuzzle, getLocaleFromCookies } from './puzzle.ts';
-import { deleteSession, getSession, setSession, updateSession } from './game-store.ts';
+import {
+	clearGenerationState,
+	deleteSession,
+	getGenerationState,
+	getSession,
+	setGenerationState,
+	setSession,
+	updateSession
+} from './game-store.ts';
 
-export function getLoadState(game: ReturnType<typeof getSession>) {
+const generationTokens = new Map<string, number>();
+
+export function getLoadState(game: ReturnType<typeof getSession>, uid: string) {
+	const generation = getGenerationState(uid);
 	if (!game) {
-		return { started: false as const };
+		return {
+			started: false as const,
+			generating: generation === 'generating',
+			generationFailed: generation === 'failed'
+		};
 	}
 
 	return {
 		started: true as const,
+		generating: generation === 'generating',
+		generationFailed: generation === 'failed',
 		clues: game.clues,
 		revealed: game.revealed,
 		solved: game.solved,
@@ -19,10 +36,23 @@ export function getLoadState(game: ReturnType<typeof getSession>) {
 	};
 }
 
-export async function startNewGame(cookies: Cookies, uid: string): Promise<void> {
+export function startNewGame(cookies: Cookies, uid: string): void {
+	if (getGenerationState(uid) === 'generating') return;
+
+	const token = (generationTokens.get(uid) ?? 0) + 1;
+	generationTokens.set(uid, token);
+	setGenerationState(uid, 'generating');
+
 	const locale = getLocaleFromCookies(cookies);
-	const puzzle = await generatePuzzle(locale);
-	setSession(uid, createInitialSession(puzzle.word, puzzle.clues));
+	void generatePuzzle(locale)
+		.then((puzzle) => {
+			if (generationTokens.get(uid) !== token) return;
+			setSession(uid, createInitialSession(puzzle.word, puzzle.clues));
+			clearGenerationState(uid);
+		})
+		.catch(() => {
+			if (generationTokens.get(uid) === token) setGenerationState(uid, 'failed');
+		});
 }
 
 export async function applyGuess(
@@ -49,5 +79,7 @@ export async function applyGuess(
 }
 
 export function endGame(uid: string): void {
+	generationTokens.set(uid, (generationTokens.get(uid) ?? 0) + 1);
+	clearGenerationState(uid);
 	deleteSession(uid);
 }

@@ -64,6 +64,7 @@ export async function generatePuzzle(locale: Locale): Promise<{ word: string; cl
 	const apiUrl = env.OLLAMA_API_URL || 'http://localhost:11434';
 	const endpoint = apiUrl + '/api/chat';
 	const model = env.OLLAMA_MODEL || 'gpt-oss';
+	const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS) || 240_000;
 	const startedAt = Date.now();
 	const systemPrompt = `You are a puzzle creator for a guessing game. When asked, you output ONLY valid JSON and nothing else. ${buildLanguageInstruction(locale)}`;
 	const userPrompt = `Create a guessing puzzle similar to LinkedIn Crossclimb.
@@ -103,11 +104,14 @@ Output ONLY this JSON structure:
 {"word": "your answer here", "clues": ["hardest", "clue 2", "clue 3", "clue 4", "easiest"]}`;
 
 	let res: Response;
-	console.info(`[pinpoint] AI request started [url=${endpoint}, model=${model}, locale=${locale}]`);
+	console.info(
+		`[pinpoint] AI request started [url=${endpoint}, model=${model}, locale=${locale}, timeoutMs=${timeoutMs}]`
+	);
 	try {
 		res = await fetch(endpoint, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
+			signal: AbortSignal.timeout(timeoutMs),
 			body: JSON.stringify({
 				model,
 				messages: [
@@ -123,7 +127,7 @@ Output ONLY this JSON structure:
 		});
 	} catch (err) {
 		console.error(
-			`[pinpoint] AI request failed [url=${endpoint}, model=${model}, locale=${locale}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
+			`[pinpoint] AI request failed [url=${endpoint}, model=${model}, locale=${locale}, timeoutMs=${timeoutMs}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
 		);
 		throw new Error(`AI API fetch failed [url=${endpoint}]: ${describeError(err)}`, { cause: err });
 	}

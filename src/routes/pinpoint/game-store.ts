@@ -11,6 +11,7 @@ export interface GameState {
 // Server-side in-memory store — the answer never leaves the server.
 // Keyed by the visitor's persistent `uid` so no extra cookie is needed.
 const store = new Map<string, GameState>();
+const generationState = new Map<string, 'generating' | 'failed'>();
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -48,4 +49,16 @@ export function updateSession(id: string, patch: Partial<GameState>): void {
 
 export function deleteSession(id: string): void {
 	store.delete(id);
+}
+
+export function getGenerationState(id: string): 'generating' | 'failed' | null {
+	return generationState.get(id) ?? null;
+}
+
+export function setGenerationState(id: string, state: 'generating' | 'failed'): void {
+	generationState.set(id, state);
+}
+
+export function clearGenerationState(id: string): void {
+	generationState.delete(id);
 }

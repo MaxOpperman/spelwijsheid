@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidate } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { capitalizeFirstChar } from '$lib/utils';
 	import type { PageData } from './$types';
@@ -15,8 +16,16 @@
 	let guessValue = $state('');
 	let isGuessing = $state(false);
 	let isGenerating = $state(false);
-	let generationError = $state(false);
 	let guessInput = $state<HTMLInputElement | undefined>(undefined);
+
+	$effect(() => {
+		if (!data.generating) return;
+
+		const interval = window.setInterval(() => {
+			void invalidate('app:pinpoint');
+		}, 2000);
+		return () => window.clearInterval(interval);
+	});
 
 	function focusInput(node: HTMLInputElement) {
 		node.focus();
@@ -47,11 +56,11 @@
 	</div>
 	<h1>Pinpoint</h1>
 	<p class="subtitle">{$t('pinpoint.subtitle')}</p>
-	{#if generationError}
+	{#if data.generationFailed}
 		<p class="generation-error" role="alert">{$t('pinpoint.generationError')}</p>
 	{/if}
 
-	{#if isGenerating}
+	{#if isGenerating || data.generating}
 		<LoadingState label={$t('pinpoint.generating')} />
 	{:else if !data.started}
 		<div class="welcome">
@@ -63,11 +72,9 @@
 				action="?/startGame"
 				use:enhance={() => {
 					isGenerating = true;
-					generationError = false;
-					return async ({ result, update }) => {
+					return async ({ update }) => {
 						await update();
 						isGenerating = false;
-						generationError = result.type !== 'success';
 					};
 				}}
 			>
@@ -155,11 +162,9 @@
 				class="guess-form"
 				use:enhance={() => {
 					isGenerating = true;
-					generationError = false;
-					return async ({ result, update }) => {
+					return async ({ update }) => {
 						await update();
 						isGenerating = false;
-						generationError = result.type !== 'success';
 					};
 				}}
 			>
