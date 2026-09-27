@@ -33,6 +33,11 @@ function describeError(error: unknown): string {
 	return details.join(', ');
 }
 
+function containsAnswer(clue: string, word: string): boolean {
+	const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return new RegExp(`(^|[^\\p{L}])${escapedWord}($|[^\\p{L}])`, 'iu').test(clue);
+}
+
 function parsePuzzleResponse(content: string): { word: string; clues: string[] } {
 	const jsonMatch = content.match(/\{[\s\S]*\}/);
 	if (!jsonMatch) {
@@ -59,7 +64,13 @@ function parsePuzzleResponse(content: string): { word: string; clues: string[] }
 		throw new Error('AI returned unexpected puzzle format');
 	}
 
-	return { word: parsed.word.trim(), clues: parsed.clues.map((clue) => clue.trim()) };
+	const word = parsed.word.trim();
+	const clues = parsed.clues.map((clue) => clue.trim());
+	if (clues.some((clue) => containsAnswer(clue, word))) {
+		throw new Error('AI returned a clue that contains the answer');
+	}
+
+	return { word, clues };
 }
 
 async function readStreamedResponse(response: Response): Promise<string> {
@@ -81,6 +92,7 @@ export async function generatePuzzle(locale: Locale): Promise<{ word: string; cl
 	const endpoint = apiUrl + '/api/chat';
 	const model = env.OLLAMA_MODEL || 'gpt-oss';
 	const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS) || 240_000;
+	const maxAttempts = 3;
 	const startedAt = Date.now();
 	const systemPrompt = `You create puzzles for a guessing game. Output only valid JSON. Do not output any other text. ${buildLanguageInstruction(locale)}`;
 	const userPrompt = `Create one guessing puzzle.
@@ -96,13 +108,14 @@ Follow these rules:
 4. Write 1 to 5 words in each clue.
 5. Each clue must be an example, member, or phrase in the category.
 6. Do not define or explain the answer.
-7. Do not put the answer word in any clue.
-8. Use nouns or short noun phrases. Do not use questions or sentences.
-9. Use the least common example for clue 1.
-10. Use a moderately common example for clue 3.
-11. Use the most common example for clue 5.
-12. Add a short hint in parentheses at the end of clue 5.
-13. The hint must give information about clue 5. The hint must not give information about the answer.
+7. Do not put the answer word in any clue, including the hint in parentheses.
+8. Do not use a singular, plural, or other obvious form of the answer in a clue.
+9. Use nouns or short noun phrases. Do not use questions or sentences.
+10. Use the least common example for clue 1.
+11. Use a moderately common example for clue 3.
+12. Use the most common example for clue 5.
+13. Add a short hint in parentheses at the end of clue 5.
+14. The hint must give information about clue 5. The hint must not give information about the answer.
 
 Use this valid example as a model:
 {"word":"mushrooms","clues":["Enoki","Oyster","Shiitake","White Button","Portobello (large edible fungus)"]}
@@ -112,63 +125,79 @@ Before you output, check these items:
 - clues is an array;
 - clues has exactly 5 items;
 - every clue is a string; and
-- no clue contains the answer.
+- no part of any clue, including the hint, contains the answer or an obvious form of the answer.
+
+Invalid example: word "lion" with clue "California Sea Lion".
+Invalid example: word "chocolate" with clue "Milk Chocolate".
 
 Output only one JSON object. Do not output Markdown, comments, or any other text.
 Use exactly this format:
 {"word":"answer","clues":["clue 1","clue 2","clue 3","clue 4","clue 5 (hint)"]}`;
 
-	let res: Response;
-	console.info(
-		`[pinpoint] AI request started [url=${endpoint}, model=${model}, locale=${locale}, timeoutMs=${timeoutMs}]`
-	);
-	try {
-		res = await fetch(endpoint, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			signal: AbortSignal.timeout(timeoutMs),
-			body: JSON.stringify({
-				model,
-				format: 'json',
-				think: false,
-				messages: [
-					{ role: 'system', content: systemPrompt },
-					{ role: 'user', content: userPrompt }
-				],
-				options: {
-					temperature: 0.7,
-					top_p: 0.9
-				},
-				stream: true
-			})
-		});
-	} catch (err) {
-		console.error(
-			`[pinpoint] AI request failed [url=${endpoint}, model=${model}, locale=${locale}, timeoutMs=${timeoutMs}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
-		);
-		throw new Error(`AI API fetch failed [url=${endpoint}]: ${describeError(err)}`, { cause: err });
-	}
-
-	console.info(
-		`[pinpoint] AI response received [status=${res.status}, ok=${res.ok}, durationMs=${Date.now() - startedAt}]`
-	);
-	if (!res.ok) {
-		throw new Error(`AI API returned ${res.status} ${res.statusText}`.trim());
-	}
-
-	try {
-		const content = await readStreamedResponse(res);
-		const puzzle = parsePuzzleResponse(content);
+	for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
 		console.info(
-			`[pinpoint] AI response parsed [durationMs=${Date.now() - startedAt}, contentLength=${content.length}]`
+			`[pinpoint] AI request started [attempt=${attempt}/${maxAttempts}, url=${endpoint}, model=${model}, locale=${locale}, timeoutMs=${timeoutMs}]`
 		);
-		return puzzle;
-	} catch (err) {
-		console.error(
-			`[pinpoint] AI response processing failed [status=${res.status}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
+		let res: Response;
+		try {
+			res = await fetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				signal: AbortSignal.timeout(timeoutMs),
+				body: JSON.stringify({
+					model,
+					format: 'json',
+					think: false,
+					messages: [
+						{ role: 'system', content: systemPrompt },
+						{
+							role: 'user',
+							content:
+								attempt === 1
+									? userPrompt
+									: `${userPrompt}\nThis is a retry. Follow every rule. Check the answer against every complete clue, including text in parentheses.`
+						}
+					],
+					options: {
+						temperature: 0.7,
+						top_p: 0.9
+					},
+					stream: true
+				})
+			});
+		} catch (err) {
+			console.error(
+				`[pinpoint] AI request failed [attempt=${attempt}/${maxAttempts}, url=${endpoint}, model=${model}, locale=${locale}, timeoutMs=${timeoutMs}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
+			);
+			throw new Error(`AI API fetch failed [url=${endpoint}]: ${describeError(err)}`, {
+				cause: err
+			});
+		}
+
+		console.info(
+			`[pinpoint] AI response received [attempt=${attempt}/${maxAttempts}, status=${res.status}, ok=${res.ok}, durationMs=${Date.now() - startedAt}]`
 		);
-		throw err;
+		if (!res.ok) {
+			throw new Error(`AI API returned ${res.status} ${res.statusText}`.trim());
+		}
+
+		try {
+			const content = await readStreamedResponse(res);
+			const puzzle = parsePuzzleResponse(content);
+			console.info(
+				`[pinpoint] AI response parsed [attempt=${attempt}/${maxAttempts}, durationMs=${Date.now() - startedAt}, contentLength=${content.length}]`
+			);
+			return puzzle;
+		} catch (err) {
+			console.error(
+				`[pinpoint] AI response processing failed [attempt=${attempt}/${maxAttempts}, status=${res.status}, durationMs=${Date.now() - startedAt}]: ${describeError(err)}`
+			);
+			if (attempt === maxAttempts) throw err;
+			console.info(`[pinpoint] Retrying AI request after invalid puzzle response`);
+		}
 	}
+
+	throw new Error('AI puzzle generation failed');
 }
 
 export function createInitialSession(word: string, clues: string[]) {
