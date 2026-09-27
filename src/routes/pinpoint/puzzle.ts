@@ -56,6 +56,16 @@ function parsePuzzleResponse(content: string): { word: string; clues: string[] }
 	return { word: parsed.word.trim(), clues: parsed.clues.map((clue) => clue.trim()) };
 }
 
+async function readStreamedResponse(response: Response): Promise<string> {
+	const body = await response.text();
+	return body
+		.split('\n')
+		.filter((line) => line.trim())
+		.map((line) => JSON.parse(line) as { message?: { content?: string } })
+		.map((chunk) => chunk.message?.content ?? '')
+		.join('');
+}
+
 export async function generatePuzzle(locale: Locale): Promise<{ word: string; clues: string[] }> {
 	if (locale !== Locale.NL_NL && locale !== Locale.EN_GB && locale !== Locale.EN_US) {
 		throw new Error('Invalid locale');
@@ -64,7 +74,7 @@ export async function generatePuzzle(locale: Locale): Promise<{ word: string; cl
 	const apiUrl = env.OLLAMA_API_URL || 'http://localhost:11434';
 	const endpoint = apiUrl + '/api/chat';
 	const model = env.OLLAMA_MODEL || 'gpt-oss';
-	const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS) || 240_000;
+	const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS) || 900_000;
 	const startedAt = Date.now();
 	const systemPrompt = `You are a puzzle creator for a guessing game. When asked, you output ONLY valid JSON and nothing else. ${buildLanguageInstruction(locale)}`;
 	const userPrompt = `Create a guessing puzzle similar to LinkedIn Crossclimb.
@@ -122,7 +132,7 @@ Output ONLY this JSON structure:
 					temperature: 1.5,
 					top_p: 0.9
 				},
-				stream: false
+				stream: true
 			})
 		});
 	} catch (err) {
@@ -140,8 +150,7 @@ Output ONLY this JSON structure:
 	}
 
 	try {
-		const data = await res.json();
-		const content = String(data?.message?.content ?? '');
+		const content = await readStreamedResponse(res);
 		const puzzle = parsePuzzleResponse(content);
 		console.info(
 			`[pinpoint] AI response parsed [durationMs=${Date.now() - startedAt}, contentLength=${content.length}]`
