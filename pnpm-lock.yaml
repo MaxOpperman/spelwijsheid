@@ -12,8 +12,8 @@ importers:
         specifier: 0.45.4
         version: 0.45.4(@electric-sql/pglite@0.5.5)(@types/pg@8.23.1)(pg@8.23.1)
       maxmind:
-        specifier: 5.0.7
-        version: 5.0.7
+        specifier: 5.0.8
+        version: 5.0.8
       pg:
         specifier: 8.23.1
         version: 8.23.1
@@ -1759,8 +1759,8 @@ packages:
   magic-string@1.4.3:
     resolution: {integrity: sha512-z12OxmaPGE0F4xlpGdjuAUckipLpQlTAuAmyGhNoD7ODpYUzvDfvtxUbjM/jwznyP178oju/KDdyi220wNJ0RQ==}
 
-  maxmind@5.0.7:
-    resolution: {integrity: sha512-+w637dwfv01MKjkrp4sKDBTEKHLPvWLYb647QTjiz3wG/teSemqudIKNShaS6eqZ7ffxC9oZlQQgIqY0rGojog==}
+  maxmind@5.0.8:
+    resolution: {integrity: sha512-M8iv2u1rZG27NiJGYO4q2JUCafvenr8KGUyCkQxh4nMrSLu+tUNGeoX0Ys6FjGRSw6cof5ED1+/003zzPBkfjw==}
     engines: {node: '>=12', npm: '>=6'}
 
   minimatch@10.2.6:
@@ -2056,8 +2056,8 @@ packages:
     resolution: {integrity: sha512-5mAftM3SoDV9X0zdF386F9p2pv8iKOwi/KfBS1XnBAkVCKFzVOLHUoa8iGWAt4buoicLmyWVRpuuD5wplXOQsg==}
     engines: {node: '>=18'}
 
-  tiny-lru@13.0.0:
-    resolution: {integrity: sha512-xDHxKKS1FdF0Tv2P+QT7IeSEg74K/8cEDzbv3Tv6UyHHUgBOjOiQiBp818MGj66dhurQus/IBcoAbwIKtSGc6Q==}
+  tiny-lru@13.1.1:
+    resolution: {integrity: sha512-5yPLGQspKXPoVMbUj+o/JWV3FJA1WdQAtU7CWvHb+B+RSInhzGs+W2H6FOt3Z0uNnf2DC8BJExJa7AWPW1bzFw==}
     engines: {node: '>=14'}
 
   tinybench@6.2.2:
@@ -3498,10 +3498,10 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  maxmind@5.0.7:
+  maxmind@5.0.8:
     dependencies:
       mmdb-lib: 3.0.3
-      tiny-lru: 13.0.0
+      tiny-lru: 13.1.1
 
   minimatch@10.2.6:
     dependencies:
@@ -3804,7 +3804,7 @@ snapshots:
     transitivePeerDependencies:
       - '@typescript-eslint/types'
 
-  tiny-lru@13.0.0: {}
+  tiny-lru@13.1.1: {}
 
   tinybench@6.2.2: {}
 
