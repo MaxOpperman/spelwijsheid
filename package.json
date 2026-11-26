@@ -52,7 +52,7 @@
 		"husky": "9.1.7",
 		"leaflet": "1.9.4",
 		"prettier": "3.10.1",
-		"prettier-plugin-svelte": "4.1.1",
+		"prettier-plugin-svelte": "4.2.0",
 		"svelte": "5.58.0",
 		"svelte-check": "4.7.8",
 		"typescript": "6.0.3",
